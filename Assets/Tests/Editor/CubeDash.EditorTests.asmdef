@@ -1,0 +1,8 @@
+{
+  "name": "CubeDash.EditorTests",
+  "rootNamespace": "CubeDash.Tests",
+  "references": ["CubeDash", "UnityEngine.UI"],
+  "includePlatforms": ["Editor"],
+  "optionalUnityReferences": ["TestAssemblies"],
+  "autoReferenced": false
+}

@@ -1,0 +1,6 @@
+{
+  "name": "CubeDash",
+  "rootNamespace": "CubeDash",
+  "references": ["Unity.InputSystem", "UnityEngine.UI"],
+  "autoReferenced": true
+}

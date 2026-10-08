@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: CubeDashGlass2
+  m_Shader: {fileID: 4800000, guid: a2db75487c954a98923edf36b5ae6aab, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 1
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs: []
+    m_Ints: []
+    m_Floats:
+    - _LitWindows: 0.49
+    - _Seed: 41
+    m_Colors:
+    - _BaseColor: {r: 0.24, g: 0.32, b: 0.41, a: 1}
+    - _CoolWindows: {r: 0.28, g: 0.63, b: 0.82, a: 1}
+    - _WarmWindows: {r: 1.05, g: 0.7, b: 0.39, a: 1}
+    - _WindowSpacing: {r: 0.7, g: 1.45, b: 0, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
