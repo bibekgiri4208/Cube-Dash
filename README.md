@@ -70,6 +70,15 @@ the far plane, and shadow-casting geometry inside the fog keeps its shadows.
 These presets cost more GPU time than the original shadows. Tune them in
 `Assets/Settings/PC_RPAsset.asset` or `Mobile_RPAsset.asset` if a target device struggles.
 
+## Rendering quality
+
+The PC pipeline renders HDR with **4x MSAA** on top of SMAA (High quality); the mobile preset
+uses 2x MSAA at 0.9 render scale. Screen-space ambient occlusion runs at full resolution with
+high-quality normals, 12 samples, and bilateral blur so contact points and podium bases read
+clearly without muddying the matte look. Color grading uses the High Range HDR LUT, both quality
+levels synchronize to the display to avoid tearing, and the fog color matches the skybox horizon
+exactly so the fogged skyline dissolves into the sky without a seam.
+
 ## Tests
 
 **Window > General > Test Runner > EditMode > CubeDash.EditorTests** checks authored scene

@@ -28,7 +28,7 @@ Material:
     - _GradientPower: 0.7
     - _SunSize: 1.8
     m_Colors:
-    - _GroundColor: {r: 0.57, g: 0.72, b: 0.69, a: 1}
+    - _GroundColor: {r: 0.64, g: 0.78, b: 0.75, a: 1}
     - _HorizonColor: {r: 0.77, g: 0.89, b: 0.85, a: 1}
     - _SunColor: {r: 0, g: 0, b: 0, a: 1}
     - _SunDirection: {r: 0.15, g: 0.07, b: 1, a: 0}
