@@ -34,7 +34,9 @@ when a matching cube is absorbed. The camera is closer so the player and cube co
 - **Track > Segment 00–07** are reusable `TrackSegment` prefab instances.
   Their nine row cubes use the existing **`ObstacleCube.prefab`**, now a plain color cube
   with a `RunnerCube` component rather than a barricade.
-- **City Surroundings** contains three editable `Skyscraper` prefab designs with matte architecture.
+- **City Surroundings** contains three editable `Skyscraper` prefab designs with matte architecture
+  (podium bases, banded shafts, stepped crowns, roof plant, and masts). Sixteen towers are placed
+  per segment across four depth rows per side, ending in a taller skyline row on the plaza slab.
 - **Player Trail** contains twelve saved ribbon meshes animated by `CubeWake`.
 - **Canvas** contains editable UI and persistent button events. The start overlay is transparent
   so the scene remains visible. **City Atmosphere** holds the non-neon color-grading profile.

@@ -26,6 +26,16 @@ namespace CubeDash.Editor
             if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) ApplyFromCommandLine();
         }
 
+        [MenuItem("Tools/Cube Dash/Enhance Background City")]
+        public static void ApplyBackgroundCityFromCommandLine()
+        {
+            UpdateBuildings();
+            UpdateCityLayout();
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Debug.Log("Enhanced background city: detailed matte towers at double density (near, mid, and skyline rows).");
+        }
+
         public static void ApplyFromCommandLine()
         {
             var scene = EditorSceneManager.OpenScene("Assets/Scenes/Level.unity");
@@ -40,6 +50,7 @@ namespace CubeDash.Editor
             Matte("CityPlaza", new Color(0.48f, 0.60f, 0.57f));
             UpdateCubePrefabs();
             UpdateBuildings();
+            UpdateCityLayout();
             UpdateTrack();
             UpdateTrail();
             AssetDatabase.SaveAssets();
@@ -69,7 +80,7 @@ namespace CubeDash.Editor
             camera.transform.position = new Vector3(0, 4f, -7.5f);
             camera.transform.LookAt(new Vector3(0, 0.75f, 15));
             camera.fieldOfView = 56;
-            camera.farClipPlane = 250;
+            camera.farClipPlane = 600;
             camera.clearFlags = CameraClearFlags.Skybox;
             camera.GetUniversalAdditionalCameraData().renderPostProcessing = true;
             Material sky = AssetDatabase.LoadAssetAtPath<Material>("Assets/Material/CubeDashHorizon.mat");
@@ -81,8 +92,8 @@ namespace CubeDash.Editor
             EditorUtility.SetDirty(sky);
             RenderSettings.skybox = sky;
             RenderSettings.fogColor = new Color(0.72f, 0.85f, 0.81f);
-            RenderSettings.fogStartDistance = 35;
-            RenderSettings.fogEndDistance = 170;
+            RenderSettings.fogStartDistance = 45;
+            RenderSettings.fogEndDistance = 260;
             RenderSettings.ambientMode = AmbientMode.Trilight;
             RenderSettings.ambientSkyColor = new Color(0.70f, 0.82f, 0.84f);
             RenderSettings.ambientEquatorColor = new Color(0.56f, 0.66f, 0.67f);
@@ -151,8 +162,8 @@ namespace CubeDash.Editor
         private static void UpdateBuildings()
         {
             Color[] colors = { new Color(0.46f, 0.57f, 0.56f), new Color(0.57f, 0.65f, 0.61f), new Color(0.40f, 0.51f, 0.52f) };
-            float[] heights = { 23, 32, 17 };
-            float[] widths = { 5, 4.8f, 6 };
+            float[] heights = { 26, 34, 21 };
+            float[] widths = { 5.2f, 5f, 6f };
             for (int variant = 0; variant < 3; variant++)
             {
                 string path = Prefabs + "Skyscraper" + (variant + 1) + ".prefab";
@@ -166,15 +177,74 @@ namespace CubeDash.Editor
                     Material concrete = Matte("CityConcrete" + variant, colors[variant]);
                     Material ledge = Matte("CityLedge" + variant, Color.Lerp(colors[variant], Color.white, 0.12f));
                     float h = heights[variant], w = widths[variant];
+
+                    // Street-level podium anchors the tower to the plaza slab.
+                    Part("Street Podium", architecture, new Vector3(0, 1.7f, 0), new Vector3(w + 1.6f, 3.4f, 7.4f), ledge);
+                    Part("Podium Cornice", architecture, new Vector3(0, 3.55f, 0), new Vector3(w + 1.9f, 0.3f, 7.7f), concrete);
+
+                    // Shaft wrapped in horizontal floor bands for readable relief at distance.
                     Part("Tower Body", architecture, new Vector3(0, h * 0.5f, 0), new Vector3(w, h, 6), concrete);
-                    Part("Upper Setback", architecture, new Vector3(variant == 1 ? 0.4f : 0, h + 1.6f, 0), new Vector3(w * 0.70f, 3.2f, 4.5f), ledge);
-                    Part("Roof Edge", architecture, new Vector3(0, h + 3.3f, 0), new Vector3(w * 0.75f, 0.15f, 4.7f), concrete);
+                    for (int band = 0; band < 4; band++)
+                        Part("Floor Band " + (band + 1), architecture, new Vector3(0, 5f + band * (h - 10f) / 3f, 0),
+                            new Vector3(w + 0.3f, 0.28f, 6.3f), ledge);
+
+                    // Stepped crown: setback, smaller crown, parapet, plant room, and mast.
+                    float crownX = variant == 1 ? 0.5f : 0;
+                    Part("Upper Setback", architecture, new Vector3(crownX, h + 1.8f, 0), new Vector3(w * 0.72f, 3.6f, 4.6f), ledge);
+                    Part("Crown Setback", architecture, new Vector3(crownX, h + 4.9f, 0), new Vector3(w * 0.5f, 2.6f, 3.4f), concrete);
+                    Part("Roof Edge", architecture, new Vector3(crownX, h + 6.35f, 0), new Vector3(w * 0.56f, 0.3f, 3.7f), ledge);
+                    Part("Roof Unit", architecture, new Vector3(crownX + w * 0.1f, h + 7.15f, 0.4f), new Vector3(w * 0.24f, 1.3f, 1.6f), concrete);
+                    Part("Roof Mast", architecture, new Vector3(crownX, h + 8.3f, -0.6f), new Vector3(0.16f, 4.2f, 0.16f), ledge);
+
                     if (variant == 2)
-                        Part("Low Annex", architecture, new Vector3(w * 0.65f, 4.5f, 0.7f), new Vector3(w * 0.6f, 9, 5), ledge);
+                    {
+                        Part("Low Annex", architecture, new Vector3(w * 0.7f, 4.6f, 0.6f), new Vector3(w * 0.6f, 9.2f, 5.2f), ledge);
+                        Part("Annex Roof", architecture, new Vector3(w * 0.7f, 9.35f, 0.6f), new Vector3(w * 0.68f, 0.3f, 5.6f), concrete);
+                    }
                     PrefabUtility.SaveAsPrefabAsset(root, path);
                 }
                 finally { PrefabUtility.UnloadPrefabContents(root); }
             }
+        }
+
+        private static void UpdateCityLayout()
+        {
+            // Four depth rows per side: near street, inner street, mid blocks, and a taller
+            // skyline row on the widened plaza — eight towers per side, sixteen per segment.
+            float[] rowX = { 14.5f, 14.5f, 18.5f, 18.5f, 29f, 29f, 41f, 41f };
+            float[] rowZ = { 4f, 26f, 15f, 37f, 10f, 31f, 5f, 27f };
+            float[] rowScale = { 1f, 1.05f, 0.95f, 1.15f, 1.2f, 1f, 1.35f, 1.15f };
+            GameObject[] towers = new GameObject[3];
+            for (int i = 0; i < towers.Length; i++)
+            {
+                towers[i] = AssetDatabase.LoadAssetAtPath<GameObject>(Prefabs + "Skyscraper" + (i + 1) + ".prefab");
+                if (towers[i] == null) throw new InvalidOperationException("Missing Skyscraper" + (i + 1) + " prefab.");
+            }
+            string path = Prefabs + "TrackSegment.prefab";
+            GameObject root = PrefabUtility.LoadPrefabContents(path);
+            try
+            {
+                Transform stale = root.transform.Find("City Surroundings");
+                if (stale != null) Object.DestroyImmediate(stale.gameObject);
+                Transform city = new GameObject("City Surroundings").transform;
+                city.SetParent(root.transform, false);
+                for (int side = -1; side <= 1; side += 2)
+                    for (int slot = 0; slot < rowX.Length; slot++)
+                    {
+                        int variant = (slot + (side == 1 ? 1 : 0)) % 3;
+                        GameObject tower = (GameObject)PrefabUtility.InstantiatePrefab(towers[variant], root.scene);
+                        tower.name = (side < 0 ? "West" : "East") + " Skyscraper " + (slot + 1);
+                        tower.transform.SetParent(city, false);
+                        tower.transform.localPosition = new Vector3(side * rowX[slot], -9f, rowZ[slot]);
+                        tower.transform.localScale = new Vector3(1, rowScale[slot], 1);
+                    }
+                Transform ground = root.transform.Find("Bridge Rails/City Ground");
+                if (ground == null) throw new InvalidOperationException("TrackSegment lost its City Ground plaza slab.");
+                ground.localScale = new Vector3(100, 0.6f, 42);
+                PrefabUtility.SaveAsPrefabAsset(root, path);
+                Debug.Log("City Surroundings rebuilt with " + (rowX.Length * 2) + " skyscrapers per segment.");
+            }
+            finally { PrefabUtility.UnloadPrefabContents(root); }
         }
 
         private static void UpdateTrack()
