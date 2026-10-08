@@ -54,8 +54,22 @@ The original Plane is retained as the starting section, and the original Main Ca
 assigned to Game Manager. The clean-style authoring tools are Editor-only; the completed scene
 is already saved, so no setup command is required.
 
+## Shadows and render distance
+
+The PC URP preset uses a **4096** main-light shadow atlas, **160 m** shadow distance, four
+cascades (12/32/72/160 m), and high-quality soft filtering. The mobile preset uses **2048**,
+**90 m**, two cascades, and medium-quality soft shadows. Reduced normal bias keeps cube
+shadows closer to their feet; the final cascade fades toward the fog rather than ending abruptly.
+
+The **Main Camera** far clip is **600 m** and linear fog runs **45 → 260 m**, so the skyline
+stays visible well past the shadow distance without a visible clipping edge. Fog ends before
+the far plane, and shadow-casting geometry inside the fog keeps its shadows.
+
+These presets cost more GPU time than the original shadows. Tune them in
+`Assets/Settings/PC_RPAsset.asset` or `Mobile_RPAsset.asset` if a target device struggles.
+
 ## Tests
 
 **Window > General > Test Runner > EditMode > CubeDash.EditorTests** checks authored scene
 references, all-color/reachable procedural rows, reproducible seeds, swept contacts, matching
-collection, wrong-color failure, scoring/restart, pause, the trail, and 50 km of fixed-size recycling.
+collection, wrong-color failure, scoring/restart, pause, the trail, shadow presets, and 50 km of fixed-size recycling.
