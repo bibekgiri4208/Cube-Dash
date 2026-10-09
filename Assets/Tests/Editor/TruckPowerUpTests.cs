@@ -20,7 +20,19 @@ namespace CubeDash.Tests
             Assert.That(body.subMeshCount, Is.EqualTo(8));
             Assert.That(body.vertexCount, Is.InRange(2000, 12000));
             Assert.That(body.bounds.max.y, Is.GreaterThan(4), "Twin stacks extend above the cab.");
-            Assert.That(prefab.transform.childCount, Is.EqualTo(6));
+            Assert.That(prefab.transform.childCount, Is.EqualTo(8));
+            ParticleSystem[] smoke = prefab.GetComponentsInChildren<ParticleSystem>(true);
+            Assert.That(smoke.Length, Is.EqualTo(2));
+            foreach (ParticleSystem system in smoke)
+            {
+                Assert.That(Mathf.Abs(system.transform.localPosition.x), Is.EqualTo(0.96f).Within(0.001f));
+                Assert.That(system.transform.localPosition.y, Is.EqualTo(4.2f).Within(0.001f));
+                Assert.That(system.transform.localPosition.z, Is.EqualTo(0.14f).Within(0.001f));
+                Assert.That(system.main.playOnAwake, Is.False);
+                Assert.That(system.main.maxParticles, Is.EqualTo(80));
+                Assert.That(system.main.simulationSpace, Is.EqualTo(ParticleSystemSimulationSpace.World));
+                Assert.That(system.GetComponent<ParticleSystemRenderer>().sharedMaterial.shader.name, Is.EqualTo("CubeDash/Jet Particle"));
+            }
             Assert.That(prefab.GetComponentsInChildren<Collider>(true), Is.Empty);
             foreach (MeshFilter filter in prefab.GetComponentsInChildren<MeshFilter>())
             {
@@ -39,12 +51,21 @@ namespace CubeDash.Tests
                 Assert.That(game.TruckPresentation, Is.SameAs(game.Player.GetComponent<PlayerTruck>()));
                 Assert.That(game.TruckPresentation.Truck.gameObject.activeSelf, Is.False);
                 Assert.That(game.TruckPresentation.Wheels.Length, Is.EqualTo(6));
+                Assert.That(game.TruckPresentation.Exhaust.Length, Is.EqualTo(2));
+                Assert.That(game.TruckPresentation.Truck.localScale.x, Is.EqualTo(0.48f).Within(0.001f));
+                Assert.That(game.TruckPresentation.ContactHalfSize, Is.EqualTo(new Vector2(0.74f, 1.62f)));
                 Assert.That(new SerializedObject(game).FindProperty("truckDuration").floatValue, Is.EqualTo(10));
                 Assert.That(new SerializedObject(game).FindProperty("truckShieldDuration").floatValue, Is.EqualTo(3));
                 Assert.That(game.Track.Debris.Capacity, Is.EqualTo(128));
                 Assert.That(game.Track.Debris.ActiveCount, Is.Zero);
                 foreach (TrackSegment segment in game.Track.Segments)
-                    foreach (PowerUpPickup pickup in segment.PowerUps) Assert.That(pickup.transform.Find("Truck Icon"), Is.Not.Null);
+                    foreach (PowerUpPickup pickup in segment.PowerUps)
+                    {
+                        Transform icon = pickup.transform.Find("Truck Icon");
+                        Assert.That(icon, Is.Not.Null);
+                        foreach (ParticleSystem system in icon.GetComponentsInChildren<ParticleSystem>(true))
+                            Assert.That(system.gameObject.activeSelf, Is.False, "Pickup icons never emit stack smoke.");
+                    }
             }
             finally { EditorSceneManager.ClosePreviewScene(scene); }
         }
@@ -78,11 +99,17 @@ namespace CubeDash.Tests
             game.TogglePause();
             float timer = game.TruckRemaining;
             Quaternion wheel = game.TruckPresentation.Wheels[0].localRotation;
+            float smokeTime = game.TruckPresentation.Exhaust[0].time;
+            Vector3 suspensionPosition = game.TruckPresentation.Truck.localPosition;
+            Quaternion bodyRotation = game.TruckPresentation.Truck.localRotation;
             Transform fragment = game.Track.Debris.transform.GetChild(0);
             Vector3 position = fragment.position;
             yield return null; yield return null;
             Assert.That(game.TruckRemaining, Is.EqualTo(timer));
             Assert.That(game.TruckPresentation.Wheels[0].localRotation, Is.EqualTo(wheel));
+            Assert.That(game.TruckPresentation.Exhaust[0].time, Is.EqualTo(smokeTime));
+            Assert.That(game.TruckPresentation.Truck.localPosition, Is.EqualTo(suspensionPosition));
+            Assert.That(game.TruckPresentation.Truck.localRotation, Is.EqualTo(bodyRotation));
             Assert.That(fragment.position, Is.EqualTo(position));
             game.TogglePause(); Clear(game);
             game.ChangeLane(1);
@@ -93,6 +120,49 @@ namespace CubeDash.Tests
             Assert.That(game.Trucking, Is.False);
             Assert.That(game.Track.Debris.ActiveCount, Is.Zero);
             Assert.That(game.TruckPresentation.Truck.gameObject.activeSelf, Is.False);
+            foreach (ParticleSystem system in game.TruckPresentation.Exhaust) Assert.That(system.particleCount, Is.Zero);
+        }
+
+        [UnityTest]
+        public IEnumerator SuspensionSteeringAndStackSmokeAnimateAndResetWithoutCreatingObjects()
+        {
+            yield return new EnterPlayMode();
+            yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/Level.unity", new LoadSceneParameters(LoadSceneMode.Single));
+            yield return null;
+            CubeDashGame game = Object.FindAnyObjectByType<CubeDashGame>();
+            game.StartRun(); Clear(game); game.enabled = false;
+            PlayerTruck presentation = game.TruckPresentation;
+            Transform truck = presentation.Truck;
+            Vector3 home = truck.localPosition;
+            Quaternion homeRotation = truck.localRotation;
+            int objectCount = game.Player.GetComponentsInChildren<Transform>(true).Length;
+            Apply(game, PowerUpType.Truck);
+            for (int i = 0; i < 10; i++) presentation.Tick(0.05f, 12, 8);
+            Assert.That(Vector3.Distance(truck.localPosition, home), Is.GreaterThan(0.001f));
+            Assert.That(Quaternion.Angle(truck.localRotation, homeRotation), Is.GreaterThan(1));
+            Transform front = truck.Find("Left Wheel 1"), rear = truck.Find("Left Wheel 2");
+            Assert.That(Quaternion.Angle(front.localRotation, rear.localRotation), Is.GreaterThan(10), "Front tires steer independently of rear tires.");
+            foreach (ParticleSystem system in presentation.Exhaust)
+            {
+                Assert.That(system.particleCount, Is.GreaterThan(0));
+                Assert.That(system.particleCount, Is.LessThanOrEqualTo(80));
+                Assert.That(system.isPaused, Is.True, "Smoke is advanced only by gameplay Tick.");
+            }
+            Quaternion rotation = front.localRotation;
+            float smokeTime = presentation.Exhaust[0].time;
+            Apply(game, PowerUpType.Truck);
+            Assert.That(front.localRotation, Is.EqualTo(rotation), "Refreshing Truck must not snap its wheels.");
+            Assert.That(presentation.Exhaust[0].time, Is.EqualTo(smokeTime));
+            TickTruck(game, game.TruckRemaining);
+            Assert.That(truck.localPosition, Is.EqualTo(home));
+            Assert.That(truck.localRotation, Is.EqualTo(homeRotation));
+            Assert.That(front.localRotation, Is.EqualTo(Quaternion.identity));
+            foreach (ParticleSystem system in presentation.Exhaust) Assert.That(system.particleCount, Is.Zero);
+            Apply(game, PowerUpType.Truck); presentation.Tick(0.5f, 30, 0);
+            Assert.That(presentation.Exhaust[0].particleCount, Is.GreaterThan(0));
+            game.StartRun();
+            foreach (ParticleSystem system in presentation.Exhaust) Assert.That(system.particleCount, Is.Zero);
+            Assert.That(game.Player.GetComponentsInChildren<Transform>(true).Length, Is.EqualTo(objectCount));
         }
 
         [UnityTest]

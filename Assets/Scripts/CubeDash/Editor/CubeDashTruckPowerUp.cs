@@ -34,7 +34,7 @@ namespace CubeDash.Editor
             Material red = Lit("Tail Lights", new Color(0.85f, 0.045f, 0.04f), 0, 0.25f, 0.5f);
             Material tire = Lit("Tires", new Color(0.045f, 0.048f, 0.055f), 0, 0.15f);
             GameObject prefab = BuildTruck(body, wheel, new[] { blue, navy, frame, chrome, glass, amber, white, red },
-                new[] { tire, chrome, frame });
+                new[] { tire, chrome, frame }, SmokeMaterial());
             UpdatePlayer(prefab);
             Material[] pickups = CubeDashPowerUps.MakePickupMaterials();
             CubeDashPowerUps.UpdatePowerUpPrefab(pickups);
@@ -58,7 +58,33 @@ namespace CubeDash.Editor
             Debug.Log("Truck power-up saved: blue cab-over tractor, six rotating wheels, obstacle fragments, 10-second rampage and 3-second exit shield.");
         }
 
-        private static GameObject BuildTruck(Mesh body, Mesh wheel, Material[] bodyMaterials, Material[] wheelMaterials)
+        [MenuItem("Tools/Cube Dash/Refine Truck Presentation")]
+        public static void RefinePresentationFromCommandLine()
+        {
+            GameObject truck = AssetDatabase.LoadAssetAtPath<GameObject>(Prefabs + "Truck.prefab");
+            if (truck == null) throw new InvalidOperationException("Add the Truck power-up before refining its presentation.");
+            GameObject prefab = BuildTruck(truck.GetComponent<MeshFilter>().sharedMesh,
+                truck.transform.Find("Left Wheel 1").GetComponent<MeshFilter>().sharedMesh,
+                truck.GetComponent<MeshRenderer>().sharedMaterials,
+                truck.transform.Find("Left Wheel 1").GetComponent<MeshRenderer>().sharedMaterials, SmokeMaterial());
+            UpdatePlayer(prefab);
+            // Only the driven truck emits smoke, not its miniature pickup icon.
+            string path = Prefabs + "PowerUp.prefab";
+            GameObject pickup = PrefabUtility.LoadPrefabContents(path);
+            try
+            {
+                Transform icon = pickup.transform.Find("Truck Icon");
+                if (icon != null)
+                    foreach (ParticleSystem system in icon.GetComponentsInChildren<ParticleSystem>(true))
+                        system.gameObject.SetActive(false);
+                PrefabUtility.SaveAsPrefabAsset(pickup, path);
+            }
+            finally { PrefabUtility.UnloadPrefabContents(pickup); }
+            AssetDatabase.SaveAssets();
+            Debug.Log("Truck presentation refined: smaller player model, sprung motion, front steering and twin stack smoke. Level and gameplay tuning preserved.");
+        }
+
+        private static GameObject BuildTruck(Mesh body, Mesh wheel, Material[] bodyMaterials, Material[] wheelMaterials, Material smoke)
         {
             string path = Prefabs + "Truck.prefab";
             bool exists = AssetDatabase.LoadAssetAtPath<GameObject>(path) != null;
@@ -75,6 +101,8 @@ namespace CubeDash.Editor
                         child.localPosition = new Vector3(side * 1.15f, 0.58f, axle == 0 ? 1.65f : axle == 1 ? -1.72f : -2.87f);
                         Render(child.gameObject, wheel, wheelMaterials);
                     }
+                StackSmoke(root.transform, -1, smoke);
+                StackSmoke(root.transform, 1, smoke);
                 return PrefabUtility.SaveAsPrefabAsset(root, path);
             }
             finally { if (exists) PrefabUtility.UnloadPrefabContents(root); else Object.DestroyImmediate(root); }
@@ -93,14 +121,19 @@ namespace CubeDash.Editor
                     instance.name = "Truck Visual"; visual = instance.transform; visual.SetParent(root.transform, false);
                 }
                 visual.localPosition = Vector3.down * 0.575f;
-                visual.localScale = Vector3.one * 0.55f;
+                visual.localScale = Vector3.one * 0.48f;
                 visual.gameObject.SetActive(false);
                 PlayerTruck presentation = root.GetComponent<PlayerTruck>();
                 if (presentation == null) presentation = root.AddComponent<PlayerTruck>();
                 var settings = new SerializedObject(presentation);
                 settings.FindProperty("truck").objectReferenceValue = visual;
                 var wheels = settings.FindProperty("wheels"); wheels.arraySize = 6;
-                for (int i = 0; i < 6; i++) wheels.GetArrayElementAtIndex(i).objectReferenceValue = visual.GetChild(i);
+                for (int i = 0; i < 6; i++) wheels.GetArrayElementAtIndex(i).objectReferenceValue =
+                    visual.Find((i < 3 ? "Left" : "Right") + " Wheel " + (i % 3 + 1));
+                ParticleSystem[] systems = visual.GetComponentsInChildren<ParticleSystem>(true);
+                var exhaust = settings.FindProperty("exhaust"); exhaust.arraySize = systems.Length;
+                for (int i = 0; i < systems.Length; i++) exhaust.GetArrayElementAtIndex(i).objectReferenceValue = systems[i];
+                settings.FindProperty("contactHalfSize").vector2Value = new Vector2(0.74f, 1.62f);
                 settings.ApplyModifiedPropertiesWithoutUndo();
                 PrefabUtility.SaveAsPrefabAsset(root, path);
             }
@@ -135,6 +168,59 @@ namespace CubeDash.Editor
             }
             settings.ApplyModifiedPropertiesWithoutUndo();
             return debris;
+        }
+
+        private static Material SmokeMaterial()
+        {
+            string path = Materials + "/Stack Smoke.mat";
+            Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material == null)
+            {
+                material = new Material(Shader.Find("CubeDash/Jet Particle")) { name = "Stack Smoke" };
+                AssetDatabase.CreateAsset(material, path);
+            }
+            material.SetColor("_Tint", new Color(0.36f, 0.38f, 0.42f, 0.72f));
+            material.enableInstancing = true; EditorUtility.SetDirty(material); return material;
+        }
+
+        private static void StackSmoke(Transform parent, int side, Material material)
+        {
+            string name = (side < 0 ? "Left" : "Right") + " Stack Smoke";
+            Transform child = parent.Find(name);
+            if (child == null) { child = new GameObject(name, typeof(ParticleSystem)).transform; child.SetParent(parent, false); }
+            child.localPosition = new Vector3(side * 0.96f, 4.2f, 0.14f);
+            child.localRotation = Quaternion.Euler(-90, 0, 0);
+            ParticleSystem system = child.GetComponent<ParticleSystem>();
+            system.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
+            system.useAutoRandomSeed = false; system.randomSeed = side < 0 ? 347u : 593u;
+            var main = system.main;
+            main.loop = true; main.playOnAwake = false; main.useUnscaledTime = false;
+            main.duration = 2; main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.scalingMode = ParticleSystemScalingMode.Hierarchy; main.maxParticles = 80;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.9f, 1.45f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0.8f, 1.3f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.26f, 0.38f);
+            main.startRotation = new ParticleSystem.MinMaxCurve(0, Mathf.PI * 2);
+            main.startColor = Color.white;
+            var emission = system.emission; emission.enabled = true; emission.rateOverTime = 24;
+            var shape = system.shape; shape.enabled = true; shape.shapeType = ParticleSystemShapeType.Cone;
+            shape.angle = 12; shape.radius = 0.065f;
+            var velocity = system.velocityOverLifetime; velocity.enabled = true;
+            velocity.space = ParticleSystemSimulationSpace.World; velocity.x = 0; velocity.y = 0.35f; velocity.z = -3.8f;
+            var noise = system.noise; noise.enabled = true; noise.strength = 0.18f;
+            noise.frequency = 0.7f; noise.scrollSpeed = 0.45f; noise.quality = ParticleSystemNoiseQuality.Low;
+            var size = system.sizeOverLifetime; size.enabled = true;
+            size.size = new ParticleSystem.MinMaxCurve(1, AnimationCurve.EaseInOut(0, 0.65f, 1, 3.2f));
+            var color = system.colorOverLifetime; color.enabled = true;
+            Gradient fade = new Gradient();
+            fade.SetKeys(new[] { new GradientColorKey(new Color(0.65f, 0.67f, 0.7f), 0),
+                    new GradientColorKey(Color.white, 1) },
+                new[] { new GradientAlphaKey(0, 0), new GradientAlphaKey(0.85f, 0.1f),
+                    new GradientAlphaKey(0.45f, 0.55f), new GradientAlphaKey(0, 1) });
+            color.color = fade;
+            ParticleSystemRenderer renderer = child.GetComponent<ParticleSystemRenderer>();
+            renderer.sharedMaterial = material; renderer.renderMode = ParticleSystemRenderMode.Billboard;
+            renderer.shadowCastingMode = ShadowCastingMode.Off; renderer.receiveShadows = false;
         }
 
         private static void Render(GameObject target, Mesh mesh, Material[] materials)

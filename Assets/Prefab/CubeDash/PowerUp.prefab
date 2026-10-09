@@ -320,11 +320,19 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1815504989488529415, guid: 20fce613bef7d914a86c19a6f43e47d1, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3655393857912631722, guid: 20fce613bef7d914a86c19a6f43e47d1, type: 3}
       propertyPath: m_Name
       value: Truck Icon
       objectReference: {fileID: 0}
     - target: {fileID: 3655393857912631722, guid: 20fce613bef7d914a86c19a6f43e47d1, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7273988831346193896, guid: 20fce613bef7d914a86c19a6f43e47d1, type: 3}
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}

@@ -142,6 +142,7 @@ namespace CubeDash.Editor
                         icon.SetParent(contents.transform, false);
                     }
                     icon.localScale = Vector3.one * 0.13f;
+                    foreach (ParticleSystem system in icon.GetComponentsInChildren<ParticleSystem>(true)) system.gameObject.SetActive(false);
                     icon.gameObject.SetActive(false);
                     Set(pickup, "truckVisual", icon);
                 }

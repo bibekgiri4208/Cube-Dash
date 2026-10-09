@@ -44,10 +44,13 @@ is saved separately from the old distance record.
   restart clears all flight effects, timers and restores the cube/collider/trail.
 - **Truck:** a miniature blue cab-over truck pickup transforms the cube into a six-wheel tractor
   for **10 seconds**. It keeps normal lane steering and smashes every cube it touches into colored,
-  tumbling pieces, regardless of color. Matching cubes still award points (and respect Double Points);
-  other colors are destroyed without ending the run or spending a shield charge.
+   tumbling pieces, regardless of color. Matching cubes still award points (and respect Double Points);
+   other colors are destroyed without ending the run or spending a shield charge.
+   The compact truck has soft suspension bounce, body sway and steering front wheels. Both tall chrome
+   stacks emit bounded, billowing smoke that rises and drifts behind the truck.
 - When the truck ends, the cube receives **3 seconds of continuous exit shield**, with a cyan bubble
-  and HUD countdown. Pause freezes the truck timer, wheels and debris; restart clears everything.
+   and HUD countdown. Pause freezes the truck timer, wheels and debris; restart clears everything.
+   Stack smoke also freezes on pause and clears when the truck ends or the run restarts.
    Collecting another truck refreshes its duration. Fighter Plane pickups are ignored while the truck is active
    and become collectible again after it expires.
 
@@ -60,6 +63,8 @@ shield and altitude are exposed on **Game Manager**.
 The truck model is saved in `Assets/Prefab/CubeDash/Truck.prefab`, with body/wheel meshes under
 `Assets/3D Models` and materials in `Assets/Material/Truck`. **Tools > Cube Dash > Add Truck Power-Up**
 rebakes and reconnects it. Truck duration and exit-shield duration are exposed on **Game Manager**.
+**Tools > Cube Dash > Refine Truck Presentation** updates only the truck/pickup prefabs and smoke,
+preserving the level and gameplay tuning.
 **Obstacle Fragments** is a fixed pool of 128 saved pieces: impacts create no objects,
 rigidbodies or gameplay colliders, and fragments disappear after 1.15 seconds.
 
