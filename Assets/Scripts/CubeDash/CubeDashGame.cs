@@ -9,11 +9,17 @@ namespace CubeDash
 
         [Header("Objects in the scene")]
         [SerializeField] private Transform player = null;
+        [SerializeField] private Transform playerVisual = null;
         [SerializeField] private BoxCollider playerCollider = null;
         [SerializeField] private Camera gameCamera = null;
         [SerializeField] private EndlessTrack track = null;
         [SerializeField] private RunnerHud hud = null;
         [SerializeField] private CubeWake wake = null;
+        [Header("Arcade feedback")]
+        [SerializeField] private AudioSource collectionAudio = null;
+        [SerializeField] private AudioClip collectionSound = null;
+        [SerializeField, Range(0f, 1f)] private float collectionVolume = 0.65f;
+        [SerializeField, Range(0.04f, 0.2f)] private float laneSmoothTime = 0.085f;
 
         [Header("Runner tuning")]
         [SerializeField] private CubeColor playerCubeColor = CubeColor.Red;
@@ -38,6 +44,7 @@ namespace CubeDash
         private Vector3 playerOrigin;
         private Quaternion playerRotation;
         private Vector3 cameraOrigin;
+        private Vector3 cameraFollow;
         private Quaternion cameraRotation;
         private float cameraFov;
         private int targetLane = 1;
@@ -47,6 +54,10 @@ namespace CubeDash
         private float shake;
         private Vector3 playerScale;
         private float absorptionPulse;
+        private float laneVelocity;
+        private float animationTime;
+        private float pickupAge = 1f;
+        public float CollectionPulse => absorptionPulse;
         public Transform Player => player;
         public Camera GameCamera => gameCamera;
         public EndlessTrack Track => track;
@@ -61,12 +72,14 @@ namespace CubeDash
                 return;
             }
             playerOrigin = player.position;
-            playerRotation = player.rotation;
-            playerScale = player.localScale;
+            if (playerVisual == null) playerVisual = player;
+            playerRotation = playerVisual.localRotation;
+            playerScale = playerVisual.localScale;
             cameraOrigin = gameCamera.transform.position;
+            cameraFollow = cameraOrigin;
             cameraRotation = gameCamera.transform.rotation;
             cameraFov = gameCamera.fieldOfView;
-            playerRenderer = player.GetComponent<Renderer>();
+            playerRenderer = playerVisual.GetComponent<Renderer>();
             playerAppearance = new MaterialPropertyBlock();
             playerRenderer.sharedMaterial = track.ColorMaterial(playerCubeColor);
             playerColor = playerRenderer.sharedMaterial.color;
@@ -84,10 +97,12 @@ namespace CubeDash
             if (State == RunState.Running)
             {
                 float oldX = player.position.x;
-                float x = Mathf.MoveTowards(oldX, playerOrigin.x + (targetLane - 1) * track.LaneWidth, laneChangeSpeed * dt);
+                float x = Mathf.SmoothDamp(oldX, playerOrigin.x + (targetLane - 1) * track.LaneWidth,
+                    ref laneVelocity, laneSmoothTime, laneChangeSpeed, dt);
                 player.position = new Vector3(x, playerOrigin.y, playerOrigin.z);
-                player.rotation = Quaternion.Lerp(player.rotation,
-                    playerRotation * Quaternion.Euler(0, 0, (oldX - x) / Mathf.Max(dt, 0.001f) * 0.45f), 1f - Mathf.Exp(-14f * dt));
+                playerVisual.localRotation = Quaternion.Lerp(playerVisual.localRotation,
+                    playerRotation * Quaternion.Euler(0, laneVelocity * 0.16f, Mathf.Clamp(-laneVelocity * 0.65f, -12f, 12f)),
+                    1f - Mathf.Exp(-16f * dt));
                 Speed = Mathf.Min(maximumSpeed, Speed + acceleration * dt);
                 float travel = Speed * dt;
                 Distance += travel;
@@ -95,14 +110,38 @@ namespace CubeDash
                 bool wrongColor = track.Advance(travel, oldX, x, Mathf.InverseLerp(startSpeed, maximumSpeed, Speed),
                     new Vector2(bounds.extents.x, bounds.extents.z), bounds.center.z, out int collected);
                 Score += collected;
-                if (collected > 0) absorptionPulse = 1f;
+                if (collected > 0)
+                {
+                    absorptionPulse = 1f;
+                    pickupAge = 0;
+                    hud.NotifyCollection(collected);
+                    if (collectionAudio != null && collectionSound != null)
+                    {
+                        collectionAudio.pitch = 1f + ((Score - 1) % 5) * 0.045f;
+                        collectionAudio.PlayOneShot(collectionSound, collectionVolume);
+                    }
+                }
                 if (wrongColor) Crash();
-                absorptionPulse = Mathf.MoveTowards(absorptionPulse, 0, dt * 5f);
-                player.localScale = Vector3.Scale(playerScale, new Vector3(1f + absorptionPulse * 0.12f,
-                    1f - absorptionPulse * 0.08f, 1f + absorptionPulse * 0.12f));
             }
+            if (State != RunState.Paused) UpdatePlayerAnimation(dt);
             if (State != RunState.Paused) UpdateCamera(dt);
             hud.UpdateStats();
+        }
+
+        private void UpdatePlayerAnimation(float dt)
+        {
+            animationTime += dt;
+            pickupAge += dt;
+            absorptionPulse = Mathf.MoveTowards(absorptionPulse, 0, dt * 3.8f);
+            float pop = pickupAge < 0.35f ? Mathf.Sin(pickupAge / 0.35f * Mathf.PI * 2f) * Mathf.Exp(-pickupAge * 9f) : 0;
+            float idle = State == RunState.Ready ? Mathf.Sin(animationTime * 2.6f) * 0.025f : 0;
+            playerVisual.localScale = Vector3.Scale(playerScale, new Vector3(1f - pop * 0.13f + idle,
+                1f + pop * 0.19f - idle, 1f - pop * 0.13f + idle));
+            // Keep the visual's feet on the road without changing the gameplay collider.
+            if (playerVisual != player)
+                playerVisual.localPosition = Vector3.up * ((playerVisual.localScale.y - playerScale.y) * 0.5f);
+            if (State != RunState.GameOver)
+                SetPlayerColor(playerColor, 0.55f + absorptionPulse * 2.8f);
         }
 
         private void UpdateCamera(float dt)
@@ -110,7 +149,9 @@ namespace CubeDash
             shake = Mathf.MoveTowards(shake, 0, dt * 0.8f);
             Vector3 offset = shake > 0 ? new Vector3(Mathf.Sin(Time.unscaledTime * 61),
                 Mathf.Cos(Time.unscaledTime * 47), 0) * shake : Vector3.zero;
-            gameCamera.transform.position = cameraOrigin + Vector3.right * ((player.position.x - playerOrigin.x) * 0.16f) + offset;
+            Vector3 target = cameraOrigin + Vector3.right * ((player.position.x - playerOrigin.x) * 0.16f);
+            cameraFollow = Vector3.Lerp(cameraFollow, target, 1f - Mathf.Exp(-8f * dt));
+            gameCamera.transform.position = cameraFollow + offset;
             gameCamera.transform.rotation = cameraRotation;
             gameCamera.fieldOfView = Mathf.Lerp(gameCamera.fieldOfView,
                 cameraFov + Mathf.InverseLerp(startSpeed, maximumSpeed, Speed) * 7f, 1f - Mathf.Exp(-3f * dt));
@@ -175,9 +216,17 @@ namespace CubeDash
             shake = 0;
             dragging = false;
             player.position = playerOrigin;
-            player.rotation = playerRotation;
-            player.localScale = playerScale;
+            playerVisual.localRotation = playerRotation;
+            playerVisual.localScale = playerScale;
+            if (playerVisual != player) playerVisual.localPosition = Vector3.zero;
             absorptionPulse = 0;
+            laneVelocity = 0;
+            pickupAge = 1;
+            animationTime = 0;
+            gameCamera.transform.position = cameraOrigin;
+            cameraFollow = cameraOrigin;
+            gameCamera.fieldOfView = cameraFov;
+            if (collectionAudio != null) collectionAudio.Stop();
             playerRenderer.sharedMaterial = track.ColorMaterial(playerCubeColor);
             playerColor = playerRenderer.sharedMaterial.color;
             SetPlayerColor(playerColor);
@@ -192,6 +241,11 @@ namespace CubeDash
             if (State == RunState.Running) State = RunState.Paused;
             else if (State == RunState.Paused) State = RunState.Running;
             else return;
+            if (collectionAudio != null)
+            {
+                if (State == RunState.Paused) collectionAudio.Pause();
+                else collectionAudio.UnPause();
+            }
             hud.Show(State);
         }
 
@@ -199,7 +253,7 @@ namespace CubeDash
         {
             State = RunState.GameOver;
             shake = 0.25f;
-            SetPlayerColor(playerColor * 0.7f);
+            SetPlayerColor(playerColor * 0.7f, 0.1f);
             int score = Score;
             if (score > Best)
             {
@@ -223,11 +277,11 @@ namespace CubeDash
             acceleration = Mathf.Max(0f, acceleration);
         }
 
-        private void SetPlayerColor(Color color)
+        private void SetPlayerColor(Color color, float emission = 0.55f)
         {
             playerAppearance.SetColor("_BaseColor", color);
             playerAppearance.SetColor("_Color", color);
-            playerAppearance.SetColor("_EmissionColor", Color.black);
+            playerAppearance.SetColor("_EmissionColor", color * emission);
             playerRenderer.SetPropertyBlock(playerAppearance);
         }
     }

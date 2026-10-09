@@ -12,28 +12,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0b2db86121404754db890f4c8dfe81b2, type: 3}
   m_Name: Bloom
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.Bloom
-  active: 0
+  active: 1
   skipIterations:
     m_OverrideState: 1
     m_Value: 1
   threshold:
     m_OverrideState: 1
-    m_Value: 0.95
+    m_Value: 1.05
   intensity:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 0.38
   scatter:
     m_OverrideState: 1
-    m_Value: 0.6
+    m_Value: 0.68
   clamp:
     m_OverrideState: 1
-    m_Value: 65472
+    m_Value: 12
   tint:
     m_OverrideState: 1
     m_Value: {r: 1, g: 1, b: 1, a: 1}
   highQualityFiltering:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 1
   filter:
     m_OverrideState: 1
     m_Value: 0
@@ -71,10 +71,10 @@ MonoBehaviour:
     m_Value: {x: 0.5, y: 0.5}
   intensity:
     m_OverrideState: 1
-    m_Value: 0.04
+    m_Value: 0.12
   smoothness:
     m_OverrideState: 1
-    m_Value: 0.4
+    m_Value: 0.55
   rounded:
     m_OverrideState: 1
     m_Value: 0
@@ -110,10 +110,10 @@ MonoBehaviour:
   active: 1
   postExposure:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 0.05
   contrast:
     m_OverrideState: 1
-    m_Value: 3
+    m_Value: 6
   colorFilter:
     m_OverrideState: 1
     m_Value: {r: 1, g: 1, b: 1, a: 1}
@@ -122,7 +122,7 @@ MonoBehaviour:
     m_Value: 0
   saturation:
     m_OverrideState: 1
-    m_Value: -2
+    m_Value: 5
 --- !u!114 &6966879160440212783
 MonoBehaviour:
   m_ObjectHideFlags: 3

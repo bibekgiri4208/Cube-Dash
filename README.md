@@ -22,27 +22,46 @@ is saved separately from the old distance record.
 
 ## Visual direction
 
-The scene follows the reference's simple, colorful aesthetic: a matte blue track, beveled
-solid-color cubes, neutral mint/stone city blocks, a pale gradient horizon, soft sunlight/shadows,
-and distance fog. No illuminated windows, sci-fi barricade markings, emissive edges, or bloom.
-The cube's wake remains as a subtle, non-glowing colored trail. A small squash/pop gives feedback
-when a matching cube is absorbed. The camera is closer so the player and cube colors read clearly.
+The scene keeps the colorful blue track, beveled cubes, mint/stone city, and pale horizon,
+with selective HDR bloom on the cubes and trail instead of washing out the entire city.
+Warm soft sunlight, cool shadow-free sky fill, and three-color ambient illumination improve
+shaded faces and contact lighting. This is an ambient/indirect-light approximation, not baked
+GI: the endless city moves and recycles, so world-space baked lightmaps would not stay aligned.
+The original fog and high-quality shadow presets are retained.
+
+Lane changes ease in/out with a restrained bank and yaw; the camera follows smoothly. Matching
+pickups trigger a springy squash/stretch, an emission flash, a score pop, floating **+1**, and an
+original rising arcade chime. The red player gets this sound when collecting red cubes; choosing
+blue or green gives the same feedback only for that matching color, never for a fatal contact.
+Sound is a short, locally authored PCM clip, with a five-step pitch cycle and Inspector volume.
+Pausing freezes gameplay feedback and pauses audio; restarting clears the pulse and tail history.
+
+The tail is a longer, soft-edged luminous ribbon, tapered and faded from head to tip. Its saved
+pieces sample the actual driven path by distance, connect through lane changes, and lengthen with
+speed. It uses a fixed-size history and the existing twelve meshes, with no runtime object churn.
+The HUD uses rounded navy panels, clear coral actions, responsive placement, animated menu entry,
+and hover/press feedback. The city remains visible around the menu cards.
 
 ## Edit
 
-- **Player Cube** is a `PlayerCube` prefab instance with a real mesh and BoxCollider.
+- **Player Cube** is a `PlayerCube` prefab instance with a real mesh and BoxCollider. Its saved
+  **Cube Visual** child banks and squash/stretches independently, keeping collision bounds stable.
 - **Track > Segment 00–07** are reusable `TrackSegment` prefab instances.
   Their nine row cubes use the existing **`ObstacleCube.prefab`**, now a plain color cube
   with a `RunnerCube` component rather than a barricade.
 - **City Surroundings** contains three editable `Skyscraper` prefab designs with matte architecture
   (podium bases, banded shafts, stepped crowns, roof plant, and masts). Sixteen towers are placed
   per segment across four depth rows per side, ending in a taller skyline row on the plaza slab.
-- **Player Trail** contains twelve saved ribbon meshes animated by `CubeWake`.
+- **Player Trail** contains twelve saved ribbon meshes animated by `CubeWake`; length is configurable.
 - **Canvas** contains editable UI and persistent button events. The start overlay is transparent
-  so the scene remains visible. **City Atmosphere** holds the non-neon color-grading profile.
+  so the scene remains visible. **City Atmosphere** holds the bloom/color-grading profile.
 - Palette assets: **`Assets/Material/CubeDashRed.mat`**, **`CubeDashBlue.mat`**, **`CubeDashGreen.mat`**.
 - Sky: **`Assets/Material/CubeDashHorizon.mat`**. Atmospheric profile:
-  **`Assets/Settings/CubeDashVisuals.asset`**; bloom is disabled.
+  **`Assets/Settings/CubeDashVisuals.asset`**; bloom uses a 1.05 HDR threshold and restrained intensity.
+- Audio: **`Assets/Audio/ArcadeCollect.wav`**; source, clip, volume, and lane easing are on **Game Manager**.
+- UI sprite: **`Assets/2D Images/ArcadePanel.png`**. **Sky Bounce Fill** is an editable scene light.
+- **Tools > Cube Dash > Apply Arcade Polish** reapplies this pass without rebuilding the city or rules.
+  The older **Apply Clean Color-Match Style** command intentionally restores the matte/no-bloom look.
 - Speed and acceleration are on **Game Manager**. Lane spacing and the three palette material
   references are on **Track**. Use a nonzero **Fixed Seed** for reproducible generation.
 
@@ -83,4 +102,6 @@ exactly so the fogged skyline dissolves into the sky without a seam.
 
 **Window > General > Test Runner > EditMode > CubeDash.EditorTests** checks authored scene
 references, all-color/reachable procedural rows, reproducible seeds, swept contacts, matching
-collection, wrong-color failure, scoring/restart, pause, the trail, shadow presets, and 50 km of fixed-size recycling.
+collection, wrong-color failure, scoring/restart, pause, the trail, shadow presets, and 50 km of
+fixed-size recycling. `ArcadePolishTests` additionally checks selective bloom, emissive palette,
+the non-silent/click-free pickup clip, saved audio/UI references, and pickup/pause/restart feedback.
