@@ -9,7 +9,7 @@ using Object = UnityEngine.Object;
 namespace CubeDash.Editor
 {
     /// <summary>
-    /// Authoring tool only. Adds the Shield / Double Points pickups as real prefab
+    /// Authoring tool only. Adds Shield / Double Points / Fighter / Truck pickups as real prefab
     /// and scene objects: a shared PowerUp gem prefab, three pickups inside each TrackSegment,
     /// pick-up materials on the track, and a "Power-Up Status" line in the HUD. Safe to re-run.
     /// </summary>
@@ -50,11 +50,11 @@ namespace CubeDash.Editor
                 "pick-up materials on the track, and a Power-Up Status line in the HUD.");
         }
 
-        private static Material[] MakePickupMaterials()
+        internal static Material[] MakePickupMaterials()
         {
-            Color[] colors = { Shield, Points };
-            string[] names = { "PickupShield", "PickupPoints" };
-            Material[] materials = new Material[2];
+            Color[] colors = { Shield, Points, new Color(0.65f, 0.55f, 1f), new Color(0.3f, 0.46f, 1f) };
+            string[] names = { "PickupShield", "PickupPoints", "PickupFlight", "PickupTruck" };
+            Material[] materials = new Material[4];
             for (int i = 0; i < materials.Length; i++)
             {
                 string path = Materials + "CubeDash" + names[i] + ".mat";
@@ -78,7 +78,7 @@ namespace CubeDash.Editor
             return materials;
         }
 
-        private static GameObject UpdatePowerUpPrefab(Material[] pickups)
+        internal static GameObject UpdatePowerUpPrefab(Material[] pickups)
         {
             string path = Prefabs + "PowerUp.prefab";
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
@@ -97,24 +97,54 @@ namespace CubeDash.Editor
                 box.size = new Vector3(0.72f, 0.72f, 0.72f);
                 box.center = Vector3.zero;
 
-                List<Transform> stale = new List<Transform>();
-                foreach (Transform child in contents.transform) stale.Add(child);
-                foreach (Transform child in stale) Object.DestroyImmediate(child.gameObject);
-
-                Transform gem = new GameObject("Gem").transform;
+                Transform gem = contents.transform.Find("Gem");
+                if (gem == null) gem = new GameObject("Gem").transform;
                 gem.SetParent(contents.transform, false);
                 gem.localPosition = Vector3.zero;
                 gem.localScale = Vector3.one * 0.55f;
                 gem.localRotation = Quaternion.Euler(0, 45, 45);
-                MeshFilter meshFilter = gem.gameObject.AddComponent<MeshFilter>();
-                meshFilter.sharedMesh = bevel;
-                MeshRenderer renderer = gem.gameObject.AddComponent<MeshRenderer>();
+                MeshFilter meshFilter = gem.GetComponent<MeshFilter>();
+                if (meshFilter == null) meshFilter = gem.gameObject.AddComponent<MeshFilter>();
+                meshFilter.sharedMesh = bevel != null ? bevel : AssetDatabase.LoadAssetAtPath<Mesh>("Assets/3D Models/CubeDashBeveledCube.asset");
+                MeshRenderer renderer = gem.GetComponent<MeshRenderer>();
+                if (renderer == null) renderer = gem.gameObject.AddComponent<MeshRenderer>();
                 renderer.sharedMaterial = pickups[0];
 
                 PowerUpPickup pickup = contents.GetComponent<PowerUpPickup>();
                 if (pickup == null) pickup = contents.AddComponent<PowerUpPickup>();
                 Set(pickup, "visual", gem);
                 Set(pickup, "visualRenderer", renderer);
+                GameObject fighterPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(Prefabs + "FighterPlane.prefab");
+                if (fighterPrefab != null)
+                {
+                    Transform icon = contents.transform.Find("Fighter Icon");
+                    if (icon == null)
+                    {
+                        GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(fighterPrefab, contents.scene);
+                        instance.name = "Fighter Icon";
+                        icon = instance.transform;
+                        icon.SetParent(contents.transform, false);
+                    }
+                    icon.localScale = Vector3.one * 0.14f;
+                    foreach (ParticleSystem system in icon.GetComponentsInChildren<ParticleSystem>(true)) system.gameObject.SetActive(false);
+                    icon.gameObject.SetActive(false);
+                    Set(pickup, "fighterVisual", icon);
+                }
+                GameObject truckPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(Prefabs + "Truck.prefab");
+                if (truckPrefab != null)
+                {
+                    Transform icon = contents.transform.Find("Truck Icon");
+                    if (icon == null)
+                    {
+                        GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(truckPrefab, contents.scene);
+                        instance.name = "Truck Icon";
+                        icon = instance.transform;
+                        icon.SetParent(contents.transform, false);
+                    }
+                    icon.localScale = Vector3.one * 0.13f;
+                    icon.gameObject.SetActive(false);
+                    Set(pickup, "truckVisual", icon);
+                }
 
                 PrefabUtility.SaveAsPrefabAsset(contents, path);
             }

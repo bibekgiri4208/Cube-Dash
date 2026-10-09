@@ -22,8 +22,9 @@ namespace CubeDash
         [SerializeField] private TrackSegment[] segments = new TrackSegment[0];
         [Tooltip("Red, Blue, Green, in that order. Also used by the player.")]
         [SerializeField] private Material[] colorMaterials = new Material[3];
-        [Tooltip("Shield, Double Points, in that order.")]
-        [SerializeField] private Material[] powerUpMaterials = new Material[2];
+        [Tooltip("Shield, Double Points, Fighter Plane, Truck, in that order.")]
+        [SerializeField] private Material[] powerUpMaterials = new Material[4];
+        [SerializeField] private ObstacleDebris debris = null;
         [Tooltip("Chance that a visible row carries a bonus in its safe lane.")]
         [SerializeField, Range(0f, 0.5f)] private float powerUpChance = 0.16f;
         [SerializeField] private EnvironmentDirector environment = null;
@@ -44,6 +45,7 @@ namespace CubeDash
         public float PowerUpChance => powerUpChance;
         public EnvironmentDirector Environment => environment;
         public float Travelled => travelled;
+        public ObstacleDebris Debris => debris;
         /// <summary>Bonuses collected by the most recent Advance call.</summary>
         public IReadOnlyList<PowerUpType> LastPowerUps => collectedPowerUps;
 
@@ -55,6 +57,7 @@ namespace CubeDash
             firstVisibleRow = true;
             travelled = 0;
             nextSectionIndex = segments.Length - 1;
+            if (debris != null) debris.ResetDebris();
             if (environment != null) environment.ResetRun();
             for (int i = 0; i < segments.Length; i++)
             {
@@ -83,6 +86,20 @@ namespace CubeDash
         public bool Advance(float travel, float previousPlayerX, float playerX, float difficulty,
             Vector2 playerHalfSize, float playerZ, bool shield,
             out int collected, out bool shieldUsed)
+            => Advance(travel, previousPlayerX, playerX, difficulty, playerHalfSize, playerZ, shield, false, false,
+                out collected, out shieldUsed);
+
+        /// <param name="airborne">Flight advances the world without contacting ground cubes or bonuses.</param>
+        /// <param name="landingShield">Continuous protection: absorbs every wrong-color hit without spending a shield charge.</param>
+        public bool Advance(float travel, float previousPlayerX, float playerX, float difficulty,
+            Vector2 playerHalfSize, float playerZ, bool shield, bool airborne, bool landingShield,
+            out int collected, out bool shieldUsed)
+            => Advance(travel, previousPlayerX, playerX, difficulty, playerHalfSize, playerZ, shield,
+                airborne, landingShield, false, out collected, out shieldUsed);
+
+        public bool Advance(float travel, float previousPlayerX, float playerX, float difficulty,
+            Vector2 playerHalfSize, float playerZ, bool shield, bool airborne, bool landingShield, bool trucking,
+            out int collected, out bool shieldUsed)
         {
             Physics.SyncTransforms();
             contacts.Clear();
@@ -91,13 +108,14 @@ namespace CubeDash
             collected = 0;
             shieldUsed = false;
             travelled += travel;
+            if (debris != null) debris.Tick(Time.deltaTime, travel);
             if (environment != null) environment.ApplyDistance(travelled, Time.deltaTime);
             float furthest = float.MinValue;
             foreach (TrackSegment segment in segments)
             {
                 foreach (RunnerCube cube in segment.Cubes)
                 {
-                    if (!cube.gameObject.activeInHierarchy || !cube.Collider.enabled) continue;
+                    if (airborne || !cube.gameObject.activeInHierarchy || !cube.Collider.enabled) continue;
                     Bounds bounds = cube.Collider.bounds;
                     Vector2 size = playerHalfSize + new Vector2(bounds.extents.x, bounds.extents.z);
                     if (RunnerRules.SweptHit(new Vector2(previousPlayerX, playerZ), new Vector2(playerX, playerZ),
@@ -109,7 +127,7 @@ namespace CubeDash
                 for (int i = 0; i < pickups.Length; i++)
                 {
                     PowerUpPickup pickup = pickups[i];
-                    if (pickup == null || !pickup.gameObject.activeInHierarchy || !pickup.Collider.enabled) continue;
+                    if (airborne || pickup == null || !pickup.gameObject.activeInHierarchy || !pickup.Collider.enabled) continue;
                     Bounds bounds = pickup.Collider.bounds;
                     Vector2 size = playerHalfSize + new Vector2(bounds.extents.x, bounds.extents.z);
                     if (RunnerRules.SweptHit(new Vector2(previousPlayerX, playerZ), new Vector2(playerX, playerZ),
@@ -129,11 +147,34 @@ namespace CubeDash
                 return order;
             });
             float fatalTime = float.MaxValue;
+            float takeoffTime = float.MaxValue;
+            float truckTime = trucking ? 0 : float.MaxValue;
+            foreach (PowerUpContact contact in powerUpContacts)
+            {
+                if (contact.Pickup.Type == PowerUpType.Truck) truckTime = Mathf.Min(truckTime, contact.Time);
+            }
+            foreach (PowerUpContact contact in powerUpContacts)
+            {
+                // Truck blocks flight from its swept pickup time, including simultaneous pickups.
+                if (contact.Pickup.Type == PowerUpType.FighterPlane && contact.Time < truckTime)
+                    takeoffTime = Mathf.Min(takeoffTime, contact.Time);
+            }
             bool hitWrongColor = false;
             foreach (Contact contact in contacts)
             {
+                // Takeoff applies at its swept pickup time, even on a long/low-FPS frame.
+                if (contact.Time >= takeoffTime) continue;
+                if (contact.Time >= truckTime)
+                {
+                    if (debris != null)
+                        debris.Shatter(contact.Cube, travel * (1 - contact.Time));
+                    contact.Cube.gameObject.SetActive(false);
+                    if (contact.Cube.Color == playerColor) collected++;
+                    continue;
+                }
                 if (contact.Cube.Color != playerColor)
                 {
+                    if (landingShield) { contact.Cube.gameObject.SetActive(false); continue; }
                     if (shield) { shield = false; shieldUsed = true; contact.Cube.gameObject.SetActive(false); continue; }
                     hitWrongColor = true;
                     fatalTime = contact.Time;
@@ -146,7 +187,8 @@ namespace CubeDash
             powerUpContacts.Sort((first, second) => first.Time.CompareTo(second.Time));
             foreach (PowerUpContact contact in powerUpContacts)
             {
-                if (contact.Time > fatalTime) break;
+                if (contact.Time > fatalTime || contact.Time > takeoffTime) break;
+                if (contact.Pickup.Type == PowerUpType.FighterPlane && contact.Time >= truckTime) continue;
                 contact.Pickup.gameObject.SetActive(false);
                 collectedPowerUps.Add(contact.Pickup.Type);
             }
@@ -227,7 +269,7 @@ namespace CubeDash
                 return;
             }
             // Always in the safe lane so a bonus never forces a collision.
-            PowerUpType type = (PowerUpType)random.Next(2);
+            PowerUpType type = (PowerUpType)random.Next(Mathf.Min(4, powerUpMaterials.Length));
             pickup.Configure(type, PowerUpMaterial(type));
             Vector3 position = pickup.transform.localPosition;
             position.x = (matchingLane - 1) * laneWidth;

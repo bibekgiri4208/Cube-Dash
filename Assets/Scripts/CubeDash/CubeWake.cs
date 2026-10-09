@@ -23,6 +23,13 @@ namespace CubeDash
         private float previousX;
         public Transform[] Pieces => pieces;
 
+        public void SetVisible(bool visible)
+        {
+            EnsureInitialized();
+            foreach (Renderer piece in renderers) piece.enabled = visible;
+            if (visible) ResetWake();
+        }
+
         private void EnsureInitialized()
         {
             if (renderers != null) return;

@@ -30,6 +30,39 @@ The default player is **red**. Choose Red, Blue, or Green using **Player Cube Co
 The player and target cubes share the same saved palette materials. The best collection score
 is saved separately from the old distance record.
 
+## Power-ups
+
+- **Shield:** absorbs one wrong-color cube contact.
+- **Double Points:** doubles matching-cube scoring for seven seconds.
+- **Fighter Plane:** a miniature fighter pickup transforms the player into a faceted, twin-engine
+  jet for **10 seconds**. It climbs above the rows, banks while steering, and emits two bounded
+  smoke/afterburner trails. Ground cubes and pickups cannot be hit or collected while airborne;
+  distance and scenery continue advancing at the normal speed.
+- At the end of flight, the cube returns and descends with **3 seconds of continuous landing
+  shield**, displayed as a cyan bubble and HUD countdown. It protects against multiple wrong-color
+  contacts, without spending an existing one-hit shield. Pause freezes flight, shielding and exhaust;
+  restart clears all flight effects, timers and restores the cube/collider/trail.
+- **Truck:** a miniature blue cab-over truck pickup transforms the cube into a six-wheel tractor
+  for **10 seconds**. It keeps normal lane steering and smashes every cube it touches into colored,
+  tumbling pieces, regardless of color. Matching cubes still award points (and respect Double Points);
+  other colors are destroyed without ending the run or spending a shield charge.
+- When the truck ends, the cube receives **3 seconds of continuous exit shield**, with a cyan bubble
+  and HUD countdown. Pause freezes the truck timer, wheels and debris; restart clears everything.
+   Collecting another truck refreshes its duration. Fighter Plane pickups are ignored while the truck is active
+   and become collectible again after it expires.
+
+The four bonus types share the existing pickup slots and unchanged spawn frequency. Fighter
+geometry, particles and shield are saved assets, not generated during Play. The editable model is
+`Assets/Prefab/CubeDash/FighterPlane.prefab`, with mesh `Assets/3D Models/CubeDashFighter.asset`
+and materials in `Assets/Material/FighterPlane`. **Tools > Cube Dash > Add Fighter Plane Power-Up**
+rebakes and reconnects the feature without changing difficulty or environments. Duration, landing
+shield and altitude are exposed on **Game Manager**.
+The truck model is saved in `Assets/Prefab/CubeDash/Truck.prefab`, with body/wheel meshes under
+`Assets/3D Models` and materials in `Assets/Material/Truck`. **Tools > Cube Dash > Add Truck Power-Up**
+rebakes and reconnects it. Truck duration and exit-shield duration are exposed on **Game Manager**.
+**Obstacle Fragments** is a fixed pool of 128 saved pieces: impacts create no objects,
+rigidbodies or gameplay colliders, and fragments disappear after 1.15 seconds.
+
 ## Visual direction
 
 ### Changing environments
@@ -186,3 +219,9 @@ menu navigation, single-confirm resume/retry, controller disconnect/reconnect, a
 mesh budgets, road clearance, wide coastal coverage, matching wave-surface seams, saved facade
 detail, shader depth/shadow passes, horizon-apron ownership during recycling, fixed-size pools,
 complete city windows between floor bands, isolated coastal blends, smooth transitions, pause and restart.
+`FighterPowerUpTests` additionally checks saved fighter geometry and bounded particles, pickup
+transformation, flight/pause/restart, timed landing protection, airborne contact suppression and
+chronological takeoff during long frames.
+`TruckPowerUpTests` checks the authored truck and debris pool, transformation, all-color smashing,
+steering, pause/restart, three-second multi-hit exit shielding, bounded fragments, pickup refresh,
+fighter/truck switching and chronological activation on long frames.

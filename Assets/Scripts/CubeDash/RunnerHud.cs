@@ -116,8 +116,22 @@ namespace CubeDash
             {
                 case PowerUpType.Shield: powerUpMessage = "SHIELD UP"; break;
                 case PowerUpType.DoublePoints: powerUpMessage = "DOUBLE POINTS"; break;
+                case PowerUpType.FighterPlane: powerUpMessage = "FIGHTER FLIGHT"; break;
+                case PowerUpType.Truck: powerUpMessage = "TRUCK RAMPAGE"; break;
             }
             powerUpMessageTimer = 1.5f;
+        }
+
+        public void NotifyLandingShield()
+        {
+            powerUpMessage = "SAFE LANDING";
+            powerUpMessageTimer = 1f;
+        }
+
+        public void NotifyTruckShield()
+        {
+            powerUpMessage = "EXIT SHIELD";
+            powerUpMessageTimer = 1f;
         }
 
         public void PrimaryAction()
@@ -299,7 +313,11 @@ namespace CubeDash
             else
             {
                 status = "";
-                if (game.Shields > 0) status = "SHIELD";
+                if (game.Flying) status = "FLIGHT " + Mathf.CeilToInt(game.FlightRemaining) + "s";
+                if (game.Trucking) status = "TRUCK " + Mathf.CeilToInt(game.TruckRemaining) + "s";
+                if (game.LandingShieldRemaining > 0)
+                    status = AppendStatus(status, "TIMED SHIELD " + Mathf.CeilToInt(game.LandingShieldRemaining) + "s");
+                if (game.Shields > 0) status = AppendStatus(status, "SHIELD");
                 if (game.DoublePointsActive) status = AppendStatus(status, "DOUBLE POINTS " + Mathf.CeilToInt(game.DoublePointsRemaining) + "s");
             }
             powerUpStatus.text = status;

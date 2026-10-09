@@ -36,9 +36,11 @@ namespace CubeDash.Tests
                 Assert.That(game.Track.PowerUpMaterial(PowerUpType.Shield), Is.Not.Null);
                 Assert.That(game.Track.PowerUpMaterial(PowerUpType.DoublePoints), Is.Not.Null);
                 Assert.That(System.Enum.GetValues(typeof(PowerUpType)),
-                    Is.EquivalentTo(new[] { PowerUpType.Shield, PowerUpType.DoublePoints }));
+                    Is.EquivalentTo(new[] { PowerUpType.Shield, PowerUpType.DoublePoints, PowerUpType.FighterPlane, PowerUpType.Truck }));
                 var trackSettings = new UnityEditor.SerializedObject(game.Track);
-                Assert.That(trackSettings.FindProperty("powerUpMaterials").arraySize, Is.EqualTo(2));
+                Assert.That(trackSettings.FindProperty("powerUpMaterials").arraySize, Is.EqualTo(4));
+                Assert.That(game.Track.PowerUpMaterial(PowerUpType.FighterPlane), Is.Not.Null);
+                Assert.That(game.Track.PowerUpMaterial(PowerUpType.Truck), Is.Not.Null);
 
                 RunnerHud hud = null;
                 foreach (GameObject root in scene.GetRootGameObjects())

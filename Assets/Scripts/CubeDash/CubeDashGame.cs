@@ -39,6 +39,13 @@ namespace CubeDash
 
         [Header("Power-ups")]
         [SerializeField, Min(0f)] private float doublePointsDuration = 7f;
+        [SerializeField] private PlayerFlight flightPresentation = null;
+        [SerializeField, Min(0.1f)] private float flightDuration = 10f;
+        [SerializeField, Min(0f)] private float landingShieldDuration = 3f;
+        [SerializeField, Min(2.5f)] private float flightAltitude = 3.2f;
+        [SerializeField] private PlayerTruck truckPresentation = null;
+        [SerializeField, Min(0.1f)] private float truckDuration = 10f;
+        [SerializeField, Min(0f)] private float truckShieldDuration = 3f;
 
         public RunState State { get; private set; }
         public float Distance { get; private set; }
@@ -71,11 +78,21 @@ namespace CubeDash
         private float pickupAge = 1f;
         private int shields;
         private float doublePointsTimer;
+        private float flightTimer;
+        private float landingShieldTimer;
+        private float truckTimer;
         public float CollectionPulse => absorptionPulse;
         public float CollectionAge => pickupAge;
         public int Shields => shields;
         public bool DoublePointsActive => doublePointsTimer > 0;
         public float DoublePointsRemaining => doublePointsTimer;
+        public bool Flying => flightTimer > 0;
+        public float FlightRemaining => flightTimer;
+        public float LandingShieldRemaining => landingShieldTimer;
+        public PlayerFlight FlightPresentation => flightPresentation;
+        public bool Trucking => truckTimer > 0;
+        public float TruckRemaining => truckTimer;
+        public PlayerTruck TruckPresentation => truckPresentation;
         public Transform Player => player;
         public Camera GameCamera => gameCamera;
         public EndlessTrack Track => track;
@@ -90,6 +107,8 @@ namespace CubeDash
                 return;
             }
             playerOrigin = player.position;
+            if (flightPresentation == null) flightPresentation = player.GetComponent<PlayerFlight>();
+            if (truckPresentation == null) truckPresentation = player.GetComponent<PlayerTruck>();
             if (playerVisual == null) playerVisual = player;
             playerRotation = playerVisual.localRotation;
             playerScale = playerVisual.localScale;
@@ -115,10 +134,15 @@ namespace CubeDash
             float dt = Time.deltaTime;
             if (State == RunState.Running)
             {
+                bool landingProtection = landingShieldTimer > 0;
+                UpdateFlightTimers(dt);
+                UpdateTruckTimers(dt);
+                landingProtection |= landingShieldTimer > 0;
                 float oldX = player.position.x;
                 float x = Mathf.SmoothDamp(oldX, playerOrigin.x + (targetLane - 1) * track.LaneWidth,
                     ref laneVelocity, laneSmoothTime, laneChangeSpeed, dt);
-                player.position = new Vector3(x, playerOrigin.y, playerOrigin.z);
+                float altitude = Mathf.MoveTowards(player.position.y, playerOrigin.y + (Flying ? flightAltitude : 0), dt * 9f);
+                player.position = new Vector3(x, altitude, playerOrigin.z);
                 playerVisual.localRotation = Quaternion.Lerp(playerVisual.localRotation,
                     playerRotation * Quaternion.Euler(0, laneVelocity * 0.16f, Mathf.Clamp(-laneVelocity * 0.65f, -12f, 12f)),
                     1f - Mathf.Exp(-16f * dt));
@@ -127,9 +151,12 @@ namespace CubeDash
                 float travel = Speed * dt;
                 Distance += travel;
                 Bounds bounds = playerCollider.bounds;
+                Vector2 halfSize = Trucking && truckPresentation != null ? truckPresentation.ContactHalfSize
+                    : new Vector2(bounds.extents.x, bounds.extents.z);
                 bool wrongColor = track.Advance(travel, oldX, x, Difficulty,
-                    new Vector2(bounds.extents.x, bounds.extents.z), bounds.center.z,
-                    shields > 0, out int collected, out bool shieldUsed);
+                    halfSize, playerCollider.enabled ? bounds.center.z : player.position.z,
+                    shields > 0, Flying || altitude > playerOrigin.y + 0.2f, landingProtection, Trucking,
+                    out int collected, out bool shieldUsed);
                 if (shieldUsed) shields--;
                 Score += collected * (doublePointsTimer > 0 ? 2 : 1);
                 if (collected > 0)
@@ -149,6 +176,10 @@ namespace CubeDash
             }
             if (State != RunState.Paused) UpdatePlayerAnimation(dt);
             if (State != RunState.Paused) UpdateCamera(dt);
+            if (State == RunState.Running && flightPresentation != null)
+                flightPresentation.Tick(dt, laneVelocity, !Trucking && (landingShieldTimer > 0 || shields > 0));
+            if (State == RunState.Running && truckPresentation != null)
+                truckPresentation.Tick(dt, Speed, laneVelocity);
             hud.UpdateStats();
         }
 
@@ -178,7 +209,8 @@ namespace CubeDash
             shake = Mathf.MoveTowards(shake, 0, dt * 0.8f);
             Vector3 offset = shake > 0 ? new Vector3(Mathf.Sin(Time.unscaledTime * 61),
                 Mathf.Cos(Time.unscaledTime * 47), 0) * shake : Vector3.zero;
-            Vector3 target = cameraOrigin + Vector3.right * ((player.position.x - playerOrigin.x) * 0.16f);
+            Vector3 target = cameraOrigin + Vector3.right * ((player.position.x - playerOrigin.x) * 0.16f)
+                + Vector3.up * ((player.position.y - playerOrigin.y) * 0.7f);
             cameraFollow = Vector3.Lerp(cameraFollow, target, 1f - Mathf.Exp(-8f * dt));
             gameCamera.transform.position = cameraFollow + offset;
             gameCamera.transform.rotation = cameraRotation;
@@ -277,6 +309,13 @@ namespace CubeDash
             animationTime = 0;
             shields = 0;
             doublePointsTimer = 0;
+            flightTimer = landingShieldTimer = 0;
+            truckTimer = 0;
+            playerRenderer.enabled = true;
+            playerCollider.enabled = true;
+            if (flightPresentation != null) flightPresentation.ResetPresentation();
+            if (truckPresentation != null) truckPresentation.ResetPresentation();
+            if (wake != null) wake.SetVisible(true);
             gameCamera.transform.position = cameraOrigin;
             cameraFollow = cameraOrigin;
             gameCamera.fieldOfView = cameraFov;
@@ -306,6 +345,12 @@ namespace CubeDash
 
         private void Crash()
         {
+            bool wasFlying = Flying;
+            flightTimer = landingShieldTimer = 0;
+            truckTimer = 0;
+            if (wasFlying) SetFlightPresentation(false);
+            SetTruckPresentation(false);
+            if (flightPresentation != null) flightPresentation.ResetPresentation();
             State = RunState.GameOver;
             shake = 0.25f;
             SetPlayerColor(playerColor * 0.7f, 0.1f);
@@ -325,6 +370,20 @@ namespace CubeDash
             {
                 case PowerUpType.Shield: shields = 1; break;
                 case PowerUpType.DoublePoints: doublePointsTimer = doublePointsDuration; break;
+                case PowerUpType.FighterPlane:
+                    if (Trucking) return;
+                    flightTimer = Mathf.Max(0.1f, flightDuration);
+                    landingShieldTimer = 0;
+                    SetFlightPresentation(true);
+                    break;
+                case PowerUpType.Truck:
+                    flightTimer = 0;
+                    SetFlightPresentation(false);
+                    player.position = new Vector3(player.position.x, playerOrigin.y, playerOrigin.z);
+                    truckTimer = Mathf.Max(0.1f, truckDuration);
+                    landingShieldTimer = 0;
+                    SetTruckPresentation(true);
+                    break;
             }
             hud.NotifyPowerUp(type);
             if (collectionAudio != null && collectionSound != null)
@@ -332,6 +391,44 @@ namespace CubeDash
                 collectionAudio.pitch = type == PowerUpType.DoublePoints ? 1.5f : 1.9f;
                 collectionAudio.PlayOneShot(collectionSound, collectionVolume);
             }
+        }
+
+        private void UpdateFlightTimers(float dt)
+        {
+            if (State != RunState.Running) return;
+            landingShieldTimer = Mathf.Max(0, landingShieldTimer - dt);
+            if (!Flying) return;
+            flightTimer = Mathf.Max(0, flightTimer - dt);
+            if (Flying) return;
+            landingShieldTimer = landingShieldDuration;
+            SetFlightPresentation(false);
+            hud.NotifyLandingShield();
+        }
+
+        private void SetFlightPresentation(bool flying)
+        {
+            playerRenderer.enabled = !flying && !Trucking;
+            playerCollider.enabled = !flying;
+            if (flightPresentation != null) flightPresentation.SetFlying(flying);
+            if (wake != null) wake.SetVisible(!flying && !Trucking);
+        }
+
+        private void UpdateTruckTimers(float dt)
+        {
+            if (State != RunState.Running || !Trucking) return;
+            truckTimer = Mathf.Max(0, truckTimer - dt);
+            if (Trucking) return;
+            landingShieldTimer = truckShieldDuration;
+            SetTruckPresentation(false);
+            hud.NotifyTruckShield();
+        }
+
+        private void SetTruckPresentation(bool driving)
+        {
+            playerRenderer.enabled = !driving && !Flying;
+            playerCollider.enabled = !Flying;
+            if (truckPresentation != null) truckPresentation.SetDriving(driving);
+            if (wake != null) wake.SetVisible(!driving && !Flying);
         }
 
         private void OnApplicationFocus(bool focused)
@@ -346,6 +443,11 @@ namespace CubeDash
             laneChangeSpeed = Mathf.Max(12f, laneChangeSpeed);
             acceleration = Mathf.Max(0f, acceleration);
             scoreForMaximumDifficulty = Mathf.Max(30, scoreForMaximumDifficulty);
+            flightDuration = Mathf.Max(0.1f, flightDuration);
+            landingShieldDuration = Mathf.Max(0, landingShieldDuration);
+            flightAltitude = Mathf.Max(2.5f, flightAltitude);
+            truckDuration = Mathf.Max(0.1f, truckDuration);
+            truckShieldDuration = Mathf.Max(0, truckShieldDuration);
         }
 
         private void SetPlayerColor(Color color, float emission)
