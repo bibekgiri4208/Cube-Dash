@@ -21,20 +21,7 @@ namespace CubeDash.Editor
 
         public static void ApplyFromCommandLine()
         {
-            if (!AssetDatabase.IsValidFolder(Materials)) AssetDatabase.CreateFolder("Assets/Material", "Truck");
-            Mesh body = SaveMesh(TruckMesh.BuildBody(), "Assets/3D Models/CubeDashTruck.asset");
-            Mesh wheel = SaveMesh(TruckMesh.BuildWheel(), "Assets/3D Models/CubeDashTruckWheel.asset");
-            Material blue = Lit("Blue Cab", new Color(0.16f, 0.22f, 0.68f), 0.15f, 0.35f);
-            Material navy = Lit("Navy Band", new Color(0.075f, 0.1f, 0.32f), 0.1f, 0.3f);
-            Material frame = Lit("Chassis", new Color(0.07f, 0.085f, 0.095f), 0.15f, 0.25f);
-            Material chrome = Lit("Chrome", new Color(0.57f, 0.66f, 0.72f), 0.55f, 0.5f);
-            Material glass = Lit("Windows", new Color(0.07f, 0.14f, 0.18f), 0.4f, 0.85f);
-            Material amber = Lit("Amber Lights", new Color(1, 0.49f, 0.035f), 0, 0.25f, 0.7f);
-            Material white = Lit("Headlights", new Color(0.85f, 0.96f, 1), 0, 0.35f, 0.65f);
-            Material red = Lit("Tail Lights", new Color(0.85f, 0.045f, 0.04f), 0, 0.25f, 0.5f);
-            Material tire = Lit("Tires", new Color(0.045f, 0.048f, 0.055f), 0, 0.15f);
-            GameObject prefab = BuildTruck(body, wheel, new[] { blue, navy, frame, chrome, glass, amber, white, red },
-                new[] { tire, chrome, frame }, SmokeMaterial());
+            GameObject prefab = BuildReferenceTruck();
             UpdatePlayer(prefab);
             Material[] pickups = CubeDashPowerUps.MakePickupMaterials();
             CubeDashPowerUps.UpdatePowerUpPrefab(pickups);
@@ -55,7 +42,7 @@ namespace CubeDash.Editor
             track.ApplyModifiedPropertiesWithoutUndo();
             EditorSceneManager.MarkSceneDirty(scene);
             AssetDatabase.SaveAssets(); EditorSceneManager.SaveScene(scene);
-            Debug.Log("Truck power-up saved: blue cab-over tractor, six rotating wheels, obstacle fragments, 10-second rampage and 3-second exit shield.");
+            Debug.Log("Truck power-up saved: blue cab-over tractor, six rotating wheel assemblies, obstacle fragments, 10-second rampage and 3-second exit shield.");
         }
 
         [MenuItem("Tools/Cube Dash/Refine Truck Presentation")]
@@ -65,9 +52,47 @@ namespace CubeDash.Editor
             if (truck == null) throw new InvalidOperationException("Add the Truck power-up before refining its presentation.");
             GameObject prefab = BuildTruck(truck.GetComponent<MeshFilter>().sharedMesh,
                 truck.transform.Find("Left Wheel 1").GetComponent<MeshFilter>().sharedMesh,
+                truck.transform.Find("Left Wheel 2").GetComponent<MeshFilter>().sharedMesh,
                 truck.GetComponent<MeshRenderer>().sharedMaterials,
                 truck.transform.Find("Left Wheel 1").GetComponent<MeshRenderer>().sharedMaterials, SmokeMaterial());
             UpdatePlayer(prefab);
+            DisablePickupSmoke();
+            AssetDatabase.SaveAssets();
+            Debug.Log("Truck presentation refined: smaller player model, sprung motion, front steering and twin stack smoke. Level and gameplay tuning preserved.");
+        }
+
+        [MenuItem("Tools/Cube Dash/Rebuild Reference Truck Model")]
+        public static void RebuildReferenceModelFromCommandLine()
+        {
+            UpdatePlayer(BuildReferenceTruck());
+            DisablePickupSmoke();
+            AssetDatabase.SaveAssets();
+            Debug.Log("Reference truck saved: boxy blue sleeper, navy band, squared hollow stacks, ladder frame, faceted tanks, fifth wheel, ten tires and curved rear mudguards. Existing gameplay and level preserved.");
+        }
+
+        private static GameObject BuildReferenceTruck()
+        {
+            if (!AssetDatabase.IsValidFolder(Materials)) AssetDatabase.CreateFolder("Assets/Material", "Truck");
+            Mesh body = SaveMesh(TruckMesh.BuildBody(), "Assets/3D Models/CubeDashTruck.asset");
+            Mesh wheel = SaveMesh(TruckMesh.BuildWheel(), "Assets/3D Models/CubeDashTruckWheel.asset");
+            Mesh rearWheel = SaveMesh(TruckMesh.BuildWheel(true), "Assets/3D Models/CubeDashTruckRearWheel.asset");
+            Material blue = Lit("Blue Cab", new Color(0.24f, 0.31f, 0.77f), 0.05f, 0.23f);
+            Material navy = Lit("Navy Band", new Color(0.12f, 0.16f, 0.39f), 0.03f, 0.2f);
+            Material frame = Lit("Chassis", new Color(0.065f, 0.078f, 0.088f), 0.12f, 0.22f);
+            Material chrome = Lit("Chrome", new Color(0.59f, 0.66f, 0.69f), 0.3f, 0.32f);
+            Material glass = Lit("Windows", new Color(0.17f, 0.22f, 0.23f), 0.25f, 0.65f);
+            Material amber = Lit("Amber Lights", new Color(1, 0.55f, 0.06f), 0, 0.2f, 0.3f);
+            Material white = Lit("Headlights", new Color(0.9f, 0.96f, 1), 0, 0.25f, 0.3f);
+            Material red = Lit("Tail Lights", new Color(0.88f, 0.045f, 0.04f), 0, 0.2f, 0.3f);
+            Material tire = Lit("Tires", new Color(0.055f, 0.058f, 0.063f), 0, 0.16f);
+            Material tank = Lit("Tanks and Mudguards", new Color(0.29f, 0.32f, 0.35f), 0.15f, 0.26f);
+            Material roof = Lit("Cab Roof", new Color(0.4f, 0.51f, 0.88f), 0.04f, 0.22f);
+            return BuildTruck(body, wheel, rearWheel,
+                new[] { blue, navy, frame, chrome, glass, amber, white, red, tank, roof }, new[] { tire, chrome, frame }, SmokeMaterial());
+        }
+
+        private static void DisablePickupSmoke()
+        {
             // Only the driven truck emits smoke, not its miniature pickup icon.
             string path = Prefabs + "PowerUp.prefab";
             GameObject pickup = PrefabUtility.LoadPrefabContents(path);
@@ -80,11 +105,9 @@ namespace CubeDash.Editor
                 PrefabUtility.SaveAsPrefabAsset(pickup, path);
             }
             finally { PrefabUtility.UnloadPrefabContents(pickup); }
-            AssetDatabase.SaveAssets();
-            Debug.Log("Truck presentation refined: smaller player model, sprung motion, front steering and twin stack smoke. Level and gameplay tuning preserved.");
         }
 
-        private static GameObject BuildTruck(Mesh body, Mesh wheel, Material[] bodyMaterials, Material[] wheelMaterials, Material smoke)
+        private static GameObject BuildTruck(Mesh body, Mesh wheel, Mesh rearWheel, Material[] bodyMaterials, Material[] wheelMaterials, Material smoke)
         {
             string path = Prefabs + "Truck.prefab";
             bool exists = AssetDatabase.LoadAssetAtPath<GameObject>(path) != null;
@@ -98,8 +121,8 @@ namespace CubeDash.Editor
                         string name = (side < 0 ? "Left" : "Right") + " Wheel " + (axle + 1);
                         Transform child = root.transform.Find(name);
                         if (child == null) { child = new GameObject(name).transform; child.SetParent(root.transform, false); }
-                        child.localPosition = new Vector3(side * 1.15f, 0.58f, axle == 0 ? 1.65f : axle == 1 ? -1.72f : -2.87f);
-                        Render(child.gameObject, wheel, wheelMaterials);
+                        child.localPosition = new Vector3(side * (axle == 0 ? 1.15f : 1.0f), 0.58f, axle == 0 ? 1.65f : axle == 1 ? -1.72f : -2.87f);
+                        Render(child.gameObject, axle == 0 ? wheel : rearWheel, wheelMaterials);
                     }
                 StackSmoke(root.transform, -1, smoke);
                 StackSmoke(root.transform, 1, smoke);
@@ -188,7 +211,7 @@ namespace CubeDash.Editor
             string name = (side < 0 ? "Left" : "Right") + " Stack Smoke";
             Transform child = parent.Find(name);
             if (child == null) { child = new GameObject(name, typeof(ParticleSystem)).transform; child.SetParent(parent, false); }
-            child.localPosition = new Vector3(side * 0.96f, 4.2f, 0.14f);
+            child.localPosition = new Vector3(side * 0.96f, 4.28f, 0.14f);
             child.localRotation = Quaternion.Euler(-90, 0, 0);
             ParticleSystem system = child.GetComponent<ParticleSystem>();
             system.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);

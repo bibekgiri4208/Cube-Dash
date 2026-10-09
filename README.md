@@ -42,7 +42,7 @@ is saved separately from the old distance record.
   shield**, displayed as a cyan bubble and HUD countdown. It protects against multiple wrong-color
   contacts, without spending an existing one-hit shield. Pause freezes flight, shielding and exhaust;
   restart clears all flight effects, timers and restores the cube/collider/trail.
-- **Truck:** a miniature blue cab-over truck pickup transforms the cube into a six-wheel tractor
+- **Truck:** a miniature blue cab-over truck pickup transforms the cube into a three-axle tractor
   for **10 seconds**. It keeps normal lane steering and smashes every cube it touches into colored,
    tumbling pieces, regardless of color. Matching cubes still award points (and respect Double Points);
    other colors are destroyed without ending the run or spending a shield charge.
@@ -60,11 +60,17 @@ geometry, particles and shield are saved assets, not generated during Play. The 
 and materials in `Assets/Material/FighterPlane`. **Tools > Cube Dash > Add Fighter Plane Power-Up**
 rebakes and reconnects the feature without changing difficulty or environments. Duration, landing
 shield and altitude are exposed on **Game Manager**.
-The truck model is saved in `Assets/Prefab/CubeDash/Truck.prefab`, with body/wheel meshes under
+The reference-style truck has a square blue sleeper cab with a navy band, a lighter flat roof,
+split windshield, hollow bevelled-square exhaust stacks, an open ladder chassis and fifth-wheel saddle.
+Faceted dark fuel tanks, curved rear mudguards, separate mudflaps and dual rear tires complete the model.
+Its six animated wheel assemblies contain ten tires (two front, eight rear).
+The truck model is saved in `Assets/Prefab/CubeDash/Truck.prefab`, with body/front/rear-wheel meshes under
 `Assets/3D Models` and materials in `Assets/Material/Truck`. **Tools > Cube Dash > Add Truck Power-Up**
 rebakes and reconnects it. Truck duration and exit-shield duration are exposed on **Game Manager**.
 **Tools > Cube Dash > Refine Truck Presentation** updates only the truck/pickup prefabs and smoke,
 preserving the level and gameplay tuning.
+**Tools > Cube Dash > Rebuild Reference Truck Model** rebakes the reference-style geometry and palette
+without changing the level, power-up durations, smaller player scale or smoke/steering behavior.
 **Obstacle Fragments** is a fixed pool of 128 saved pieces: impacts create no objects,
 rigidbodies or gameplay colliders, and fragments disappear after 1.15 seconds.
 

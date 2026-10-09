@@ -17,7 +17,7 @@ namespace CubeDash.Tests
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/CubeDash/Truck.prefab");
             Assert.That(prefab, Is.Not.Null);
             Mesh body = prefab.GetComponent<MeshFilter>().sharedMesh;
-            Assert.That(body.subMeshCount, Is.EqualTo(8));
+            Assert.That(body.subMeshCount, Is.EqualTo(10));
             Assert.That(body.vertexCount, Is.InRange(2000, 12000));
             Assert.That(body.bounds.max.y, Is.GreaterThan(4), "Twin stacks extend above the cab.");
             Assert.That(prefab.transform.childCount, Is.EqualTo(8));
@@ -26,7 +26,7 @@ namespace CubeDash.Tests
             foreach (ParticleSystem system in smoke)
             {
                 Assert.That(Mathf.Abs(system.transform.localPosition.x), Is.EqualTo(0.96f).Within(0.001f));
-                Assert.That(system.transform.localPosition.y, Is.EqualTo(4.2f).Within(0.001f));
+                Assert.That(system.transform.localPosition.y, Is.EqualTo(4.28f).Within(0.001f));
                 Assert.That(system.transform.localPosition.z, Is.EqualTo(0.14f).Within(0.001f));
                 Assert.That(system.main.playOnAwake, Is.False);
                 Assert.That(system.main.maxParticles, Is.EqualTo(80));
@@ -34,6 +34,14 @@ namespace CubeDash.Tests
                 Assert.That(system.GetComponent<ParticleSystemRenderer>().sharedMaterial.shader.name, Is.EqualTo("CubeDash/Jet Particle"));
             }
             Assert.That(prefab.GetComponentsInChildren<Collider>(true), Is.Empty);
+            Mesh frontWheel = prefab.transform.Find("Left Wheel 1").GetComponent<MeshFilter>().sharedMesh;
+            Mesh rearWheel = prefab.transform.Find("Left Wheel 2").GetComponent<MeshFilter>().sharedMesh;
+            Assert.That(rearWheel, Is.SameAs(AssetDatabase.LoadAssetAtPath<Mesh>("Assets/3D Models/CubeDashTruckRearWheel.asset")));
+            Assert.That(rearWheel.bounds.size.x, Is.GreaterThan(frontWheel.bounds.size.x * 1.6f), "Rear assemblies carry dual tires.");
+            Assert.That(rearWheel.bounds.size.y, Is.EqualTo(frontWheel.bounds.size.y).Within(0.001f));
+            Assert.That(prefab.transform.Find("Right Wheel 3").GetComponent<MeshFilter>().sharedMesh, Is.SameAs(rearWheel));
+            Assert.That(prefab.GetComponent<MeshRenderer>().sharedMaterials[8].name, Is.EqualTo("Tanks and Mudguards"));
+            Assert.That(prefab.GetComponent<MeshRenderer>().sharedMaterials[9].name, Is.EqualTo("Cab Roof"));
             foreach (MeshFilter filter in prefab.GetComponentsInChildren<MeshFilter>())
             {
                 Mesh mesh = filter.sharedMesh;
