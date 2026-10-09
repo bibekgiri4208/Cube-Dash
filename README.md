@@ -40,15 +40,27 @@ New landscapes approach naturally along the road; existing visible sections neve
 Sky, fog, sunlight and ambient colors blend across each boundary, without environment-name text
 on the HUD. The blue road and the red/blue/green gameplay palette remain unchanged.
 
-- **Jungle:** tapered trunks, visible branches and buttress roots, rounded layered canopies,
-  fern undergrowth, a river and rolling forest hills.
-- **Mountains:** asymmetric craggy ridges with broken snowlines, weathered boulders,
-  foothills and five-tier evergreens with scalloped branch silhouettes.
-- **Desert:** smooth wind-shaped dunes, eroded sandstone bluffs with exposed strata,
-  and rounded, curved cactus arms.
+- **City:** recessed glass windows, projecting sills, entrance canopies, corner trim and roof vents
+  on the existing stepped towers.
+- **Jungle:** tapered trunks, visible branches and buttress roots, fuller rounded canopies,
+  bark grain, fern undergrowth, mossy rocks, a river and layered distant hills.
+- **Mountains:** detailed asymmetric craggy ridges with broken snowlines, weathered rock grain,
+  scree, distant peaks and five-tier evergreens with scalloped branch silhouettes.
+- **Desert:** wind-shaped dunes with subtle sand ripples, layered sandstone bluffs,
+  pebbles, dry grass and rounded, curved cactus arms.
 - **Beach:** leaning ringed palm trunks, curved fronds with individual leaflets and coconuts,
-  turquoise ocean, shoreline, stilt huts and timber jetties.
-- Slowly drifting clouds and ocean/river ripples freeze on pause and reset on restart.
+  turquoise ocean, wet shoreline sand, timber houses with hipped thatch roofs, framed windows,
+  porches and steps, and individual jetty planks.
+- Beach sand extends **1,024 m to either side** and ocean reaches **1,024 m outward**, beyond the
+  600 m camera far plane. All other landscape floors are widened too, removing lateral cutoffs
+  at wide FOVs without reducing the view angle.
+- Saved ground/ocean aprons extend the two outer pool edges by **1,024 m** as well, covering
+  extreme side-angle views. Only the first/last section activates them; biome boundaries inside
+  the pool retain their normal footprints, avoiding overlapping water or sand in other regions.
+- Water has gently displaced waves, layered ripple normals, a shallow-to-deep gradient,
+  stylized sky/Fresnel reflection, sun glints and animated broken surf foam. River water uses
+  a separate, calmer material. This is opaque stylized water, not screen-space reflection/refraction.
+- Slowly drifting clouds, waves and surf freeze on pause and reset on restart.
 
 Each non-city region has three deterministic mesh layouts. Saved scenery roots are pooled with
 the eight track sections; recycling toggles roots and swaps shared meshes without instantiating
@@ -57,7 +69,7 @@ Tune **Segments Per Biome** and **Transition Distance** on **Track > Environment
 Assets are under `Assets/Prefab/CubeDash/Environments`, `Assets/Material/Environments` and
 `Assets/3D Models/Environments`. **Tools > Cube Dash > Apply Dynamic Environments** rebakes the
 saved landscapes and reconnects the scene without rebuilding the road, cubes or existing city.
-**Tools > Cube Dash > Rebuild Environment Models** refreshes just the model meshes/prefabs,
+**Tools > Cube Dash > Rebuild Environment Models** refreshes scenery meshes, materials and prefabs,
 preserving scene settings, difficulty and HUD. The richer meshes are still shared and pooled;
 no trees, terrain or colliders are generated during a run.
 
@@ -91,8 +103,8 @@ and hover/press feedback. The current environment remains visible around the men
 - **Track > Segment 00–07** are reusable `TrackSegment` prefab instances.
   Their nine row cubes use the existing **`ObstacleCube.prefab`**, now a plain color cube
   with a `RunnerCube` component rather than a barricade.
-- **City Surroundings** contains three editable `Skyscraper` prefab designs with matte architecture
-  (podium bases, banded shafts, stepped crowns, roof plant, and masts). Sixteen towers are placed
+- **City Surroundings** contains three editable `Skyscraper` prefab designs with detailed architecture
+  (podium bases, banded shafts, stepped crowns, roof plant, masts and shared baked facade details). Sixteen towers are placed
   per segment across four depth rows per side, ending in a taller skyline row on the plaza slab.
 - **Player Trail** contains twelve saved ribbon meshes animated by `CubeWake`; length is configurable.
 - **Canvas** contains editable UI and persistent button events. The start overlay is transparent
@@ -168,4 +180,6 @@ trail light, rapid-pickup popups, all three colors' pitch cycles, and pickup/pau
 `DesktopInputTests` uses virtual gamepads to check drift/hold/reversal handling, steering,
 menu navigation, single-confirm resume/retry, controller disconnect/reconnect, and the shared desktop fallback actions.
 `EnvironmentTests` checks biome boundaries, saved scenery/layouts, collider-free decoration,
-fixed-size recycling, smooth atmosphere transitions, pause and restart behavior.
+mesh budgets, road clearance, wide coastal coverage, matching wave-surface seams, saved facade
+detail, shader depth/shadow passes, horizon-apron ownership during recycling, fixed-size pools,
+smooth transitions, pause and restart.

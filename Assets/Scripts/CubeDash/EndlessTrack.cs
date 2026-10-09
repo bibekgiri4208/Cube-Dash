@@ -62,6 +62,7 @@ namespace CubeDash
                 Populate(segments[i], i == 0 ? 3 : i == 1 ? 1 : 0);
                 ConfigureEnvironment(segments[i], i - 1);
             }
+            UpdateHorizonEdges();
         }
 
         public bool Advance(float travel, float previousPlayerX, float playerX, float difficulty,
@@ -150,6 +151,7 @@ namespace CubeDash
                 collectedPowerUps.Add(contact.Pickup.Type);
             }
 
+            bool recycled = false;
             while (true)
             {
                 TrackSegment oldest = null;
@@ -161,8 +163,23 @@ namespace CubeDash
                 oldest.transform.position = new Vector3(transform.position.x, transform.position.y, furthest);
                 Populate(oldest, 0, difficulty);
                 ConfigureEnvironment(oldest, nextSectionIndex++);
+                recycled = true;
             }
+            if (recycled) UpdateHorizonEdges();
             return hitWrongColor;
+        }
+
+        private void UpdateHorizonEdges()
+        {
+            if (environment == null || segments.Length == 0) return;
+            TrackSegment rear = segments[0], front = segments[0];
+            foreach (TrackSegment segment in segments)
+            {
+                if (segment.transform.localPosition.z < rear.transform.localPosition.z) rear = segment;
+                if (segment.transform.localPosition.z > front.transform.localPosition.z) front = segment;
+            }
+            foreach (TrackSegment segment in segments)
+                if (segment.Environment != null) segment.Environment.SetHorizonEdges(segment == rear, segment == front);
         }
 
         private void Populate(TrackSegment segment, int warmupRows, float difficulty = 0f)

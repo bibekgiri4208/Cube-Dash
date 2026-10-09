@@ -11,6 +11,13 @@ namespace CubeDash
         public EnvironmentBiome CurrentBiome { get; private set; }
         public int SectionIndex { get; private set; }
 
+        public void SetHorizonEdges(bool rear, bool front)
+        {
+            foreach (GameObject biome in biomes)
+                if (biome != null && biome.TryGetComponent(out HorizonBackdrop backdrop))
+                    backdrop.SetEdges(biome.activeSelf && rear, biome.activeSelf && front);
+        }
+
         public void Configure(int sectionIndex, int segmentsPerBiome)
         {
             SectionIndex = sectionIndex;

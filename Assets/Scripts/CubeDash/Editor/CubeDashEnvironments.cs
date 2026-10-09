@@ -14,10 +14,12 @@ namespace CubeDash.Editor
         private const string Prefabs = "Assets/Prefab/CubeDash/Environments";
         private const string Materials = "Assets/Material/Environments";
         private const string Meshes = "Assets/3D Models/Environments";
-        private static Mesh cube, cylinder, cone, rock, dune, hill, trunk, branch, pineTier, palmTrunk, frond, cactusStem, cactusArm;
+        private static Mesh cube, cylinder, rock, dune, hill, trunk, branch, pineTier, palmTrunk, frond, cactusStem, cactusArm, roof;
         private static Mesh[] crowns, peaks, mesas;
         private static readonly List<Mesh> ownedMeshes = new List<Mesh>();
         private static Material bark, leaf, lightLeaf, stone, snow, sand, redStone, grass, water, foam, wood;
+        private static Material riverWater, wetSand, thatch, glass, trim, moss, dryGrass;
+        private const float LandscapeExtent = 1024f;
 
         [MenuItem("Tools/Cube Dash/Apply Dynamic Environments")]
         public static void ApplyFromMenu()
@@ -38,6 +40,8 @@ namespace CubeDash.Editor
                 GameObject[] scenery = new GameObject[4];
                 for (int i = 0; i < scenery.Length; i++) scenery[i] = BuildScenery((EnvironmentBiome)(i + 1));
                 UpdateTrackPrefab(scenery);
+                PolishCityBuildings();
+                ExtendCityGround();
 
                 EnvironmentDirector director = game.Track.GetComponent<EnvironmentDirector>();
                 if (director == null) director = game.Track.gameObject.AddComponent<EnvironmentDirector>();
@@ -66,8 +70,10 @@ namespace CubeDash.Editor
             {
                 MakeMaterials();
                 for (int i = 1; i < BiomeRules.Count; i++) BuildScenery((EnvironmentBiome)i);
+                PolishCityBuildings();
+                ExtendCityGround();
                 AssetDatabase.SaveAssets();
-                Debug.Log("Environment models rebuilt: branched trees, curved palms, rugged snow-covered ridges, rolling hills and eroded dunes/bluffs.");
+                Debug.Log("Environment assets rebuilt: wide coastlines, animated surf, detailed natural surfaces, richer foliage, timber houses and city facades.");
             }
             finally { ReleaseModels(); }
         }
@@ -76,7 +82,7 @@ namespace CubeDash.Editor
         {
             cube = PrimitiveMesh(PrimitiveType.Cube);
             cylinder = PrimitiveMesh(PrimitiveType.Cylinder);
-            cone = Own(MakeCone());
+            roof = Own(EnvironmentModelMeshes.HipRoof());
             rock = Own(EnvironmentModelMeshes.Foliage(37, true));
             dune = Own(EnvironmentModelMeshes.Hill(29, true));
             hill = Own(EnvironmentModelMeshes.Hill(17, false));
@@ -135,12 +141,38 @@ namespace CubeDash.Editor
             sand = Material("Golden Sand", new Color(0.83f, 0.66f, 0.40f));
             redStone = Material("Sandstone", new Color(0.68f, 0.36f, 0.22f));
             grass = Material("Forest Floor", new Color(0.19f, 0.34f, 0.25f));
-            water = Material("Lagoon Water", new Color(0.04f, 0.43f, 0.55f), "CubeDash/Biome Water");
+            water = Material("Lagoon Water", new Color(0.025f, 0.24f, 0.34f), "CubeDash/Biome Water");
             foam = Material("Shore Foam", new Color(0.74f, 0.90f, 0.86f));
             wood = Material("Beach Timber", new Color(0.51f, 0.36f, 0.23f));
+            riverWater = Material("River Water", new Color(0.04f, 0.28f, 0.29f), "CubeDash/Biome Water");
+            wetSand = Material("Wet Sand", new Color(0.54f, 0.45f, 0.30f));
+            thatch = Material("Roof Thatch", new Color(0.62f, 0.49f, 0.28f));
+            glass = Material("Facade Glass", new Color(0.13f, 0.25f, 0.29f));
+            trim = Material("Ivory Trim", new Color(0.76f, 0.80f, 0.72f));
+            moss = Material("Rock Moss", new Color(0.27f, 0.39f, 0.24f));
+            dryGrass = Material("Dry Grass", new Color(0.54f, 0.48f, 0.25f));
+            Surface(bark, 1, 1.4f); Surface(leaf, 2, 1.7f); Surface(lightLeaf, 2, 1.7f);
+            Surface(stone, 0, 1.3f); Surface(snow, 5, 2); Surface(sand, 3, 0.8f);
+            Surface(redStone, 0, 1.5f); Surface(grass, 6, 1.3f); Surface(wood, 4, 1.2f);
+            Surface(wetSand, 3, 1); Surface(thatch, 4, 2.5f); Surface(trim, 0, 0.7f);
+            Surface(moss, 6, 2); Surface(dryGrass, 6, 2); Surface(glass, 0, 0.2f);
+            glass.SetFloat("_Smoothness", 0.78f); glass.SetFloat("_Metallic", 0.18f);
+            wetSand.SetFloat("_Smoothness", 0.42f);
+            water.SetColor("_ShallowColor", new Color(0.12f, 0.64f, 0.63f));
+            water.SetFloat("_WaveHeight", 0.14f);
+            water.SetFloat("_ShoreMode", 1); water.SetFloat("_ShoreX", 7); water.SetFloat("_ShallowWidth", 22);
+            riverWater.SetColor("_ShallowColor", new Color(0.13f, 0.45f, 0.39f));
+            riverWater.SetFloat("_WaveHeight", 0.035f); riverWater.SetFloat("_ShoreMode", 0);
         }
 
-        private static Material Material(string name, Color color, string shader = "Universal Render Pipeline/Lit")
+        private static void Surface(Material material, float type, float scale)
+        {
+            material.SetFloat("_DetailType", type); material.SetFloat("_DetailScale", scale);
+            material.SetColor("_SecondaryColor", Color.Lerp(material.GetColor("_BaseColor"), new Color(0.17f, 0.20f, 0.16f), 0.24f));
+            EditorUtility.SetDirty(material);
+        }
+
+        private static Material Material(string name, Color color, string shader = "CubeDash/Environment Surface")
         {
             string path = Materials + "/" + name + ".mat";
             Material result = AssetDatabase.LoadAssetAtPath<Material>(path);
@@ -149,6 +181,7 @@ namespace CubeDash.Editor
                 result = new Material(Shader.Find(shader)) { name = name };
                 AssetDatabase.CreateAsset(result, path);
             }
+            result.shader = Shader.Find(shader);
             result.SetColor("_BaseColor", color);
             result.enableInstancing = true;
             if (result.HasProperty("_Smoothness")) result.SetFloat("_Smoothness", 0.18f);
@@ -160,7 +193,8 @@ namespace CubeDash.Editor
 
         private static GameObject BuildScenery(EnvironmentBiome biome)
         {
-            Material[] palette = { bark, leaf, lightLeaf, stone, snow, sand, redStone, grass, foam, wood };
+            Material[] palette = { bark, leaf, lightLeaf, stone, snow, sand, redStone, grass, foam, wood,
+                thatch, glass, trim, moss, dryGrass };
             Mesh[] layouts = new Mesh[3];
             for (int layout = 0; layout < layouts.Length; layout++)
             {
@@ -180,15 +214,21 @@ namespace CubeDash.Editor
             try
             {
                 Material floor = biome == EnvironmentBiome.Jungle ? grass : biome == EnvironmentBiome.Mountains ? stone : sand;
-                Part(root.transform, "Landscape Ground", cube, floor, new Vector3(0, -9.3f, 21), new Vector3(124, 0.6f, 42));
+                Part(root.transform, "Landscape Ground", cube, floor, new Vector3(0, -9.3f, 21), new Vector3(LandscapeExtent * 2, 0.6f, 42));
                 if (biome == EnvironmentBiome.Beach)
                 {
-                    Part(root.transform, "Ocean", cube, water, new Vector3(40, -8.92f, 21), new Vector3(66, 0.08f, 42), false);
-                    Part(root.transform, "Shoreline", cube, foam, new Vector3(7.4f, -8.86f, 21), new Vector3(1.3f, 0.05f, 42), false);
+                    Mesh ocean = SaveMesh(EnvironmentModelMeshes.WaterSurface(new[]
+                    { 7f, 8, 9, 10, 12, 14, 17, 20, 24, 30, 40, 55, 80, 120, 200, 320, 640, LandscapeExtent }), "Ocean Surface");
+                    Part(root.transform, "Ocean", ocean, water, new Vector3(0, -8.72f, 0), Vector3.one, false);
+                    Part(root.transform, "Shoreline", cube, wetSand, new Vector3(5.9f, -9, 21), new Vector3(2.2f, 0.06f, 42), false);
                 }
                 if (biome == EnvironmentBiome.Jungle)
-                    Part(root.transform, "River", cube, water, new Vector3(-29, -8.9f, 21), new Vector3(5, 0.1f, 42), false);
+                {
+                    Mesh river = SaveMesh(EnvironmentModelMeshes.WaterSurface(new[] { -31.5f, -30.5f, -29.5f, -28.5f, -27.5f, -26.5f }), "River Surface");
+                    Part(root.transform, "River", river, riverWater, new Vector3(0, -8.8f, 0), Vector3.one, false);
+                }
                 GameObject details = Part(root.transform, "Landscape Details", layouts[0], palette, Vector3.zero, Vector3.one);
+                AddHorizonAprons(root.transform, floor, biome == EnvironmentBiome.Beach);
                 BiomeScenery scenery = root.AddComponent<BiomeScenery>();
                 Set(scenery, "details", details.GetComponent<MeshFilter>());
                 SetArray(scenery, "layouts", layouts);
@@ -212,9 +252,11 @@ namespace CubeDash.Editor
                     Boulder(g, stone, new Vector3(side * Range(random, 13, 24), -9, z + 2), new Vector3(4, 3, 4), random);
                     Bush(g, new Vector3(side * Range(random, 11, 24), -9, z + 3), random);
                     Fern(g, new Vector3(side * Range(random, 10, 17), -8.3f, z + 1), random);
+                    g.Add(crowns[row % 3], moss, new Vector3(side * Range(random, 14, 24), -7.9f, z + 2), new Vector3(2.2f, 0.7f, 2.3f));
                 }
                 // A distant continuous ridge frames the canopy without intruding into the lanes.
                 g.Add(hill, grass, new Vector3(side * 46, -9, 21), new Vector3(32, 13, 46));
+                g.Add(hill, grass, new Vector3(side * 115, -9, 21), new Vector3(135, 20, 65));
             }
         }
 
@@ -240,8 +282,14 @@ namespace CubeDash.Editor
                 {
                     Tree(g, new Vector3(side * Range(random, 15, 24), -9, 4 + row * 10), Range(random, 11, 17), true, random);
                     Boulder(g, stone, new Vector3(side * Range(random, 15, 26), -9, 8 + row * 9), new Vector3(7, 7, 6), random);
+                    for (int rubble = 0; rubble < 3; rubble++)
+                        Boulder(g, row % 2 == 0 ? snow : stone, new Vector3(side * Range(random, 19, 32), -9, 7 + row * 9 + rubble),
+                            new Vector3(1.6f, 1.2f, 1.8f), random);
                 }
                 g.Add(hill, stone, new Vector3(side * 38, -9, 21), new Vector3(31, 8, 44));
+                Mesh farPeak = peaks[random.Next(peaks.Length)];
+                g.AddSurface(farPeak, 0, stone, new Vector3(side * 105, -9, 21), new Vector3(110, 43, 60), 5);
+                g.AddSurface(farPeak, 1, snow, new Vector3(side * 105, -9, 21), new Vector3(110, 43, 60), 5);
             }
         }
 
@@ -261,7 +309,11 @@ namespace CubeDash.Editor
                     g.AddSurface(bluff, 1, sand, mesa, scale, 8);
                     Cactus(g, new Vector3(side * Range(random, 12, 20), -9, z), Range(random, 5, 9));
                     Boulder(g, redStone, new Vector3(side * Range(random, 12, 23), -9, z + 5), new Vector3(4, 3, 3), random);
+                    for (int pebble = 0; pebble < 3; pebble++)
+                        Boulder(g, redStone, new Vector3(side * Range(random, 11, 19), -9, z + 2 + pebble), Vector3.one * Range(random, 0.7f, 1.4f), random);
+                    GrassTuft(g, new Vector3(side * Range(random, 12, 22), -9, z + 3), 1.2f, random);
                 }
+                g.Add(dune, sand, new Vector3(side * 100, -9, 21), new Vector3(130, 10, 65));
             }
         }
 
@@ -280,16 +332,17 @@ namespace CubeDash.Editor
             {
                 float hutX = -34 - i * 16;
                 float groundHeight = -9 + EnvironmentModelMeshes.HillHeight((hutX + 46) / 15, (hutZ - 21) / 22, 29, true) * 4;
-                Vector3 p = new Vector3(hutX, groundHeight + 3.5f, hutZ);
-                g.Add(cube, wood, p, new Vector3(7, 5, 6));
-                g.Add(cone, sand, p + Vector3.up * 2.5f, new Vector3(11, 4.5f, 10), 45);
-                for (int leg = -1; leg <= 1; leg += 2)
-                    g.Add(cylinder, bark, p + new Vector3(leg * 2.7f, -3, 0), new Vector3(0.7f, 2, 0.7f));
+                House(g, new Vector3(hutX, groundHeight + 1, hutZ));
             }
-            g.Add(cube, wood, new Vector3(20, -6.5f, hutZ), new Vector3(18, 0.4f, 3));
+            for (int plank = 0; plank < 15; plank++)
+                g.Add(cube, wood, new Vector3(11.5f + plank * 1.2f, -6.5f, hutZ), new Vector3(1.14f, 0.32f, 3.2f));
             for (int post = 0; post < 4; post++)
                 g.Add(cylinder, wood, new Vector3(13 + post * 4.5f, -7.4f, hutZ), new Vector3(0.5f, 2.5f, 0.5f));
+            g.Add(cube, trim, new Vector3(20, -5.6f, hutZ + 1.5f), new Vector3(18, 0.14f, 0.14f));
             g.Add(dune, sand, new Vector3(-46, -9, 21), new Vector3(30, 4, 44));
+            g.Add(dune, sand, new Vector3(-130, -9, 21), new Vector3(160, 5, 60));
+            for (int clump = 0; clump < 5; clump++)
+                GrassTuft(g, new Vector3(-Range(random, 12, 28), -9, 3 + clump * 8), 0.8f, random);
         }
 
         private static void Tree(Geometry g, Vector3 p, float height, bool pine, System.Random random)
@@ -317,6 +370,10 @@ namespace CubeDash.Editor
                     Limb(g, p + Vector3.up * height * (0.39f + limb * 0.045f), end, diameter * 0.5f);
                     g.Add(crowns[random.Next(crowns.Length)], limb % 3 == 0 ? lightLeaf : leaf, end,
                         new Vector3(height * 0.38f, height * Range(random, 0.23f, 0.30f), height * 0.34f), yaw + limb * 33);
+                    if (limb % 2 == 0)
+                        g.Add(crowns[(limb + 1) % crowns.Length], lightLeaf,
+                            end + direction * height * 0.07f + Vector3.up * height * 0.055f,
+                            new Vector3(height * 0.19f, height * 0.16f, height * 0.18f), yaw + limb * 47);
                 }
                 g.Add(crowns[random.Next(crowns.Length)], lightLeaf, p + Vector3.up * height * 0.91f,
                     new Vector3(height * 0.43f, height * 0.32f, height * 0.40f), yaw);
@@ -327,6 +384,133 @@ namespace CubeDash.Editor
                         p + Vector3.up * diameter * 1.9f, diameter * 0.46f);
                 }
             }
+        }
+
+        private static void GrassTuft(Geometry g, Vector3 p, float size, System.Random random)
+        {
+            for (int blade = 0; blade < 5; blade++)
+                g.Add(frond, dryGrass, p + Vector3.up * 0.25f,
+                    Vector3.one * size, Quaternion.Euler(0, Range(random, 0, 360), Range(random, 42, 72)));
+        }
+
+        private static void House(Geometry g, Vector3 p)
+        {
+            g.Add(cube, wood, p + Vector3.up * 2.5f, new Vector3(7, 5, 6));
+            g.Add(roof, thatch, p + Vector3.up * 5, new Vector3(9.4f, 3.2f, 8));
+            g.Add(cube, trim, p + Vector3.up * 5, new Vector3(7.7f, 0.22f, 6.8f));
+            // Timber siding and roof battens add relief, not just painted-on detail.
+            for (int board = 0; board < 9; board++)
+                g.Add(cube, wood, p + new Vector3(3.53f, 0.35f + board * 0.51f, 0), new Vector3(0.10f, 0.09f, 6.1f));
+            for (int band = 1; band < 6; band++)
+            {
+                float t = band / 6f;
+                for (int side = -1; side <= 1; side += 2)
+                    g.Add(cube, wood, p + new Vector3(0, 5 + t * 3.2f, side * (1 - t) * 4),
+                        new Vector3(9.4f * (1 - t * 0.54f), 0.07f, 0.10f));
+            }
+            g.Add(cube, glass, p + new Vector3(3.58f, 1.5f, 0), new Vector3(0.14f, 2.8f, 1.2f));
+            for (int side = -1; side <= 1; side += 2)
+            {
+                Vector3 window = p + new Vector3(3.60f, 2.8f, side * 2.0f);
+                g.Add(cube, glass, window, new Vector3(0.12f, 1.45f, 1.3f));
+                g.Add(cube, trim, window, new Vector3(0.20f, 0.08f, 1.4f));
+                g.Add(cube, trim, window, new Vector3(0.20f, 1.5f, 0.08f));
+                for (int edge = -1; edge <= 1; edge += 2)
+                    g.Add(cube, trim, window + Vector3.up * edge * 0.76f, new Vector3(0.20f, 0.10f, 1.5f));
+                for (int corner = -1; corner <= 1; corner += 2)
+                    g.Add(cube, bark, p + new Vector3(corner * 2.8f, -0.6f, side * 2.4f), new Vector3(0.55f, 3.3f, 0.55f));
+                g.Add(cube, trim, p + new Vector3(4.9f, 1.35f, side * 3), new Vector3(0.16f, 2.5f, 0.16f));
+                g.Add(cube, wood, p + new Vector3(4.5f, 1.6f, side * 3), new Vector3(2, 0.13f, 0.13f));
+            }
+            g.Add(cube, wood, p + new Vector3(4.1f, 0.05f, 0), new Vector3(2.6f, 0.25f, 6.8f));
+            for (int step = 0; step < 3; step++)
+                g.Add(cube, wood, p + new Vector3(5.6f + step * 0.38f, -0.18f - step * 0.26f, 0), new Vector3(0.45f, 0.22f, 1.6f));
+        }
+
+        private static void PolishCityBuildings()
+        {
+            float[] heights = { 26, 34, 21 }, widths = { 5.2f, 5, 6 };
+            for (int variant = 0; variant < 3; variant++)
+            {
+                Geometry g = new Geometry(new[] { glass, trim });
+                float h = heights[variant], w = widths[variant];
+                for (float y = 5; y < h - 1; y += 2.4f)
+                    for (int side = -1; side <= 1; side += 2)
+                        for (int column = -1; column <= 1; column++)
+                        {
+                            g.Add(cube, glass, new Vector3(column * w * 0.28f, y, side * 3.06f), new Vector3(w * 0.21f, 1.5f, 0.12f));
+                            g.Add(cube, trim, new Vector3(column * w * 0.28f, y - 0.79f, side * 3.15f), new Vector3(w * 0.24f, 0.10f, 0.30f));
+                            g.Add(cube, glass, new Vector3(side * (w * 0.5f + 0.06f), y, column * 1.85f), new Vector3(0.12f, 1.5f, 1.15f));
+                            g.Add(cube, trim, new Vector3(side * (w * 0.5f + 0.15f), y - 0.79f, column * 1.85f), new Vector3(0.30f, 0.10f, 1.3f));
+                        }
+                for (int side = -1; side <= 1; side += 2)
+                {
+                    g.Add(cube, glass, new Vector3(0, 1.4f, side * 3.77f), new Vector3(2.2f, 2.7f, 0.12f));
+                    g.Add(cube, trim, new Vector3(0, 2.95f, side * 4.2f), new Vector3(3.2f, 0.20f, 1.5f));
+                    g.Add(cube, trim, new Vector3(side * (w * 0.5f + 0.06f), h * 0.5f, -2.88f), new Vector3(0.15f, h - 3, 0.2f));
+                }
+                for (int vent = 0; vent < 6; vent++)
+                    g.Add(cube, glass, new Vector3(0.52f, h + 7.1f, 1.23f - vent * 0.12f), new Vector3(1, 0.07f, 0.06f));
+                Mesh detailMesh = SaveMesh(g.Bake(), "City Facade " + (variant + 1));
+                string path = "Assets/Prefab/CubeDash/Skyscraper" + (variant + 1) + ".prefab";
+                GameObject root = PrefabUtility.LoadPrefabContents(path);
+                try
+                {
+                    Transform existing = root.transform.Find("Facade Details");
+                    GameObject details = existing != null ? existing.gameObject
+                        : Part(root.transform, "Facade Details", detailMesh, new[] { glass, trim }, Vector3.zero, Vector3.one, false);
+                    details.GetComponent<MeshFilter>().sharedMesh = detailMesh;
+                    details.GetComponent<MeshRenderer>().sharedMaterials = new[] { glass, trim };
+                    PrefabUtility.SaveAsPrefabAsset(root, path);
+                }
+                finally { PrefabUtility.UnloadPrefabContents(root); }
+            }
+        }
+
+        private static void ExtendCityGround()
+        {
+            const string path = "Assets/Prefab/CubeDash/TrackSegment.prefab";
+            GameObject root = PrefabUtility.LoadPrefabContents(path);
+            try
+            {
+                Transform floor = root.transform.Find("City Surroundings/City Ground");
+                if (floor != null) floor.localScale = new Vector3(LandscapeExtent * 2, 0.6f, 42);
+                if (floor != null) AddHorizonAprons(floor.parent, floor.GetComponent<Renderer>().sharedMaterial, false);
+                PrefabUtility.SaveAsPrefabAsset(root, path);
+            }
+            finally { PrefabUtility.UnloadPrefabContents(root); }
+        }
+
+        private static void AddHorizonAprons(Transform parent, Material floor, bool ocean)
+        {
+            GameObject[] ends = new GameObject[2];
+            for (int edge = 0; edge < ends.Length; edge++)
+            {
+                string name = edge == 0 ? "Rear Horizon" : "Forward Horizon";
+                Transform existing = parent.Find(name);
+                GameObject end = existing != null ? existing.gameObject : new GameObject(name);
+                end.transform.SetParent(parent, false);
+                ends[edge] = end;
+                // These contain only broad surfaces; no duplicate trees, buildings or gameplay.
+                if (existing == null)
+                {
+                    float center = edge == 0 ? -LandscapeExtent * 0.5f : 42 + LandscapeExtent * 0.5f;
+                    Part(end.transform, "Ground Apron", cube, floor, new Vector3(0, -9.3f, center),
+                        new Vector3(LandscapeExtent * 2, 0.6f, LandscapeExtent), false);
+                    if (ocean)
+                    {
+                        Mesh surface = SaveMesh(EnvironmentModelMeshes.WaterSurface(new[]
+                        { 7f, 8, 9, 10, 12, 14, 17, 20, 24, 30, 40, 55, 80, 120, 200, 320, 640, LandscapeExtent }), "Ocean Surface");
+                        Part(end.transform, "Ocean Apron", surface, water,
+                            new Vector3(0, -8.72f, edge == 0 ? -LandscapeExtent : 42),
+                            new Vector3(1, 1, LandscapeExtent / RunnerRules.SegmentLength), false);
+                    }
+                }
+                end.SetActive(false);
+            }
+            HorizonBackdrop backdrop = parent.GetComponent<HorizonBackdrop>();
+            if (backdrop == null) backdrop = parent.gameObject.AddComponent<HorizonBackdrop>();
+            Set(backdrop, "behind", ends[0]); Set(backdrop, "ahead", ends[1]);
         }
 
         private static void Limb(Geometry g, Vector3 start, Vector3 end, float diameter)
@@ -503,32 +687,6 @@ namespace CubeDash.Editor
                 foreach (CombineInstance instance in submeshes) Object.DestroyImmediate(instance.mesh);
                 return result;
             }
-        }
-
-        private static Mesh MakeCone()
-        {
-            List<Vector3> vertices = new List<Vector3>();
-            for (int i = 0; i < 8; i++)
-            {
-                float a = i * Mathf.PI / 4, b = (i + 1) * Mathf.PI / 4;
-                Vector3 first = new Vector3(Mathf.Cos(a) * 0.5f, 0, Mathf.Sin(a) * 0.5f);
-                Vector3 second = new Vector3(Mathf.Cos(b) * 0.5f, 0, Mathf.Sin(b) * 0.5f);
-                vertices.Add(first); vertices.Add(Vector3.up); vertices.Add(second);
-                vertices.Add(Vector3.zero); vertices.Add(first); vertices.Add(second);
-            }
-            return FlatMesh(vertices);
-        }
-
-        private static Mesh FlatMesh(List<Vector3> vertices)
-        {
-            Mesh mesh = new Mesh();
-            mesh.SetVertices(vertices);
-            int[] triangles = new int[vertices.Count];
-            for (int i = 0; i < triangles.Length; i++) triangles[i] = i;
-            mesh.triangles = triangles;
-            mesh.uv = new Vector2[vertices.Count];
-            mesh.RecalculateNormals(); mesh.RecalculateBounds();
-            return mesh;
         }
 
         private static Mesh SaveMesh(Mesh mesh, string name)

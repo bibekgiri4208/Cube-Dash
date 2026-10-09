@@ -9,7 +9,7 @@ namespace CubeDash.Editor
     {
         public static Mesh Foliage(int seed, bool faceted = false)
         {
-            const int sides = 12, rings = 7;
+            int sides = faceted ? 14 : 16, rings = faceted ? 8 : 10;
             var vertices = new List<Vector3> { Vector3.up * 0.5f };
             var triangles = new List<int>();
             float phase = seed * 0.37f;
@@ -160,9 +160,9 @@ namespace CubeDash.Editor
         /// <summary>Two material regions: exposed crags and a broken, slope-aware snowline.</summary>
         public static Mesh Mountain(int seed)
         {
-            const int sides = 18;
-            float[] heights = { 0, 0.10f, 0.25f, 0.43f, 0.61f, 0.78f, 0.91f };
-            float[] radii = { 0.5f, 0.48f, 0.36f, 0.29f, 0.20f, 0.115f, 0.046f };
+            const int sides = 24;
+            float[] heights = { 0, 0.07f, 0.15f, 0.25f, 0.36f, 0.48f, 0.61f, 0.72f, 0.82f, 0.92f };
+            float[] radii = { 0.5f, 0.49f, 0.44f, 0.36f, 0.32f, 0.27f, 0.20f, 0.15f, 0.10f, 0.043f };
             var vertices = new List<Vector3>();
             var stone = new List<int>();
             var snow = new List<int>();
@@ -209,7 +209,7 @@ namespace CubeDash.Editor
 
         public static Mesh Mesa(int seed)
         {
-            const int sides = 11;
+            const int sides = 18;
             float[] heights = { 0, 0.12f, 0.33f, 0.35f, 0.57f, 0.60f, 0.84f, 0.89f, 0.96f, 1 };
             float[] radii = { 0.55f, 0.49f, 0.45f, 0.445f, 0.41f, 0.405f, 0.40f, 0.34f, 0.32f, 0.30f };
             var vertices = new List<Vector3>();
@@ -237,6 +237,46 @@ namespace CubeDash.Editor
             Cap(vertices, strata, Vector3.up, (heights.Length - 1) * sides, sides, true);
             Cap(vertices, cliff, Vector3.zero, 0, sides, false);
             return Finish("Layered sandstone bluff", vertices, new[] { cliff, strata }, false);
+        }
+
+        public static Mesh WaterSurface(float[] xPositions, int rows = 21)
+        {
+            var vertices = new List<Vector3>();
+            var triangles = new List<int>();
+            int columns = xPositions.Length;
+            for (int row = 0; row <= rows; row++)
+                for (int column = 0; column < columns; column++)
+                    vertices.Add(new Vector3(xPositions[column], 0, row * RunnerRules.SegmentLength / rows));
+            for (int row = 0; row < rows; row++)
+                for (int column = 0; column < columns - 1; column++)
+                {
+                    int a = row * columns + column;
+                    Triangle(triangles, a, a + columns, a + 1);
+                    Triangle(triangles, a + 1, a + columns, a + columns + 1);
+                }
+            Mesh mesh = Finish("Continuous wave surface", vertices, new[] { triangles }, true);
+            Bounds bounds = mesh.bounds;
+            // Cover the full shader wave-height range, including its three combined swells.
+            bounds.Expand(new Vector3(0, 1.8f, 0));
+            mesh.bounds = bounds;
+            return mesh;
+        }
+
+        public static Mesh HipRoof()
+        {
+            var vertices = new List<Vector3>
+            {
+                new Vector3(-0.5f, 0, -0.5f), new Vector3(0.5f, 0, -0.5f),
+                new Vector3(0.5f, 0, 0.5f), new Vector3(-0.5f, 0, 0.5f),
+                new Vector3(-0.23f, 1, 0), new Vector3(0.23f, 1, 0)
+            };
+            var triangles = new List<int>();
+            Triangle(triangles, 0, 4, 1); Triangle(triangles, 1, 4, 5);
+            Triangle(triangles, 1, 5, 2);
+            Triangle(triangles, 2, 5, 3); Triangle(triangles, 3, 5, 4);
+            Triangle(triangles, 3, 4, 0);
+            Triangle(triangles, 0, 1, 3); Triangle(triangles, 3, 1, 2);
+            return Finish("Hipped thatched roof", vertices, new[] { triangles }, false);
         }
 
         private static void JoinRings(List<int> triangles, int rings, int sides)
