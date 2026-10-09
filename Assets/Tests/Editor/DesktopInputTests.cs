@@ -70,7 +70,7 @@ namespace CubeDash.Tests
                 }
                 Transform safe = sceneHud.transform.Find("Safe Area");
                 Assert.That(safe.Find("Lane Controls").gameObject.activeSelf, Is.False);
-                Assert.That(safe.Find("Desktop Controls Hint").GetComponent<Text>().text, Does.Contain("LEFT / RIGHT"));
+                Assert.That(safe.Find("Desktop Controls Hint").gameObject.activeSelf, Is.False);
                 Assert.That(safe.Find("Menu Overlay/Menu Card/Primary Action").GetComponentInChildren<Text>().text, Is.EqualTo("START RUN"));
                 Assert.That(safe.Find("Menu Overlay/Menu Card/Description").GetComponent<Text>().text, Does.Not.Contain("swipe"));
                 Assert.That(module.move, Is.Not.Null);
@@ -110,7 +110,7 @@ namespace CubeDash.Tests
             Assert.That(game.State, Is.EqualTo(CubeDashGame.RunState.Running));
             Assert.That(hud.UsingGamepad, Is.True);
             Assert.That(hud.transform.Find("Safe Area/Lane Controls").gameObject.activeSelf, Is.False);
-            Assert.That(hud.transform.Find("Safe Area/Desktop Controls Hint").GetComponent<Text>().text, Does.Contain("D-PAD"));
+            Assert.That(hud.transform.Find("Safe Area/Desktop Controls Hint").gameObject.activeSelf, Is.False);
             ClearTrack();
             SendPad(new GamepadState().WithButton(GamepadButton.DpadLeft));
             yield return null;

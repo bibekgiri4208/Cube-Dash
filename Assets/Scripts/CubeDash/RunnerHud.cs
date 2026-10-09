@@ -44,11 +44,11 @@ namespace CubeDash
         private GameObject scorePanel;
         private GameObject objectivePanel;
         private GameObject brand;
-        private Text desktopHint;
         private Text menuHint;
         private Text retryHint;
         private Button primaryButton;
         private Button retryButton;
+        private Button quitButton;
         public bool UsingGamepad { get; private set; }
 
         public void Initialize(CubeDashGame controller)
@@ -61,7 +61,6 @@ namespace CubeDash
             scorePanel = safeRoot.Find("Score Panel")?.gameObject;
             objectivePanel = safeRoot.Find("Color Objective Panel")?.gameObject;
             brand = safeRoot.Find("Brand")?.gameObject;
-            desktopHint = safeRoot.Find("Desktop Controls Hint")?.GetComponent<Text>();
             menuHint = card.Find("Keyboard Hint")?.GetComponent<Text>();
             primaryButton = card.Find("Primary Action")?.GetComponent<Button>();
             controls.SetActive(false);
@@ -77,6 +76,7 @@ namespace CubeDash
                 endGroup = gameOverOverlay.GetComponent<CanvasGroup>();
                 endComposition = gameOverOverlay.transform.Find("Abstract Composition") as RectTransform;
                 retryButton = endComposition != null ? endComposition.Find("Retry")?.GetComponent<Button>() : null;
+                quitButton = endComposition != null ? endComposition.Find("Quit")?.GetComponent<Button>() : null;
                 retryHint = endComposition != null ? endComposition.Find("Tap Hint")?.GetComponent<Text>() : null;
             }
             UpdateStats();
@@ -104,6 +104,16 @@ namespace CubeDash
             else game.StartRun();
         }
 
+        /// <summary>Stops the run in the editor, or closes the built player.</summary>
+        public void QuitGame()
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+        }
+
         public void MoveLeft() => game.ChangeLane(-1);
         public void MoveRight() => game.ChangeLane(1);
 
@@ -122,7 +132,8 @@ namespace CubeDash
             GameObject selected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
             Button button = selected != null ? selected.GetComponent<Button>() : null;
             if (button != null && button.gameObject.activeInHierarchy && button.IsInteractable() &&
-                (button == primaryButton || button == retryButton || button.gameObject == secondaryButton)) button.onClick.Invoke();
+                (button == primaryButton || button == retryButton || button == quitButton ||
+                 button.gameObject == secondaryButton)) button.onClick.Invoke();
             else PrimaryAction();
         }
 
@@ -144,15 +155,16 @@ namespace CubeDash
         private void RefreshInputPrompts()
         {
             if (game.State == CubeDashGame.RunState.Ready)
+                description.text = "Collect " + game.PlayerCubeColor.ToString().ToUpperInvariant() + ". Dodge the rest.";
+            if (menuHint != null)
             {
-                description.text = "Collect " + game.PlayerCubeColor.ToString().ToUpperInvariant() + ". Dodge the rest.\n" +
-                    (UsingGamepad ? "Left stick or D-pad to change lanes." : "A / D or arrow keys to change lanes.");
-                actionLabel.text = "START RUN";
+                if (game.State == CubeDashGame.RunState.Ready)
+                    menuHint.text = UsingGamepad ? "LEFT STICK / D-PAD move   \xB7   A / CROSS start" :
+                        "A / D or ARROWS move   \xB7   ENTER / SPACE start";
+                else
+                    menuHint.text = UsingGamepad ? "A / Cross confirm   \xB7   D-pad navigate   \xB7   Menu pause" :
+                        "Enter / Space confirm   \xB7   Tab / arrows select   \xB7   Esc pause";
             }
-            if (menuHint != null) menuHint.text = UsingGamepad ? "A / Cross confirm   ·   D-pad navigate   ·   Menu pause" :
-                "Enter / Space confirm   ·   Tab / arrows select   ·   Esc pause";
-            if (desktopHint != null) desktopHint.text = UsingGamepad ? "LEFT STICK / D-PAD   ·   MENU pause" :
-                "A / D or LEFT / RIGHT   ·   P / ESC pause   ·   R restart";
             if (retryHint != null) retryHint.text = UsingGamepad ? "A / Cross or X / Square to retry" : "Enter / Space or R to retry";
         }
 
@@ -187,7 +199,6 @@ namespace CubeDash
             if (brand != null) brand.SetActive(!ended);
             if (ended && collectionFeedback != null) collectionFeedback.gameObject.SetActive(false);
             controls.SetActive(false);
-            if (desktopHint != null) desktopHint.gameObject.SetActive(running);
             pauseButton.SetActive(running);
             secondaryButton.SetActive(state == CubeDashGame.RunState.Paused);
             if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);
@@ -233,9 +244,9 @@ namespace CubeDash
             safeRoot.offsetMin = safeRoot.offsetMax = Vector2.zero;
             Canvas.ForceUpdateCanvases();
             float width = Mathf.Min(540, Mathf.Max(240, safeRoot.rect.width - 32));
-            card.sizeDelta = new Vector2(width, 360);
+            card.sizeDelta = new Vector2(width, 300);
             heading.rectTransform.sizeDelta = new Vector2(width - 30, 86);
-            description.rectTransform.sizeDelta = new Vector2(width - 36, 100);
+            description.rectTransform.sizeDelta = new Vector2(width - 36, 40);
             float objectiveY = safeRoot.rect.width < 780 ? -174 : -42;
             speed.rectTransform.anchoredPosition = new Vector2(0, objectiveY);
             if (objectivePanel != null) ((RectTransform)objectivePanel.transform).anchoredPosition = new Vector2(0, objectiveY);

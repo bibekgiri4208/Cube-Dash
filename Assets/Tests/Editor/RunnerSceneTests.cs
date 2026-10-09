@@ -4,6 +4,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
+using UnityEngine.UI;
 
 namespace CubeDash.Tests
 {
@@ -36,6 +37,45 @@ namespace CubeDash.Tests
                     Assert.That(segment.transform.Find("City Surroundings"), Is.Not.Null);
                     foreach (RunnerCube cube in segment.Cubes) Assert.That(cube, Is.Not.Null);
                 }
+            }
+            finally { EditorSceneManager.ClosePreviewScene(scene); }
+        }
+
+        [Test]
+        public void HudKeepsScoreTopRightPauseTopLeftAndQuitOnGameOver()
+        {
+            var scene = EditorSceneManager.OpenPreviewScene("Assets/Scenes/Level.unity");
+            try
+            {
+                RunnerHud hud = null;
+                foreach (GameObject root in scene.GetRootGameObjects())
+                    if (root.GetComponent<RunnerHud>() != null) hud = root.GetComponent<RunnerHud>();
+                Assert.That(hud, Is.Not.Null);
+                Transform safe = hud.transform.Find("Safe Area");
+
+                RectTransform score = (RectTransform)safe.Find("Score Panel");
+                Assert.That(score.anchorMin.x, Is.EqualTo(1f));
+                Assert.That(score.anchorMin.y, Is.EqualTo(1f));
+                Assert.That(score.anchoredPosition.x, Is.LessThan(0f));
+                Assert.That(safe.Find("Distance").GetComponent<Text>().alignment, Is.EqualTo(TextAnchor.MiddleRight));
+
+                RectTransform pause = (RectTransform)safe.Find("Pause");
+                Assert.That(pause.anchorMin.x, Is.EqualTo(0f));
+                Assert.That(pause.anchorMin.y, Is.EqualTo(1f));
+                Assert.That(pause.anchoredPosition.x, Is.GreaterThan(0f));
+                Assert.That(pause.Find("Label").gameObject.activeSelf, Is.False, "The pause button uses an icon, not text.");
+                Assert.That(pause.Find("Pause Icon"), Is.Not.Null);
+                Assert.That(pause.Find("Pause Icon").childCount, Is.EqualTo(2));
+
+                Assert.That(safe.Find("Desktop Controls Hint").gameObject.activeSelf, Is.False);
+                Assert.That(safe.Find("Menu Overlay/Menu Card/Eyebrow").gameObject.activeSelf, Is.False);
+
+                Transform composition = safe.Find("Game Over Overlay/Abstract Composition");
+                Button quit = composition.Find("Quit").GetComponent<Button>();
+                Assert.That(quit, Is.Not.Null);
+                Assert.That(quit.onClick.GetPersistentEventCount(), Is.EqualTo(1));
+                Assert.That(quit.onClick.GetPersistentMethodName(0), Is.EqualTo(nameof(RunnerHud.QuitGame)));
+                Assert.That(composition.Find("Quit").GetComponent<ArcadeButton>(), Is.Not.Null);
             }
             finally { EditorSceneManager.ClosePreviewScene(scene); }
         }

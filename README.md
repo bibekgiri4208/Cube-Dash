@@ -79,6 +79,9 @@ and hover/press feedback. The city remains visible around the menu cards.
   The older **Apply Clean Color-Match Style** command intentionally restores the matte/no-bloom look.
 - **Tools > Cube Dash > Apply Desktop and Gamepad Controls** updates only the desktop UI/input presentation.
   The retained mobile rendering preset is an optional lightweight preset, not a mobile build target.
+- **Tools > Cube Dash > Refine HUD Layout** re-applies the current UI layout: score in the top-right,
+  icon-only pause button in the top-left, bottom instruction and eyebrow hidden, a simplified start
+  card (controls move into its footer), and a **QUIT** button under **TRY AGAIN** on Game Over.
 - Speed and acceleration are on **Game Manager**. Lane spacing and the three palette material
   references are on **Track**. Use a nonzero **Fixed Seed** for reproducible generation.
 
