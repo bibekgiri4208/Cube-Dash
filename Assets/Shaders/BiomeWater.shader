@@ -10,6 +10,7 @@ Shader "CubeDash/Biome Water"
         _ShoreMode ("Coastal surf", Range(0, 1)) = 1
         _ShoreX ("Shoreline X", Float) = 7
         _ShallowWidth ("Shallows width", Float) = 22
+        _CoastLimits ("Boundary bay (entrance, exit, start Z, end Z)", Vector) = (0, 0, 0, 42)
     }
     SubShader
     {
@@ -20,6 +21,7 @@ Shader "CubeDash/Biome Water"
         CBUFFER_START(UnityPerMaterial)
             half4 _BaseColor, _ShallowColor, _FoamColor, _ReflectionColor;
             float _WaveHeight, _ShoreMode, _ShoreX, _ShallowWidth;
+            float4 _CoastLimits;
         CBUFFER_END
         float _CubeDashEnvironmentTime;
         struct Attributes { float4 positionOS : POSITION; UNITY_VERTEX_INPUT_INSTANCE_ID };
@@ -27,8 +29,17 @@ Shader "CubeDash/Biome Water"
         {
             float4 positionCS : SV_POSITION;
             float3 world : TEXCOORD0;
+            float2 metres : TEXCOORD1;
             UNITY_VERTEX_INPUT_INSTANCE_ID
         };
+        float BoundaryDistance(float2 metres)
+        {
+            float nearRoad = 1 - smoothstep(7, 120, metres.x);
+            float bank = 8 + nearRoad * 22 + sin(metres.x * 0.055) * 2.8 + sin(metres.x * 0.17) * 1.2;
+            float entry = metres.y - (_CoastLimits.z + bank);
+            float exit = (_CoastLimits.w - bank) - metres.y;
+            return min(_CoastLimits.x > 0.5 ? entry : 10000, _CoastLimits.y > 0.5 ? exit : 10000);
+        }
         float Wave(float2 p, out float2 slope)
         {
             float t = _CubeDashEnvironmentTime;
@@ -46,14 +57,16 @@ Shader "CubeDash/Biome Water"
             UNITY_SETUP_INSTANCE_ID(input);
             UNITY_TRANSFER_INSTANCE_ID(input, output);
             output.world = TransformObjectToWorld(input.positionOS.xyz);
+            output.metres = mul((float3x3)GetObjectToWorldMatrix(), input.positionOS.xyz).xz;
             float2 slope;
-            output.world.y += Wave(output.world.xz, slope);
+            output.world.y += Wave(output.world.xz, slope) * smoothstep(0, 3, BoundaryDistance(output.metres));
             output.positionCS = TransformWorldToHClip(output.world);
             return output;
         }
         half4 NormalFrag(Varyings input) : SV_Target
         {
             UNITY_SETUP_INSTANCE_ID(input);
+            clip(BoundaryDistance(input.metres));
             float2 slope;
             Wave(input.world.xz, slope);
             float3 normal = normalize(float3(-slope.x, 1, -slope.y));
@@ -63,7 +76,12 @@ Shader "CubeDash/Biome Water"
                 return half4(normal, 0);
             #endif
         }
-        half4 DepthFrag(Varyings input) : SV_Target { return 0; }
+        half4 DepthFrag(Varyings input) : SV_Target
+        {
+            UNITY_SETUP_INSTANCE_ID(input);
+            clip(BoundaryDistance(input.metres));
+            return 0;
+        }
         ENDHLSL
         Pass
         {
@@ -80,6 +98,8 @@ Shader "CubeDash/Biome Water"
             half4 Frag(Varyings input) : SV_Target
             {
                 UNITY_SETUP_INSTANCE_ID(input);
+                float bayDistance = BoundaryDistance(input.metres);
+                clip(bayDistance);
                 float t = _CubeDashEnvironmentTime;
                 float2 slope;
                 float swell = Wave(input.world.xz, slope);
@@ -91,6 +111,7 @@ Shader "CubeDash/Biome Water"
                 float3 view = normalize(_WorldSpaceCameraPos - input.world);
                 float coast = max(0, input.world.x - _ShoreX);
                 float shallow = _ShoreMode * (1 - smoothstep(0, _ShallowWidth, coast));
+                shallow = max(shallow, _ShoreMode * (1 - smoothstep(0, 12, bayDistance)));
                 half3 color = lerp(_BaseColor.rgb, _ShallowColor.rgb, shallow * 0.86 + 0.09);
                 float caustic = pow(saturate(sin(input.world.x * 0.95 + t * 0.4)
                     * cos(input.world.z * 1.15 - t * 0.3)), 7);
@@ -108,6 +129,8 @@ Shader "CubeDash/Biome Water"
                 float foamNoise = saturate(sin(input.world.z * 2.5 + input.world.x * 3.2) * 0.35 + 0.68);
                 float foam = (shoreFoam * 0.72 + breaker * (1 - smoothstep(2, 13, coast)) * 0.28)
                     * foamNoise * _ShoreMode;
+                float baySurf = 1 - smoothstep(0.25, 1.5, bayDistance);
+                foam = max(foam, baySurf * foamNoise * _ShoreMode * (0.65 + 0.15 * sin(t + input.metres.x * 0.2)));
                 float whitecap = smoothstep(_WaveHeight * 1.32, _WaveHeight * 1.59 + 0.001, swell)
                     * detailFade * 0.18;
                 color = lerp(color, _FoamColor.rgb, saturate(foam + whitecap));

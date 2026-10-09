@@ -60,6 +60,9 @@ on the HUD. The blue road and the red/blue/green gameplay palette remain unchang
 - Water has gently displaced waves, layered ripple normals, a shallow-to-deep gradient,
   stylized sky/Fresnel reflection, sun glints and animated broken surf foam. River water uses
   a separate, calmer material. This is opaque stylized water, not screen-space reflection/refraction.
+- Beach boundaries form curved bays rather than rectangular water edges. Shore foam and a rocky
+  headland close the exit; sand blends into the next city plaza. Per-section property blocks keep
+  boundary clipping/blending local, including horizon aprons, and reset when sections recycle.
 - Slowly drifting clouds, waves and surf freeze on pause and reset on restart.
 
 Each non-city region has three deterministic mesh layouts. Saved scenery roots are pooled with
@@ -182,4 +185,4 @@ menu navigation, single-confirm resume/retry, controller disconnect/reconnect, a
 `EnvironmentTests` checks biome boundaries, saved scenery/layouts, collider-free decoration,
 mesh budgets, road clearance, wide coastal coverage, matching wave-surface seams, saved facade
 detail, shader depth/shadow passes, horizon-apron ownership during recycling, fixed-size pools,
-smooth transitions, pause and restart.
+complete city windows between floor bands, isolated coastal blends, smooth transitions, pause and restart.

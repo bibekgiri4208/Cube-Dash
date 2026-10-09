@@ -229,6 +229,7 @@ namespace CubeDash.Editor
                 }
                 GameObject details = Part(root.transform, "Landscape Details", layouts[0], palette, Vector3.zero, Vector3.one);
                 AddHorizonAprons(root.transform, floor, biome == EnvironmentBiome.Beach);
+                if (biome == EnvironmentBiome.Beach) AddCoastalTransition(root.transform);
                 BiomeScenery scenery = root.AddComponent<BiomeScenery>();
                 Set(scenery, "details", details.GetComponent<MeshFilter>());
                 SetArray(scenery, "layouts", layouts);
@@ -429,33 +430,57 @@ namespace CubeDash.Editor
 
         private static void PolishCityBuildings()
         {
-            float[] heights = { 26, 34, 21 }, widths = { 5.2f, 5, 6 };
             for (int variant = 0; variant < 3; variant++)
             {
-                Geometry g = new Geometry(new[] { glass, trim });
-                float h = heights[variant], w = widths[variant];
-                for (float y = 5; y < h - 1; y += 2.4f)
-                    for (int side = -1; side <= 1; side += 2)
-                        for (int column = -1; column <= 1; column++)
-                        {
-                            g.Add(cube, glass, new Vector3(column * w * 0.28f, y, side * 3.06f), new Vector3(w * 0.21f, 1.5f, 0.12f));
-                            g.Add(cube, trim, new Vector3(column * w * 0.28f, y - 0.79f, side * 3.15f), new Vector3(w * 0.24f, 0.10f, 0.30f));
-                            g.Add(cube, glass, new Vector3(side * (w * 0.5f + 0.06f), y, column * 1.85f), new Vector3(0.12f, 1.5f, 1.15f));
-                            g.Add(cube, trim, new Vector3(side * (w * 0.5f + 0.15f), y - 0.79f, column * 1.85f), new Vector3(0.30f, 0.10f, 1.3f));
-                        }
-                for (int side = -1; side <= 1; side += 2)
-                {
-                    g.Add(cube, glass, new Vector3(0, 1.4f, side * 3.77f), new Vector3(2.2f, 2.7f, 0.12f));
-                    g.Add(cube, trim, new Vector3(0, 2.95f, side * 4.2f), new Vector3(3.2f, 0.20f, 1.5f));
-                    g.Add(cube, trim, new Vector3(side * (w * 0.5f + 0.06f), h * 0.5f, -2.88f), new Vector3(0.15f, h - 3, 0.2f));
-                }
-                for (int vent = 0; vent < 6; vent++)
-                    g.Add(cube, glass, new Vector3(0.52f, h + 7.1f, 1.23f - vent * 0.12f), new Vector3(1, 0.07f, 0.06f));
-                Mesh detailMesh = SaveMesh(g.Bake(), "City Facade " + (variant + 1));
                 string path = "Assets/Prefab/CubeDash/Skyscraper" + (variant + 1) + ".prefab";
                 GameObject root = PrefabUtility.LoadPrefabContents(path);
                 try
                 {
+                    Transform architecture = root.transform.Find("Matte Architecture");
+                    Transform body = architecture.Find("Tower Body");
+                    float h = body.localScale.y, w = body.localScale.x, depth = body.localScale.z;
+                    Geometry g = new Geometry(new[] { glass, trim });
+                    var boundaries = new List<float>();
+                    foreach (Transform part in architecture)
+                        if (part.name.StartsWith("Floor Band ", StringComparison.Ordinal)) boundaries.Add(part.localPosition.y);
+                    boundaries.Add(h);
+                    boundaries.Sort();
+                    // Place complete windows between the actual floor bands, never through them.
+                    for (int interval = 0; interval < boundaries.Count - 1; interval++)
+                    {
+                        float span = boundaries[interval + 1] - boundaries[interval];
+                        int floors = Mathf.Max(1, Mathf.FloorToInt(span / 2.4f));
+                        float spacing = span / floors, paneHeight = Mathf.Min(1.6f, spacing - 0.7f);
+                        for (int floor = 0; floor < floors; floor++)
+                        {
+                            float y = boundaries[interval] + spacing * (floor + 0.5f);
+                            for (int side = -1; side <= 1; side += 2)
+                                for (int column = -1; column <= 1; column++)
+                                {
+                                    g.Add(cube, glass, new Vector3(column * w * 0.28f, y, side * (depth * 0.5f + 0.07f)),
+                                        new Vector3(w * 0.21f, paneHeight, 0.12f));
+                                    g.Add(cube, trim, new Vector3(column * w * 0.28f, y - paneHeight * 0.5f - 0.1f, side * (depth * 0.5f + 0.16f)),
+                                        new Vector3(w * 0.24f, 0.10f, 0.30f));
+                                    // The short tower's east annex covers this wall below its roof.
+                                    if (variant == 2 && side == 1 && y - paneHeight * 0.5f < 9.6f) continue;
+                                    g.Add(cube, glass, new Vector3(side * (w * 0.5f + 0.07f), y, column * depth * 0.30f),
+                                        new Vector3(0.12f, paneHeight, depth * 0.19f));
+                                    g.Add(cube, trim, new Vector3(side * (w * 0.5f + 0.16f), y - paneHeight * 0.5f - 0.1f, column * depth * 0.30f),
+                                        new Vector3(0.30f, 0.10f, depth * 0.21f));
+                                }
+                        }
+                    }
+                    for (int side = -1; side <= 1; side += 2)
+                    {
+                        g.Add(cube, glass, new Vector3(0, 1.4f, side * 3.77f), new Vector3(2.2f, 2.7f, 0.12f));
+                        g.Add(cube, trim, new Vector3(0, 2.95f, side * 4.2f), new Vector3(3.2f, 0.20f, 1.5f));
+                        g.Add(cube, trim, new Vector3(side * (w * 0.5f + 0.06f), h * 0.5f, -2.88f), new Vector3(0.15f, h - 3, 0.2f));
+                    }
+                    Transform plant = architecture.Find("Roof Unit");
+                    for (int vent = 0; vent < 6; vent++)
+                        g.Add(cube, glass, plant.localPosition + new Vector3(0, -0.43f + vent * 0.16f, plant.localScale.z * 0.5f + 0.04f),
+                            new Vector3(plant.localScale.x * 0.8f, 0.06f, 0.06f));
+                    Mesh detailMesh = SaveMesh(g.Bake(), "City Facade " + (variant + 1));
                     Transform existing = root.transform.Find("Facade Details");
                     GameObject details = existing != null ? existing.gameObject
                         : Part(root.transform, "Facade Details", detailMesh, new[] { glass, trim }, Vector3.zero, Vector3.one, false);
@@ -465,6 +490,36 @@ namespace CubeDash.Editor
                 }
                 finally { PrefabUtility.UnloadPrefabContents(root); }
             }
+        }
+
+        private static void AddCoastalTransition(Transform root)
+        {
+            Geometry g = new Geometry(new[] { stone, sand });
+            var random = new System.Random(8819);
+            foreach (float x in new[] { 11f, 18, 28, 42, 60, 82, 110 })
+            {
+                float nearRoad = 1 - Mathf.SmoothStep(0, 1, Mathf.InverseLerp(7, 120, x));
+                float bank = 8 + nearRoad * 22 + Mathf.Sin(x * 0.055f) * 2.8f + Mathf.Sin(x * 0.17f) * 1.2f;
+                float z = RunnerRules.SegmentLength - bank;
+                Boulder(g, stone, new Vector3(x, -9, z + 0.7f), new Vector3(4.5f, 3, 4.5f), random);
+                g.Add(hill, sand, new Vector3(x, -9, z + 3), new Vector3(7, 0.65f, 8));
+            }
+            Mesh mesh = SaveMesh(g.Bake(), "Coastal Headland");
+            GameObject headland = Part(root, "Coastal Headland", mesh, new[] { stone, sand }, Vector3.zero, Vector3.one);
+            headland.SetActive(false);
+            CoastalTransition transition = root.gameObject.AddComponent<CoastalTransition>();
+            Set(transition, "headland", headland);
+            SetArray(transition, "waterSurfaces", new[]
+            {
+                root.Find("Ocean").GetComponent<Renderer>(),
+                root.Find("Rear Horizon/Ocean Apron").GetComponent<Renderer>(),
+                root.Find("Forward Horizon/Ocean Apron").GetComponent<Renderer>()
+            });
+            SetArray(transition, "landSurfaces", new[]
+            {
+                root.Find("Landscape Ground").GetComponent<Renderer>(), root.Find("Shoreline").GetComponent<Renderer>(),
+                root.Find("Rear Horizon/Ground Apron").GetComponent<Renderer>(), root.Find("Forward Horizon/Ground Apron").GetComponent<Renderer>()
+            });
         }
 
         private static void ExtendCityGround()

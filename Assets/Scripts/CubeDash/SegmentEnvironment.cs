@@ -28,6 +28,13 @@ namespace CubeDash
                 bool active = i == (int)CurrentBiome;
                 biomes[i].SetActive(active);
                 if (active && biomes[i].TryGetComponent(out BiomeScenery scenery)) scenery.SelectLayout(sectionIndex);
+                if (active && biomes[i].TryGetComponent(out CoastalTransition coast))
+                {
+                    Transform cityGround = biomes[0] != null ? biomes[0].transform.Find("City Ground") : null;
+                    Renderer ground = cityGround != null ? cityGround.GetComponent<Renderer>() : null;
+                    Color tint = ground != null ? ground.sharedMaterial.GetColor("_BaseColor") : new Color(0.5f, 0.61f, 0.6f);
+                    coast.Configure(sectionIndex, segmentsPerBiome, tint);
+                }
             }
         }
     }

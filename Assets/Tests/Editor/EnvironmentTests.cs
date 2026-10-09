@@ -119,6 +119,73 @@ namespace CubeDash.Tests
         }
 
         [Test]
+        public void CityWindowsDoNotIntersectFloorBands()
+        {
+            for (int variant = 1; variant <= 3; variant++)
+            {
+                GameObject building = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/CubeDash/Skyscraper" + variant + ".prefab");
+                Mesh mesh = building.transform.Find("Facade Details").GetComponent<MeshFilter>().sharedMesh;
+                Vector3[] vertices = mesh.vertices;
+                int[] glass = mesh.GetTriangles(0);
+                foreach (Transform part in building.transform.Find("Matte Architecture"))
+                {
+                    if (!part.name.StartsWith("Floor Band ", System.StringComparison.Ordinal)) continue;
+                    float bottom = part.localPosition.y - part.localScale.y * 0.5f;
+                    float top = part.localPosition.y + part.localScale.y * 0.5f;
+                    for (int i = 0; i < glass.Length; i += 3)
+                    {
+                        float a = vertices[glass[i]].y, b = vertices[glass[i + 1]].y, c = vertices[glass[i + 2]].y;
+                        Assert.That(Mathf.Min(a, Mathf.Min(b, c)) < top && Mathf.Max(a, Mathf.Max(b, c)) > bottom,
+                            Is.False, "A floor band must not cut a window panel into fragments.");
+                    }
+                }
+            }
+        }
+
+        [Test]
+        public void CoastalBoundariesUsePerInstanceBayAndGroundBlendsAndResetOnReuse()
+        {
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/CubeDash/Environments/Beach.prefab");
+            GameObject exit = Object.Instantiate(prefab), interior = Object.Instantiate(prefab);
+            try
+            {
+                CoastalTransition coast = exit.GetComponent<CoastalTransition>();
+                Assert.That(coast, Is.Not.Null);
+                Material shared = exit.transform.Find("Ocean").GetComponent<Renderer>().sharedMaterial;
+                Vector4 original = shared.GetVector("_CoastLimits");
+                var block = new MaterialPropertyBlock();
+                Color nextColor = new Color(0.5f, 0.6f, 0.6f);
+                coast.Configure(39, 8, nextColor);
+                Assert.That(coast.IsExit, Is.True);
+                Assert.That(coast.IsEntrance, Is.False);
+                exit.transform.Find("Ocean").GetComponent<Renderer>().GetPropertyBlock(block);
+                Assert.That(block.GetVector("_CoastLimits"), Is.EqualTo(new Vector4(0, 1, 0, 42)));
+                exit.transform.Find("Forward Horizon/Ocean Apron").GetComponent<Renderer>().GetPropertyBlock(block);
+                Assert.That(block.GetVector("_CoastLimits").w, Is.Zero, "The exit bay must also clip the forward water apron.");
+                exit.transform.Find("Landscape Ground").GetComponent<Renderer>().GetPropertyBlock(block);
+                Assert.That(block.GetVector("_LandEnd"), Is.EqualTo(new Vector4(1, 21, 18, 0)));
+                Assert.That(block.GetColor("_EndTint"), Is.EqualTo(nextColor));
+                Assert.That(exit.transform.Find("Coastal Headland").gameObject.activeSelf, Is.True);
+                interior.GetComponent<CoastalTransition>().Configure(36, 8, nextColor);
+                interior.transform.Find("Ocean").GetComponent<Renderer>().GetPropertyBlock(block);
+                Assert.That(block.GetVector("_CoastLimits").x, Is.Zero);
+                Assert.That(block.GetVector("_CoastLimits").y, Is.Zero);
+                Assert.That(shared.GetVector("_CoastLimits"), Is.EqualTo(original), "A boundary must not change other pooled water materials.");
+                coast.Configure(32, 8, nextColor);
+                Assert.That(coast.IsEntrance, Is.True);
+                Assert.That(coast.IsExit, Is.False);
+                Assert.That(exit.transform.Find("Coastal Headland").gameObject.activeSelf, Is.False);
+                exit.transform.Find("Rear Horizon/Ocean Apron").GetComponent<Renderer>().GetPropertyBlock(block);
+                Assert.That(block.GetVector("_CoastLimits").z, Is.EqualTo(1024));
+                coast.Configure(36, 8, nextColor);
+                Assert.That(coast.IsEntrance || coast.IsExit, Is.False);
+                exit.transform.Find("Landscape Ground").GetComponent<Renderer>().GetPropertyBlock(block);
+                Assert.That(block.GetVector("_LandEnd").x, Is.Zero);
+            }
+            finally { Object.DestroyImmediate(exit); Object.DestroyImmediate(interior); }
+        }
+
+        [Test]
         public void BeachHasSavedApronsBeyondBothLongitudinalPoolEdges()
         {
             GameObject beach = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/CubeDash/Environments/Beach.prefab");
@@ -221,6 +288,13 @@ namespace CubeDash.Tests
                 foreach (TrackSegment segment in track.Segments)
                 {
                     SegmentEnvironment scenery = segment.Environment;
+                    if (scenery.CurrentBiome == EnvironmentBiome.Beach)
+                    {
+                        CoastalTransition coast = scenery.Biomes[4].GetComponent<CoastalTransition>();
+                        int within = scenery.SectionIndex % track.Environment.SegmentsPerBiome;
+                        Assert.That(coast.IsEntrance, Is.EqualTo(within == 0));
+                        Assert.That(coast.IsExit, Is.EqualTo(within == track.Environment.SegmentsPerBiome - 1));
+                    }
                     Assert.That(scenery.CurrentBiome, Is.EqualTo(BiomeRules.AtDistance(
                         scenery.SectionIndex * RunnerRules.SegmentLength, track.Environment.SegmentsPerBiome)));
                     int active = 0;

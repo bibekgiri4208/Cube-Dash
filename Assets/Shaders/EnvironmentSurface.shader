@@ -8,6 +8,8 @@ Shader "CubeDash/Environment Surface"
         _DetailScale ("Grain scale", Float) = 1
         _Smoothness ("Smoothness", Range(0, 1)) = 0.2
         _Metallic ("Metallic", Range(0, 1)) = 0
+        _LandEnd ("Exit blend (enabled, end Z, width)", Vector) = (0, 42, 18, 0)
+        _EndTint ("Next region ground tint", Color) = (0.5, 0.61, 0.6, 1)
     }
     SubShader
     {
@@ -17,6 +19,8 @@ Shader "CubeDash/Environment Surface"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
         CBUFFER_START(UnityPerMaterial)
             half4 _BaseColor, _SecondaryColor;
+            half4 _EndTint;
+            float4 _LandEnd;
             float _DetailType, _DetailScale, _Smoothness, _Metallic;
         CBUFFER_END
         struct Attributes { float4 positionOS : POSITION; float3 normalOS : NORMAL; UNITY_VERTEX_INPUT_INSTANCE_ID };
@@ -93,6 +97,8 @@ Shader "CubeDash/Environment Surface"
                 float fade = 1 - smoothstep(45, 190, distance(input.world, _WorldSpaceCameraPos));
                 grain = lerp(0.5, grain, fade);
                 half3 albedo = lerp(_SecondaryColor.rgb, _BaseColor.rgb, saturate(grain * 0.62 + 0.40));
+                float edgeBlend = _LandEnd.x * smoothstep(_LandEnd.y - max(1, _LandEnd.z), _LandEnd.y, input.metres.z);
+                albedo = lerp(albedo, _EndTint.rgb, edgeBlend);
                 InputData data = (InputData)0;
                 data.positionWS = input.world;
                 data.normalWS = normalize(input.normal);
