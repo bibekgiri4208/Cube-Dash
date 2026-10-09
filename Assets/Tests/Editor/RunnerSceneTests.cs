@@ -69,6 +69,25 @@ namespace CubeDash.Tests
 
                 Assert.That(safe.Find("Desktop Controls Hint").gameObject.activeSelf, Is.False);
                 Assert.That(safe.Find("Menu Overlay/Menu Card/Eyebrow").gameObject.activeSelf, Is.False);
+                Assert.That(safe.Find("Menu Overlay/Menu Card/Accent").gameObject.activeSelf, Is.True);
+                Assert.That(safe.Find("Menu Overlay/Menu Card/Pause Motif"), Is.Not.Null);
+                Assert.That(safe.Find("Menu Overlay/Menu Card/Pause Motif").gameObject.activeSelf, Is.False,
+                    "The abstract pause motif only shows while paused.");
+
+                RectTransform primary = (RectTransform)safe.Find("Menu Overlay/Menu Card/Primary Action");
+                RectTransform restart = (RectTransform)safe.Find("Menu Overlay/Menu Card/Restart");
+                Assert.That(primary.sizeDelta, Is.EqualTo(restart.sizeDelta), "Resume and Restart share one size.");
+
+                Transform pauseQuit = safe.Find("Menu Overlay/Menu Card/Quit");
+                Assert.That(pauseQuit, Is.Not.Null, "The pause menu offers a Quit action.");
+                Assert.That(pauseQuit.gameObject.activeSelf, Is.False, "Quit is hidden until the run is paused.");
+                Assert.That(pauseQuit.GetComponent<ArcadeButton>(), Is.Not.Null);
+                Button pauseQuitButton = pauseQuit.GetComponent<Button>();
+                Assert.That(pauseQuitButton.onClick.GetPersistentEventCount(), Is.EqualTo(1));
+                Assert.That(pauseQuitButton.onClick.GetPersistentMethodName(0), Is.EqualTo(nameof(RunnerHud.QuitGame)));
+                Assert.That(pauseQuitButton.colors.highlightedColor, Is.EqualTo(primary.GetComponent<Button>().colors.highlightedColor),
+                    "Quit shares the same hover highlight as the other menu buttons.");
+                Assert.That(pauseQuit.GetComponent<Outline>(), Is.Not.Null, "Quit has the same focus outline as the other buttons.");
 
                 Transform composition = safe.Find("Game Over Overlay/Abstract Composition");
                 Button quit = composition.Find("Quit").GetComponent<Button>();
@@ -78,6 +97,32 @@ namespace CubeDash.Tests
                 Assert.That(composition.Find("Quit").GetComponent<ArcadeButton>(), Is.Not.Null);
             }
             finally { EditorSceneManager.ClosePreviewScene(scene); }
+        }
+
+        [UnityTest]
+        public IEnumerator PauseMenuShowsAbstractMotifOnlyWhilePaused()
+        {
+            yield return new EnterPlayMode();
+            yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/Level.unity",
+                new LoadSceneParameters(LoadSceneMode.Single));
+            yield return null;
+            CubeDashGame game = Object.FindAnyObjectByType<CubeDashGame>();
+            RunnerHud hud = Object.FindAnyObjectByType<RunnerHud>();
+            Transform card = hud.transform.Find("Safe Area/Menu Overlay/Menu Card");
+            Assert.That(card.Find("Pause Motif").gameObject.activeSelf, Is.False);
+            Assert.That(card.Find("Accent").gameObject.activeSelf, Is.True);
+            Assert.That(card.Find("Keyboard Hint").gameObject.activeSelf, Is.True);
+            Assert.That(card.Find("Quit").gameObject.activeSelf, Is.False);
+
+            game.StartRun();
+            yield return null;
+            game.TogglePause();
+            yield return null;
+            Assert.That(game.State, Is.EqualTo(CubeDashGame.RunState.Paused));
+            Assert.That(card.Find("Pause Motif").gameObject.activeSelf, Is.True);
+            Assert.That(card.Find("Accent").gameObject.activeSelf, Is.False, "The start-menu accent yields to the pause motif.");
+            Assert.That(card.Find("Keyboard Hint").gameObject.activeSelf, Is.False, "The pause menu drops the instruction line.");
+            Assert.That(card.Find("Quit").gameObject.activeSelf, Is.True, "The pause menu offers Quit.");
         }
 
         [UnityTest]

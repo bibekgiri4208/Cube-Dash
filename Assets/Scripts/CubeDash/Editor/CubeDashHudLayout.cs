@@ -49,6 +49,7 @@ namespace CubeDash.Editor
             MovePauseTopLeft(safe);
             RemoveBottomInstruction(safe);
             SimplifyStartMenu(safe);
+            StylePauseMenu(safe, hud);
             AddQuitToGameOver(safe, hud);
         }
 
@@ -119,12 +120,12 @@ namespace CubeDash.Editor
         private static void SimplifyStartMenu(Transform safe)
         {
             Transform card = safe.Find("Menu Overlay/Menu Card");
-            Place((RectTransform)card, new Vector2(0.5f, 0.60f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(540, 300));
+            Place((RectTransform)card, new Vector2(0.5f, 0.60f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(540, 360));
             Panel(card.GetComponent<Image>(), Navy);
 
             Transform accent = card.Find("Accent");
             accent.gameObject.SetActive(true);
-            Place((RectTransform)accent, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, 22), new Vector2(64, 5));
+            Place((RectTransform)accent, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -18), new Vector2(56, 5));
             accent.GetComponent<Image>().color = Coral;
 
             card.Find("Eyebrow").gameObject.SetActive(false);
@@ -135,17 +136,17 @@ namespace CubeDash.Editor
             heading.fontStyle = FontStyle.Bold;
             heading.color = White;
             heading.alignment = TextAnchor.MiddleCenter;
-            Place(heading.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 0.5f), new Vector2(0, -66), new Vector2(500, 78));
+            Place(heading.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 0.5f), new Vector2(0, -66), new Vector2(500, 86));
 
             Text description = card.Find("Description").GetComponent<Text>();
             description.text = "Collect your color. Avoid the rest.";
             description.fontSize = 17;
             description.color = Muted;
             description.alignment = TextAnchor.MiddleCenter;
-            Place(description.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 0.5f), new Vector2(0, -126), new Vector2(470, 40));
+            Place(description.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 0.5f), new Vector2(0, -128), new Vector2(470, 40));
 
             RectTransform primary = (RectTransform)card.Find("Primary Action");
-            Place(primary, new Vector2(0.5f, 0), new Vector2(0.5f, 0.5f), new Vector2(0, 96), new Vector2(300, 56));
+            Place(primary, new Vector2(0.5f, 0), new Vector2(0.5f, 0.5f), new Vector2(0, 162), new Vector2(300, 46));
             Panel(primary.GetComponent<Image>(), Coral);
             Text primaryLabel = primary.GetComponentInChildren<Text>();
             primaryLabel.text = "START RUN";
@@ -154,14 +155,108 @@ namespace CubeDash.Editor
             primaryLabel.fontStyle = FontStyle.Bold;
 
             Transform restart = card.Find("Restart");
-            Place((RectTransform)restart, new Vector2(0.5f, 0), new Vector2(0.5f, 0.5f), new Vector2(0, 40), new Vector2(300, 36));
+            Place((RectTransform)restart, new Vector2(0.5f, 0), new Vector2(0.5f, 0.5f), new Vector2(0, 102), new Vector2(300, 46));
             Panel(restart.GetComponent<Image>(), PanelFill);
             restart.Find("Label").GetComponent<Text>().color = Muted;
             restart.gameObject.SetActive(false);
 
             Transform keyboardHint = card.Find("Keyboard Hint");
-            Place((RectTransform)keyboardHint, new Vector2(0.5f, 0), new Vector2(0.5f, 0.5f), new Vector2(0, 12), new Vector2(450, 22));
+            Place((RectTransform)keyboardHint, new Vector2(0.5f, 0), new Vector2(0.5f, 0.5f), new Vector2(0, 102), new Vector2(450, 22));
             keyboardHint.GetComponent<Text>().color = Muted;
+        }
+
+        private static void StylePauseMenu(Transform safe, RunnerHud hud)
+        {
+            Transform card = safe.Find("Menu Overlay/Menu Card");
+            Transform existing = card.Find("Pause Motif");
+            if (existing != null) Object.DestroyImmediate(existing.gameObject);
+
+            RectTransform motif = Rect("Pause Motif", card);
+            motif.anchorMin = motif.anchorMax = new Vector2(0.5f, 1);
+            motif.pivot = new Vector2(0.5f, 1);
+            motif.anchoredPosition = new Vector2(0, -12);
+            motif.sizeDelta = new Vector2(110, 30);
+
+            Motif("Motif Blue", motif, new Vector2(-24, 2), new Vector2(16, 16), new Color(0.25f, 0.5f, 0.95f));
+            Motif("Motif Green", motif, new Vector2(24, 2), new Vector2(16, 16), new Color(0.3f, 0.78f, 0.45f));
+            Motif("Motif Coral", motif, new Vector2(0, -2), new Vector2(22, 22), Coral);
+            motif.gameObject.SetActive(false);
+
+            RectTransform quit = card.Find("Quit") as RectTransform;
+            if (quit == null)
+            {
+                quit = Rect("Quit", card);
+                Image background = quit.gameObject.AddComponent<Image>();
+                Button created = quit.gameObject.AddComponent<Button>();
+                created.targetGraphic = background;
+                Text label = Label("Label", quit, "QUIT", 18, White);
+                label.fontStyle = FontStyle.Bold;
+            }
+            if (quit.GetComponent<ArcadeButton>() == null) quit.gameObject.AddComponent<ArcadeButton>();
+            Button quitButton = quit.GetComponent<Button>();
+            if (quitButton == null)
+            {
+                quitButton = quit.gameObject.AddComponent<Button>();
+                quitButton.targetGraphic = quit.GetComponent<Image>();
+            }
+            if (quitButton.onClick.GetPersistentEventCount() == 0)
+                UnityEventTools.AddPersistentListener(quitButton.onClick, hud.QuitGame);
+            MatchButtonFeedback(quitButton);
+            Place(quit, new Vector2(0.5f, 0), new Vector2(0.5f, 0.5f), new Vector2(0, 42), new Vector2(300, 46));
+            Panel(quit.GetComponent<Image>(), PanelFill);
+            quit.gameObject.SetActive(false);
+
+            // Resume, Restart and Quit share one size and a single D-pad navigation order.
+            Button primary = card.Find("Primary Action").GetComponent<Button>();
+            Button restart = card.Find("Restart").GetComponent<Button>();
+            Link(primary, null, restart);
+            Link(restart, primary, quitButton);
+            Link(quitButton, restart, null);
+        }
+
+        private static void Link(Button button, Button up, Button down)
+        {
+            Navigation navigation = button.navigation;
+            navigation.mode = Navigation.Mode.Explicit;
+            navigation.selectOnUp = up;
+            navigation.selectOnDown = down;
+            button.navigation = navigation;
+        }
+
+        /// <summary>Matches the hand-authored buttons so hover/press feedback is consistent.</summary>
+        private static void MatchButtonFeedback(Button button)
+        {
+            ColorBlock colors = button.colors;
+            colors.normalColor = White;
+            colors.highlightedColor = new Color(1f, 0.93f, 0.88f, 1f);
+            colors.pressedColor = new Color(0.72f, 0.78f, 0.85f, 1f);
+            colors.selectedColor = new Color(0.9607843f, 0.9607843f, 0.9607843f, 1f);
+            colors.disabledColor = new Color(0.78431374f, 0.78431374f, 0.78431374f, 0.5019608f);
+            colors.colorMultiplier = 1f;
+            colors.fadeDuration = 0.08f;
+            button.colors = colors;
+
+            if (button.GetComponent<Outline>() == null)
+            {
+                Outline outline = button.gameObject.AddComponent<Outline>();
+                outline.effectColor = new Color(1f, 0.65f, 0.35f, 0.95f);
+                outline.effectDistance = new Vector2(2, -2);
+                outline.enabled = false;
+            }
+        }
+
+        private static void Motif(string name, Transform parent, Vector2 position, Vector2 size, Color color)
+        {
+            RectTransform rect = Rect(name, parent);
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+            Image image = rect.gameObject.AddComponent<Image>();
+            image.sprite = rounded;
+            image.type = Image.Type.Sliced;
+            image.color = color;
+            image.raycastTarget = false;
         }
 
         private static void AddQuitToGameOver(Transform safe, RunnerHud hud)
@@ -194,13 +289,7 @@ namespace CubeDash.Editor
             }
             if (quitButton.onClick.GetPersistentEventCount() == 0)
                 UnityEventTools.AddPersistentListener(quitButton.onClick, hud.QuitGame);
-            if (quit.GetComponent<Outline>() == null)
-            {
-                Outline outline = quit.gameObject.AddComponent<Outline>();
-                outline.effectColor = new Color(1f, 0.65f, 0.35f, 0.95f);
-                outline.effectDistance = new Vector2(2, -2);
-                outline.enabled = false;
-            }
+            MatchButtonFeedback(quitButton);
             Place(quit, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -158), new Vector2(230, 44));
             Panel(quit.GetComponent<Image>(), PanelFill);
 

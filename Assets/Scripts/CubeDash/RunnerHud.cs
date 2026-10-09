@@ -44,6 +44,10 @@ namespace CubeDash
         private GameObject scorePanel;
         private GameObject objectivePanel;
         private GameObject brand;
+        private GameObject menuAccent;
+        private GameObject pauseMotif;
+        private GameObject pauseQuit;
+        private Button pauseQuitButton;
         private Text menuHint;
         private Text retryHint;
         private Button primaryButton;
@@ -61,6 +65,10 @@ namespace CubeDash
             scorePanel = safeRoot.Find("Score Panel")?.gameObject;
             objectivePanel = safeRoot.Find("Color Objective Panel")?.gameObject;
             brand = safeRoot.Find("Brand")?.gameObject;
+            menuAccent = card.Find("Accent")?.gameObject;
+            pauseMotif = card.Find("Pause Motif")?.gameObject;
+            pauseQuit = card.Find("Quit")?.gameObject;
+            pauseQuitButton = card.Find("Quit")?.GetComponent<Button>();
             menuHint = card.Find("Keyboard Hint")?.GetComponent<Text>();
             primaryButton = card.Find("Primary Action")?.GetComponent<Button>();
             controls.SetActive(false);
@@ -133,7 +141,7 @@ namespace CubeDash
             Button button = selected != null ? selected.GetComponent<Button>() : null;
             if (button != null && button.gameObject.activeInHierarchy && button.IsInteractable() &&
                 (button == primaryButton || button == retryButton || button == quitButton ||
-                 button.gameObject == secondaryButton)) button.onClick.Invoke();
+                 button == pauseQuitButton || button.gameObject == secondaryButton)) button.onClick.Invoke();
             else PrimaryAction();
         }
 
@@ -142,7 +150,11 @@ namespace CubeDash
             if (EventSystem.current == null || game.State == CubeDashGame.RunState.Running) return;
             if (game.State != CubeDashGame.RunState.Paused) { FocusPrimary(); return; }
             GameObject current = EventSystem.current.currentSelectedGameObject;
-            EventSystem.current.SetSelectedGameObject(current == secondaryButton ? primaryButton.gameObject : secondaryButton);
+            GameObject next;
+            if (current == primaryButton.gameObject) next = secondaryButton;
+            else if (current == secondaryButton) next = pauseQuit != null ? pauseQuit : primaryButton.gameObject;
+            else next = primaryButton.gameObject;
+            EventSystem.current.SetSelectedGameObject(next);
         }
 
         private void FocusPrimary()
@@ -219,6 +231,10 @@ namespace CubeDash
                     actionLabel.text = "TRY AGAIN";
                     break;
             }
+            if (pauseMotif != null) pauseMotif.SetActive(state == CubeDashGame.RunState.Paused);
+            if (menuAccent != null) menuAccent.SetActive(state == CubeDashGame.RunState.Ready);
+            if (pauseQuit != null) pauseQuit.SetActive(state == CubeDashGame.RunState.Paused);
+            if (menuHint != null) menuHint.gameObject.SetActive(state == CubeDashGame.RunState.Ready);
             RefreshInputPrompts();
             if (!running) FocusPrimary();
         }
@@ -244,7 +260,7 @@ namespace CubeDash
             safeRoot.offsetMin = safeRoot.offsetMax = Vector2.zero;
             Canvas.ForceUpdateCanvases();
             float width = Mathf.Min(540, Mathf.Max(240, safeRoot.rect.width - 32));
-            card.sizeDelta = new Vector2(width, 300);
+            card.sizeDelta = new Vector2(width, 360);
             heading.rectTransform.sizeDelta = new Vector2(width - 30, 86);
             description.rectTransform.sizeDelta = new Vector2(width - 36, 40);
             float objectiveY = safeRoot.rect.width < 780 ? -174 : -42;
