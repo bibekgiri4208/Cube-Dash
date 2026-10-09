@@ -58,9 +58,9 @@ namespace CubeDash.Editor
 
             SetArray(game.Track, "colorMaterials", palette);
             SetEnum(game, "playerCubeColor", (int)CubeColor.Red);
-            SetFloat(game, "startSpeed", 10f);
-            SetFloat(game, "maximumSpeed", 24f);
-            SetFloat(game, "acceleration", 0.16f);
+            SetFloat(game, "startSpeed", 14f);
+            SetFloat(game, "maximumSpeed", 42f);
+            SetFloat(game, "acceleration", 1.2f);
             game.Player.position = new Vector3(0, 0.595f, 0);
             game.Player.localScale = Vector3.one * 1.15f;
             PrefabUtility.RecordPrefabInstancePropertyModifications(game.Player);

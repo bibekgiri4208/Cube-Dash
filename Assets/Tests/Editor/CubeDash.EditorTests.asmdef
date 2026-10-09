@@ -1,7 +1,7 @@
 {
   "name": "CubeDash.EditorTests",
   "rootNamespace": "CubeDash.Tests",
-  "references": ["CubeDash", "UnityEngine.UI", "Unity.RenderPipelines.Core.Runtime", "Unity.RenderPipelines.Universal.Runtime"],
+  "references": ["CubeDash", "Unity.InputSystem", "UnityEngine.UI", "Unity.RenderPipelines.Core.Runtime", "Unity.RenderPipelines.Universal.Runtime"],
   "includePlatforms": ["Editor"],
   "optionalUnityReferences": ["TestAssemblies"],
   "autoReferenced": false

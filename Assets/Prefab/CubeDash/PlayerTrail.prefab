@@ -915,6 +915,7 @@ MonoBehaviour:
   - {fileID: 3350288990810118651}
   minimumLength: 2.8
   maximumLength: 4.4
+  pickupWaveDuration: 0.45
 --- !u!1 &8246112689880259609
 GameObject:
   m_ObjectHideFlags: 0

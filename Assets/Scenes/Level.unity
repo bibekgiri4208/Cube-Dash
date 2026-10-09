@@ -865,6 +865,7 @@ GameObject:
   - component: {fileID: 151912125}
   - component: {fileID: 151912124}
   - component: {fileID: 151912127}
+  - component: {fileID: 151912128}
   m_Layer: 0
   m_Name: Retry
   m_TagString: Untagged
@@ -998,6 +999,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50d5775893b24c17a4586c5a28504fa8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
+--- !u!114 &151912128
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 151912122}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
+  m_EffectColor: {r: 1, g: 0.65, b: 0.35, a: 0.95}
+  m_EffectDistance: {x: 2, y: -2}
+  m_UseGraphicAlpha: 1
 --- !u!1 &181958465
 GameObject:
   m_ObjectHideFlags: 0
@@ -1011,6 +1027,7 @@ GameObject:
   - component: {fileID: 181958468}
   - component: {fileID: 181958467}
   - component: {fileID: 181958470}
+  - component: {fileID: 181958471}
   m_Layer: 0
   m_Name: Right
   m_TagString: Untagged
@@ -1144,6 +1161,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50d5775893b24c17a4586c5a28504fa8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
+--- !u!114 &181958471
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 181958465}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
+  m_EffectColor: {r: 1, g: 0.65, b: 0.35, a: 0.95}
+  m_EffectDistance: {x: 2, y: -2}
+  m_UseGraphicAlpha: 1
 --- !u!1 &197067924
 GameObject:
   m_ObjectHideFlags: 0
@@ -1564,6 +1596,85 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
+--- !u!1 &334455772
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 334455773}
+  - component: {fileID: 334455775}
+  - component: {fileID: 334455774}
+  m_Layer: 0
+  m_Name: Desktop Controls Hint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &334455773
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 334455772}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 593878898}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0}
+  m_AnchorMax: {x: 0.5, y: 0}
+  m_AnchoredPosition: {x: 0, y: 26}
+  m_SizeDelta: {x: 600, y: 36}
+  m_Pivot: {x: 0.5, y: 0}
+--- !u!114 &334455774
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 334455772}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.12, g: 0.24, b: 0.3, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_FontData:
+    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_FontSize: 14
+    m_FontStyle: 0
+    m_BestFit: 0
+    m_MinSize: 10
+    m_MaxSize: 40
+    m_Alignment: 4
+    m_AlignByGeometry: 0
+    m_RichText: 1
+    m_HorizontalOverflow: 0
+    m_VerticalOverflow: 0
+    m_LineSpacing: 1
+  m_Text: "A / D or LEFT / RIGHT   \xB7   P / ESC pause   \xB7   R restart"
+--- !u!222 &334455775
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 334455772}
+  m_CullTransparentMesh: 1
 --- !u!1 &346465664
 GameObject:
   m_ObjectHideFlags: 0
@@ -1690,7 +1801,9 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: One cube. Infinite road.
+  m_Text: 'Collect RED. Dodge the rest.
+
+    A / D or arrow keys to change lanes.'
 --- !u!222 &388642387
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2049,6 +2162,7 @@ GameObject:
   - component: {fileID: 531778195}
   - component: {fileID: 531778194}
   - component: {fileID: 531778198}
+  - component: {fileID: 531778199}
   m_Layer: 0
   m_Name: Restart
   m_TagString: Untagged
@@ -2069,10 +2183,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
   m_Navigation:
-    m_Mode: 0
+    m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
-    m_SelectOnDown: {fileID: 0}
+    m_SelectOnUp: {fileID: 1760063400}
+    m_SelectOnDown: {fileID: 1760063400}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
@@ -2182,6 +2296,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50d5775893b24c17a4586c5a28504fa8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
+--- !u!114 &531778199
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 531778193}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
+  m_EffectColor: {r: 1, g: 0.65, b: 0.35, a: 0.95}
+  m_EffectDistance: {x: 2, y: -2}
+  m_UseGraphicAlpha: 1
 --- !u!1 &563510485
 GameObject:
   m_ObjectHideFlags: 0
@@ -2300,6 +2429,7 @@ RectTransform:
   - {fileID: 253831763}
   - {fileID: 472968045}
   - {fileID: 1213286297}
+  - {fileID: 334455773}
   m_Father: {fileID: 1534366547}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -3005,7 +3135,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: TAP TO START
+  m_Text: START RUN
 --- !u!222 &964837466
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3103,7 +3233,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Tap anywhere to retry
+  m_Text: Enter / Space or R to retry
 --- !u!222 &967756595
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3239,20 +3369,6 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
---- !u!114 &990473271
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fc1515ab76e54f068e2f2207940fab32, type: 3}
-  m_Name: UI/Cancel
-  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
-  m_Asset: {fileID: 44311408}
-  m_ActionId: 15cef263-9014-4fd5-94d9-4e4a6234a6ef
 --- !u!114 &1054279239
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3554,6 +3670,7 @@ GameObject:
   - component: {fileID: 1120232144}
   - component: {fileID: 1120232143}
   - component: {fileID: 1120232147}
+  - component: {fileID: 1120232148}
   m_Layer: 0
   m_Name: Pause
   m_TagString: Untagged
@@ -3687,6 +3804,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50d5775893b24c17a4586c5a28504fa8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
+--- !u!114 &1120232148
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1120232142}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
+  m_EffectColor: {r: 1, g: 0.65, b: 0.35, a: 0.95}
+  m_EffectDistance: {x: 2, y: -2}
+  m_UseGraphicAlpha: 1
 --- !u!1 &1133520070
 GameObject:
   m_ObjectHideFlags: 0
@@ -3836,7 +3968,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "SPACE / ENTER to go   \xB7   P / ESC to pause"
+  m_Text: "Enter / Space confirm   \xB7   Tab / arrows select   \xB7   Esc pause"
 --- !u!222 &1183458957
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -5298,7 +5430,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1738255306
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5444,7 +5576,7 @@ MonoBehaviour:
     m_FontStyle: 1
     m_BestFit: 1
     m_MinSize: 30
-    m_MaxSize: 48
+    m_MaxSize: 58
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 0
@@ -5649,6 +5781,7 @@ GameObject:
   - component: {fileID: 1760063401}
   - component: {fileID: 1760063400}
   - component: {fileID: 1760063403}
+  - component: {fileID: 1760063404}
   m_Layer: 0
   m_Name: Primary Action
   m_TagString: Untagged
@@ -5689,10 +5822,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
   m_Navigation:
-    m_Mode: 0
+    m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
-    m_SelectOnDown: {fileID: 0}
+    m_SelectOnUp: {fileID: 531778194}
+    m_SelectOnDown: {fileID: 531778194}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
@@ -5782,6 +5915,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50d5775893b24c17a4586c5a28504fa8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
+--- !u!114 &1760063404
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1760063398}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
+  m_EffectColor: {r: 1, g: 0.65, b: 0.35, a: 0.95}
+  m_EffectDistance: {x: 2, y: -2}
+  m_UseGraphicAlpha: 1
 --- !u!1 &1782416638
 GameObject:
   m_ObjectHideFlags: 0
@@ -5822,11 +5970,16 @@ MonoBehaviour:
   collectionAudio: {fileID: 1782416641}
   collectionSound: {fileID: 8300000, guid: 412ca27765d7dc04bb473d357a85df58, type: 3}
   collectionVolume: 0.65
+  collectionPitchStep: 0.045
   laneSmoothTime: 0.085
+  cubeEmission: 0.75
+  pickupEmission: 2.8
+  pickupDuration: 0.35
   playerCubeColor: 0
-  startSpeed: 10
-  maximumSpeed: 24
-  acceleration: 0.16
+  startSpeed: 14
+  maximumSpeed: 42
+  acceleration: 1.2
+  scoreForMaximumDifficulty: 120
   laneChangeSpeed: 18
   fixedSeed: 0
 --- !u!4 &1782416640
@@ -5941,20 +6094,6 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!114 &1791149647
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fc1515ab76e54f068e2f2207940fab32, type: 3}
-  m_Name: UI/Submit
-  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
-  m_Asset: {fileID: 44311408}
-  m_ActionId: 7607c7b6-cd76-4816-beef-bd0341cfe950
 --- !u!1 &1794151108
 GameObject:
   m_ObjectHideFlags: 0
@@ -6047,6 +6186,7 @@ GameObject:
   - component: {fileID: 1852657146}
   - component: {fileID: 1852657145}
   - component: {fileID: 1852657148}
+  - component: {fileID: 1852657149}
   m_Layer: 0
   m_Name: Left
   m_TagString: Untagged
@@ -6180,6 +6320,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50d5775893b24c17a4586c5a28504fa8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
+--- !u!114 &1852657149
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1852657143}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
+  m_EffectColor: {r: 1, g: 0.65, b: 0.35, a: 0.95}
+  m_EffectDistance: {x: 2, y: -2}
+  m_UseGraphicAlpha: 1
 --- !u!114 &1924960708
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6231,15 +6386,15 @@ MonoBehaviour:
   m_ActionsAsset: {fileID: 44311408}
   m_PointAction: {fileID: 1924960708}
   m_MoveAction: {fileID: 1651128454}
-  m_SubmitAction: {fileID: 1791149647}
-  m_CancelAction: {fileID: 990473271}
+  m_SubmitAction: {fileID: 0}
+  m_CancelAction: {fileID: 0}
   m_LeftClickAction: {fileID: 1490621436}
   m_MiddleClickAction: {fileID: 1580909378}
   m_RightClickAction: {fileID: 1268991790}
   m_ScrollWheelAction: {fileID: 944471831}
   m_TrackedDevicePositionAction: {fileID: 1054279239}
   m_TrackedDeviceOrientationAction: {fileID: 868534553}
-  m_DeselectOnBackgroundClick: 1
+  m_DeselectOnBackgroundClick: 0
   m_PointerBehavior: 0
   m_CursorLockBehavior: 0
   m_ScrollDeltaPerTick: 6

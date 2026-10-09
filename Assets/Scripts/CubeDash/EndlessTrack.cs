@@ -92,19 +92,19 @@ namespace CubeDash
                 if (oldest == null) break;
                 furthest += RunnerRules.SegmentLength;
                 oldest.transform.position = new Vector3(transform.position.x, transform.position.y, furthest);
-                Populate(oldest, 0);
+                Populate(oldest, 0, difficulty);
             }
             return hitWrongColor;
         }
 
-        private void Populate(TrackSegment segment, int warmupRows)
+        private void Populate(TrackSegment segment, int warmupRows, float difficulty = 0f)
         {
             for (int row = 0; row < 3; row++)
             {
                 bool visible = row >= warmupRows;
                 if (visible)
                 {
-                    if (!firstVisibleRow) matchingLane = RunnerRules.NextSafeLane(random, matchingLane);
+                    if (!firstVisibleRow) matchingLane = RunnerRules.NextSafeLane(random, matchingLane, difficulty);
                     firstVisibleRow = false;
                 }
                 bool swapOthers = random.Next(2) == 0;

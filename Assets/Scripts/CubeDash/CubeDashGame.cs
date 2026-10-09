@@ -19,13 +19,20 @@ namespace CubeDash
         [SerializeField] private AudioSource collectionAudio = null;
         [SerializeField] private AudioClip collectionSound = null;
         [SerializeField, Range(0f, 1f)] private float collectionVolume = 0.65f;
+        [SerializeField, Range(0f, 0.1f)] private float collectionPitchStep = 0.045f;
         [SerializeField, Range(0.04f, 0.2f)] private float laneSmoothTime = 0.085f;
+        [SerializeField, Min(0f)] private float cubeEmission = 0.75f;
+        [SerializeField, Min(0f)] private float pickupEmission = 2.8f;
+        [SerializeField, Range(0.2f, 0.6f)] private float pickupDuration = 0.35f;
 
         [Header("Runner tuning")]
         [SerializeField] private CubeColor playerCubeColor = CubeColor.Red;
-        [SerializeField, Min(1f)] private float startSpeed = 12f;
-        [SerializeField, Range(12f, 30f)] private float maximumSpeed = 28f;
-        [SerializeField, Min(0f)] private float acceleration = 0.22f;
+        [SerializeField, Min(1f)] private float startSpeed = 14f;
+        [SerializeField, Range(12f, 48f)] private float maximumSpeed = 42f;
+        [Tooltip("How quickly speed approaches the score-based target, in metres per second squared.")]
+        [SerializeField, Min(0f)] private float acceleration = 1.2f;
+        [Tooltip("Points needed to reach top speed and the most demanding lane patterns.")]
+        [SerializeField, Min(30)] private int scoreForMaximumDifficulty = 120;
         [SerializeField, Min(12f)] private float laneChangeSpeed = 18f;
         [Tooltip("0 gives each run a fresh seed. Use a nonzero value to reproduce a track.")]
         [SerializeField] private int fixedSeed = 0;
@@ -35,6 +42,7 @@ namespace CubeDash
         public float Speed { get; private set; }
         public int Best { get; private set; }
         public int Score { get; private set; }
+        public float Difficulty => RunnerRules.DifficultyForScore(Score, scoreForMaximumDifficulty);
         public CubeColor PlayerCubeColor => playerCubeColor;
 
         private const string BestKey = "CubeDash.BestColorScore";
@@ -48,16 +56,18 @@ namespace CubeDash
         private Quaternion cameraRotation;
         private float cameraFov;
         private int targetLane = 1;
-        private Vector2 gestureStart;
-        private bool dragging;
-        private bool gestureUsed;
+        private Gamepad activeGamepad;
+        private readonly GamepadLaneInput stickInput = new GamepadLaneInput();
+        private readonly GamepadLaneInput menuStickInput = new GamepadLaneInput();
         private float shake;
         private Vector3 playerScale;
+        private Vector3 playerVisualOrigin;
         private float absorptionPulse;
         private float laneVelocity;
         private float animationTime;
         private float pickupAge = 1f;
         public float CollectionPulse => absorptionPulse;
+        public float CollectionAge => pickupAge;
         public Transform Player => player;
         public Camera GameCamera => gameCamera;
         public EndlessTrack Track => track;
@@ -75,6 +85,7 @@ namespace CubeDash
             if (playerVisual == null) playerVisual = player;
             playerRotation = playerVisual.localRotation;
             playerScale = playerVisual.localScale;
+            playerVisualOrigin = playerVisual.localPosition;
             cameraOrigin = gameCamera.transform.position;
             cameraFollow = cameraOrigin;
             cameraRotation = gameCamera.transform.rotation;
@@ -103,11 +114,12 @@ namespace CubeDash
                 playerVisual.localRotation = Quaternion.Lerp(playerVisual.localRotation,
                     playerRotation * Quaternion.Euler(0, laneVelocity * 0.16f, Mathf.Clamp(-laneVelocity * 0.65f, -12f, 12f)),
                     1f - Mathf.Exp(-16f * dt));
-                Speed = Mathf.Min(maximumSpeed, Speed + acceleration * dt);
+                float targetSpeed = Mathf.Lerp(startSpeed, maximumSpeed, Difficulty);
+                Speed = Mathf.MoveTowards(Speed, targetSpeed, acceleration * dt);
                 float travel = Speed * dt;
                 Distance += travel;
                 Bounds bounds = playerCollider.bounds;
-                bool wrongColor = track.Advance(travel, oldX, x, Mathf.InverseLerp(startSpeed, maximumSpeed, Speed),
+                bool wrongColor = track.Advance(travel, oldX, x, Difficulty,
                     new Vector2(bounds.extents.x, bounds.extents.z), bounds.center.z, out int collected);
                 Score += collected;
                 if (collected > 0)
@@ -117,7 +129,7 @@ namespace CubeDash
                     hud.NotifyCollection(collected);
                     if (collectionAudio != null && collectionSound != null)
                     {
-                        collectionAudio.pitch = 1f + ((Score - 1) % 5) * 0.045f;
+                        collectionAudio.pitch = 1f + ((Score - 1) % 5) * collectionPitchStep;
                         collectionAudio.PlayOneShot(collectionSound, collectionVolume);
                     }
                 }
@@ -132,16 +144,21 @@ namespace CubeDash
         {
             animationTime += dt;
             pickupAge += dt;
-            absorptionPulse = Mathf.MoveTowards(absorptionPulse, 0, dt * 3.8f);
-            float pop = pickupAge < 0.35f ? Mathf.Sin(pickupAge / 0.35f * Mathf.PI * 2f) * Mathf.Exp(-pickupAge * 9f) : 0;
+            absorptionPulse = Mathf.MoveTowards(absorptionPulse, 0, dt / pickupDuration);
+            // Compress first, then rebound; settle smoothly at the authored scale.
+            float phase = Mathf.Clamp01(pickupAge / pickupDuration);
+            float pop = -Mathf.Sin(phase * Mathf.PI * 2f) * Mathf.Pow(1f - phase, 2);
             float idle = State == RunState.Ready ? Mathf.Sin(animationTime * 2.6f) * 0.025f : 0;
             playerVisual.localScale = Vector3.Scale(playerScale, new Vector3(1f - pop * 0.13f + idle,
                 1f + pop * 0.19f - idle, 1f - pop * 0.13f + idle));
             // Keep the visual's feet on the road without changing the gameplay collider.
             if (playerVisual != player)
-                playerVisual.localPosition = Vector3.up * ((playerVisual.localScale.y - playerScale.y) * 0.5f);
+                playerVisual.localPosition = playerVisualOrigin + Vector3.up * ((playerVisual.localScale.y - playerScale.y) * 0.5f);
             if (State != RunState.GameOver)
-                SetPlayerColor(playerColor, 0.55f + absorptionPulse * 2.8f);
+            {
+                float breathing = State == RunState.Ready ? 1f + Mathf.Sin(animationTime * 2.6f) * 0.12f : 1f;
+                SetPlayerColor(playerColor, cubeEmission * breathing + absorptionPulse * pickupEmission);
+            }
         }
 
         private void UpdateCamera(float dt)
@@ -159,47 +176,70 @@ namespace CubeDash
 
         private void ReadInput()
         {
+            if (activeGamepad != null && (!activeGamepad.added || !activeGamepad.enabled))
+            {
+                activeGamepad = null;
+                if (hud.UsingGamepad && State == RunState.Running) TogglePause();
+                hud.SetInputMode(false);
+            }
+            Gamepad pad = Gamepad.current;
+            if (pad != null && (!pad.added || !pad.enabled)) pad = null;
+            if (pad != activeGamepad)
+            {
+                activeGamepad = pad;
+                ResetGamepadStick();
+            }
             Keyboard keyboard = Keyboard.current;
+            if ((keyboard != null && keyboard.anyKey.wasPressedThisFrame) ||
+                (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)) hud.SetInputMode(false);
             if (keyboard != null)
             {
-                if (keyboard.escapeKey.wasPressedThisFrame || keyboard.pKey.wasPressedThisFrame) TogglePause();
+                if (keyboard.escapeKey.wasPressedThisFrame || keyboard.pKey.wasPressedThisFrame) { TogglePause(); return; }
+                if (keyboard.rKey.wasPressedThisFrame && State != RunState.Ready) { StartRun(); return; }
                 if (keyboard.spaceKey.wasPressedThisFrame || keyboard.enterKey.wasPressedThisFrame)
                 {
-                    if (State == RunState.Ready || State == RunState.GameOver) StartRun();
-                    else if (State == RunState.Paused) TogglePause();
+                    if (State != RunState.Running) hud.ConfirmSelection();
+                    return;
                 }
-                if (keyboard.rKey.wasPressedThisFrame && State != RunState.Ready) StartRun();
-                if (keyboard.aKey.wasPressedThisFrame || keyboard.leftArrowKey.wasPressedThisFrame) ChangeLane(-1);
-                if (keyboard.dKey.wasPressedThisFrame || keyboard.rightArrowKey.wasPressedThisFrame) ChangeLane(1);
+                if (keyboard.tabKey.wasPressedThisFrame && State != RunState.Running) hud.CycleMenuSelection();
+                int direction = (keyboard.dKey.wasPressedThisFrame || keyboard.rightArrowKey.wasPressedThisFrame ? 1 : 0)
+                    - (keyboard.aKey.wasPressedThisFrame || keyboard.leftArrowKey.wasPressedThisFrame ? 1 : 0);
+                if (direction != 0 && State == RunState.Running) { ChangeLane(direction); return; }
             }
-
-            Touchscreen touch = Touchscreen.current;
-            if (touch != null && (touch.primaryTouch.press.isPressed || touch.primaryTouch.press.wasReleasedThisFrame))
-                ReadGesture(touch.primaryTouch.position.ReadValue(), touch.primaryTouch.press.wasPressedThisFrame,
-                    touch.primaryTouch.press.wasReleasedThisFrame);
-            else if (Mouse.current != null)
-                ReadGesture(Mouse.current.position.ReadValue(), Mouse.current.leftButton.wasPressedThisFrame,
-                    Mouse.current.leftButton.wasReleasedThisFrame);
+            if (pad == null) return;
+            int stickDirection = stickInput.Read(pad.leftStick.x.ReadValue());
+            int menuDirection = menuStickInput.Read(pad.leftStick.y.ReadValue());
+            bool confirm = pad.buttonSouth.wasPressedThisFrame;
+            bool pause = pad.startButton.wasPressedThisFrame;
+            bool back = pad.buttonEast.wasPressedThisFrame;
+            bool retry = pad.buttonWest.wasPressedThisFrame;
+            int dpadDirection = (pad.dpad.right.wasPressedThisFrame ? 1 : 0) - (pad.dpad.left.wasPressedThisFrame ? 1 : 0);
+            if (confirm || pause || back || retry || stickDirection != 0 || menuDirection != 0 ||
+                dpadDirection != 0 || pad.dpad.up.wasPressedThisFrame || pad.dpad.down.wasPressedThisFrame) hud.SetInputMode(true);
+            // Confirm is owned here, not also by the UI module: one press causes one action.
+            if (pause)
+            {
+                if (State == RunState.Ready || State == RunState.GameOver) StartRun();
+                else TogglePause();
+                return;
+            }
+            if (back && State == RunState.Paused) { TogglePause(); return; }
+            if (retry && (State == RunState.GameOver || State == RunState.Paused)) { StartRun(); return; }
+            if (confirm && State != RunState.Running) { hud.ConfirmSelection(); return; }
+            if (State == RunState.Running) ChangeLane(dpadDirection != 0 ? dpadDirection : stickDirection);
         }
 
-        private void ReadGesture(Vector2 position, bool pressed, bool released)
+        private void ResetGamepadStick()
         {
-            if (pressed) { gestureStart = position; dragging = true; gestureUsed = false; }
-            if (dragging && !gestureUsed && State == RunState.Running)
-            {
-                Vector2 delta = position - gestureStart;
-                if (Mathf.Abs(delta.x) >= Mathf.Max(35f, Screen.width * 0.045f) && Mathf.Abs(delta.x) > Mathf.Abs(delta.y))
-                {
-                    ChangeLane(delta.x > 0 ? 1 : -1);
-                    gestureUsed = true;
-                }
-            }
-            if (released)
-            {
-                if (dragging && !gestureUsed && Vector2.Distance(position, gestureStart) < 25f &&
-                    (State == RunState.Ready || State == RunState.GameOver)) StartRun();
-                dragging = false;
-            }
+            stickInput.Reset(activeGamepad != null ? activeGamepad.leftStick.x.ReadValue() : 0);
+            menuStickInput.Reset(activeGamepad != null ? activeGamepad.leftStick.y.ReadValue() : 0);
+        }
+
+        private void OnDisable()
+        {
+            activeGamepad = null;
+            stickInput.Reset();
+            menuStickInput.Reset();
         }
 
         public void ChangeLane(int direction)
@@ -214,11 +254,11 @@ namespace CubeDash
             Score = 0;
             Speed = startSpeed;
             shake = 0;
-            dragging = false;
+            ResetGamepadStick();
             player.position = playerOrigin;
             playerVisual.localRotation = playerRotation;
             playerVisual.localScale = playerScale;
-            if (playerVisual != player) playerVisual.localPosition = Vector3.zero;
+            if (playerVisual != player) playerVisual.localPosition = playerVisualOrigin;
             absorptionPulse = 0;
             laneVelocity = 0;
             pickupAge = 1;
@@ -226,10 +266,10 @@ namespace CubeDash
             gameCamera.transform.position = cameraOrigin;
             cameraFollow = cameraOrigin;
             gameCamera.fieldOfView = cameraFov;
-            if (collectionAudio != null) collectionAudio.Stop();
+            if (collectionAudio != null) { collectionAudio.Stop(); collectionAudio.pitch = 1f; }
             playerRenderer.sharedMaterial = track.ColorMaterial(playerCubeColor);
             playerColor = playerRenderer.sharedMaterial.color;
-            SetPlayerColor(playerColor);
+            SetPlayerColor(playerColor, cubeEmission);
             if (wake != null) { wake.SetColor(playerColor); wake.ResetWake(); }
             track.Reset(fixedSeed == 0 ? System.Environment.TickCount : fixedSeed, playerCubeColor);
             State = RunState.Running;
@@ -241,6 +281,7 @@ namespace CubeDash
             if (State == RunState.Running) State = RunState.Paused;
             else if (State == RunState.Paused) State = RunState.Running;
             else return;
+            ResetGamepadStick();
             if (collectionAudio != null)
             {
                 if (State == RunState.Paused) collectionAudio.Pause();
@@ -271,13 +312,14 @@ namespace CubeDash
 
         private void OnValidate()
         {
-            maximumSpeed = Mathf.Clamp(maximumSpeed, 12f, 30f);
+            maximumSpeed = Mathf.Clamp(maximumSpeed, 12f, 48f);
             startSpeed = Mathf.Clamp(startSpeed, 1f, maximumSpeed);
             laneChangeSpeed = Mathf.Max(12f, laneChangeSpeed);
             acceleration = Mathf.Max(0f, acceleration);
+            scoreForMaximumDifficulty = Mathf.Max(30, scoreForMaximumDifficulty);
         }
 
-        private void SetPlayerColor(Color color, float emission = 0.55f)
+        private void SetPlayerColor(Color color, float emission)
         {
             playerAppearance.SetColor("_BaseColor", color);
             playerAppearance.SetColor("_Color", color);

@@ -36,6 +36,7 @@ namespace CubeDash.Editor
             AuthorAudio(game);
             rounded = RoundedPanel();
             UpgradeHud(Object.FindAnyObjectByType<RunnerHud>());
+            CubeDashDesktopControls.ApplyToScene(Object.FindAnyObjectByType<RunnerHud>());
             EditorSceneManager.MarkSceneDirty(scene);
             AssetDatabase.SaveAssets();
             EditorSceneManager.SaveScene(scene);
@@ -74,7 +75,7 @@ namespace CubeDash.Editor
                 material.DisableKeyword("_SPECULARHIGHLIGHTS_OFF");
                 material.DisableKeyword("_ENVIRONMENTREFLECTIONS_OFF");
                 material.EnableKeyword("_EMISSION");
-                material.SetColor("_EmissionColor", material.color * 0.55f);
+                material.SetColor("_EmissionColor", material.color * 0.75f);
                 // URP requires an emissive flag to preserve _EMISSION on reimport. The cubes
                 // are not lightmap-static, so this does not bake recycled geometry into a map.
                 material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.BakedEmissive;

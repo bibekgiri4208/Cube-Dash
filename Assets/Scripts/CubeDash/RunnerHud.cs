@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 
 namespace CubeDash
@@ -33,6 +34,8 @@ namespace CubeDash
         private int shownBest = -1;
         private int shownMetres = -1;
         private float scorePulse;
+        private int feedbackCount;
+        private Vector2 feedbackOrigin;
         private float entrance = 1;
         private Color scoreColor;
         private CanvasGroup menuGroup;
@@ -41,30 +44,56 @@ namespace CubeDash
         private GameObject scorePanel;
         private GameObject objectivePanel;
         private GameObject brand;
+        private Text desktopHint;
+        private Text menuHint;
+        private Text retryHint;
+        private Button primaryButton;
+        private Button retryButton;
+        public bool UsingGamepad { get; private set; }
 
         public void Initialize(CubeDashGame controller)
         {
             game = controller;
             speed.color = game.Track.ColorMaterial(game.PlayerCubeColor).color;
             scoreColor = distance.color;
+            if (collectionFeedback != null) feedbackOrigin = collectionFeedback.rectTransform.anchoredPosition;
             menuGroup = overlay.GetComponent<CanvasGroup>();
             scorePanel = safeRoot.Find("Score Panel")?.gameObject;
             objectivePanel = safeRoot.Find("Color Objective Panel")?.gameObject;
             brand = safeRoot.Find("Brand")?.gameObject;
+            desktopHint = safeRoot.Find("Desktop Controls Hint")?.GetComponent<Text>();
+            menuHint = card.Find("Keyboard Hint")?.GetComponent<Text>();
+            primaryButton = card.Find("Primary Action")?.GetComponent<Button>();
+            controls.SetActive(false);
+            InputSystemUIInputModule module = EventSystem.current != null ? EventSystem.current.GetComponent<InputSystemUIInputModule>() : null;
+            if (module != null)
+            {
+                // Gameplay owns confirm/cancel. Keep the module's pointer and navigation actions.
+                module.submit = null;
+                module.cancel = null;
+            }
             if (gameOverOverlay != null)
             {
                 endGroup = gameOverOverlay.GetComponent<CanvasGroup>();
                 endComposition = gameOverOverlay.transform.Find("Abstract Composition") as RectTransform;
+                retryButton = endComposition != null ? endComposition.Find("Retry")?.GetComponent<Button>() : null;
+                retryHint = endComposition != null ? endComposition.Find("Tap Hint")?.GetComponent<Text>() : null;
             }
             UpdateStats();
         }
 
         public void NotifyCollection(int count)
         {
+            if (count <= 0) return;
+            feedbackCount = scorePulse > 0 ? feedbackCount + count : count;
             scorePulse = 1;
             if (collectionFeedback != null)
             {
-                collectionFeedback.text = "+" + count;
+                collectionFeedback.text = "+" + feedbackCount;
+                Color color = collectionFeedback.color;
+                color.a = 1;
+                collectionFeedback.color = color;
+                collectionFeedback.rectTransform.anchoredPosition = feedbackOrigin;
                 collectionFeedback.gameObject.SetActive(true);
             }
         }
@@ -78,6 +107,55 @@ namespace CubeDash
         public void MoveLeft() => game.ChangeLane(-1);
         public void MoveRight() => game.ChangeLane(1);
 
+        public void SetInputMode(bool gamepad)
+        {
+            if (UsingGamepad == gamepad) return;
+            UsingGamepad = gamepad;
+            RefreshInputPrompts();
+            if (gamepad && game.State != CubeDashGame.RunState.Running && EventSystem.current != null &&
+                EventSystem.current.currentSelectedGameObject == null) FocusPrimary();
+        }
+
+        public void ConfirmSelection()
+        {
+            if (game.State == CubeDashGame.RunState.Running) return;
+            GameObject selected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
+            Button button = selected != null ? selected.GetComponent<Button>() : null;
+            if (button != null && button.gameObject.activeInHierarchy && button.IsInteractable() &&
+                (button == primaryButton || button == retryButton || button.gameObject == secondaryButton)) button.onClick.Invoke();
+            else PrimaryAction();
+        }
+
+        public void CycleMenuSelection()
+        {
+            if (EventSystem.current == null || game.State == CubeDashGame.RunState.Running) return;
+            if (game.State != CubeDashGame.RunState.Paused) { FocusPrimary(); return; }
+            GameObject current = EventSystem.current.currentSelectedGameObject;
+            EventSystem.current.SetSelectedGameObject(current == secondaryButton ? primaryButton.gameObject : secondaryButton);
+        }
+
+        private void FocusPrimary()
+        {
+            if (EventSystem.current == null) return;
+            Button button = game.State == CubeDashGame.RunState.GameOver ? retryButton : primaryButton;
+            EventSystem.current.SetSelectedGameObject(button != null ? button.gameObject : null);
+        }
+
+        private void RefreshInputPrompts()
+        {
+            if (game.State == CubeDashGame.RunState.Ready)
+            {
+                description.text = "Collect " + game.PlayerCubeColor.ToString().ToUpperInvariant() + ". Dodge the rest.\n" +
+                    (UsingGamepad ? "Left stick or D-pad to change lanes." : "A / D or arrow keys to change lanes.");
+                actionLabel.text = "START RUN";
+            }
+            if (menuHint != null) menuHint.text = UsingGamepad ? "A / Cross confirm   ·   D-pad navigate   ·   Menu pause" :
+                "Enter / Space confirm   ·   Tab / arrows select   ·   Esc pause";
+            if (desktopHint != null) desktopHint.text = UsingGamepad ? "LEFT STICK / D-PAD   ·   MENU pause" :
+                "A / D or LEFT / RIGHT   ·   P / ESC pause   ·   R restart";
+            if (retryHint != null) retryHint.text = UsingGamepad ? "A / Cross or X / Square to retry" : "Enter / Space or R to retry";
+        }
+
         public void Show(CubeDashGame.RunState state)
         {
             bool running = state == CubeDashGame.RunState.Running;
@@ -88,9 +166,15 @@ namespace CubeDash
             if (state == CubeDashGame.RunState.Running && game.Score == 0)
             {
                 scorePulse = 0;
+                feedbackCount = 0;
                 shownScore = shownMetres = -1;
                 distance.rectTransform.localScale = Vector3.one;
-                if (collectionFeedback != null) collectionFeedback.gameObject.SetActive(false);
+                distance.color = scoreColor;
+                if (collectionFeedback != null)
+                {
+                    collectionFeedback.rectTransform.anchoredPosition = feedbackOrigin;
+                    collectionFeedback.gameObject.SetActive(false);
+                }
             }
             overlay.SetActive(!running && !(ended && gameOverOverlay != null));
             if (gameOverOverlay != null) gameOverOverlay.SetActive(ended);
@@ -102,7 +186,8 @@ namespace CubeDash
             if (objectivePanel != null) objectivePanel.SetActive(!ended);
             if (brand != null) brand.SetActive(!ended);
             if (ended && collectionFeedback != null) collectionFeedback.gameObject.SetActive(false);
-            controls.SetActive(running);
+            controls.SetActive(false);
+            if (desktopHint != null) desktopHint.gameObject.SetActive(running);
             pauseButton.SetActive(running);
             secondaryButton.SetActive(state == CubeDashGame.RunState.Paused);
             if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);
@@ -110,8 +195,7 @@ namespace CubeDash
             {
                 case CubeDashGame.RunState.Ready:
                     heading.text = "CUBE DASH";
-                    description.text = "Collect " + game.PlayerCubeColor.ToString().ToUpperInvariant() + ". Dodge the rest.\nArrows / A D / swipe to move.";
-                    actionLabel.text = "TAP TO START";
+                    actionLabel.text = "START RUN";
                     break;
                 case CubeDashGame.RunState.Paused:
                     heading.text = "PAUSED";
@@ -124,6 +208,8 @@ namespace CubeDash
                     actionLabel.text = "TRY AGAIN";
                     break;
             }
+            RefreshInputPrompts();
+            if (!running) FocusPrimary();
         }
 
         public void UpdateStats()
@@ -168,7 +254,7 @@ namespace CubeDash
                 Color color = collectionFeedback.color;
                 color.a = scorePulse;
                 collectionFeedback.color = color;
-                collectionFeedback.rectTransform.anchoredPosition = new Vector2(194, -70 + (1 - scorePulse) * 22);
+                collectionFeedback.rectTransform.anchoredPosition = feedbackOrigin + Vector2.up * ((1 - scorePulse) * 22);
                 if (scorePulse <= 0) collectionFeedback.gameObject.SetActive(false);
             }
             entrance = Mathf.Min(1, entrance + Time.unscaledDeltaTime * 4.5f);

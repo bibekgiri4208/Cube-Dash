@@ -10,6 +10,7 @@ namespace CubeDash
         [SerializeField] private Transform[] pieces = new Transform[0];
         [SerializeField, Min(0.1f)] private float minimumLength = 2.8f;
         [SerializeField, Min(0.1f)] private float maximumLength = 4.4f;
+        [SerializeField, Range(0.2f, 0.8f)] private float pickupWaveDuration = 0.45f;
         private const int HistorySize = 160;
         private const float SampleSpacing = 0.05f;
         private readonly float[] history = new float[HistorySize];
@@ -42,11 +43,21 @@ namespace CubeDash
             for (int i = 0; i < pieces.Length; i++)
             {
                 float taper = 1f - (i + 0.5f) / pieces.Length;
-                Color color = trailColor * (1.4f + pulse * 1.8f);
-                color.a = Mathf.Pow(taper, 1.3f) * (0.62f + pulse * 0.2f);
+                float wave = PickupWave(i);
+                Color color = trailColor * (1.4f + pulse * 1.2f + wave * 2f);
+                color.a = Mathf.Pow(taper, 1.3f) * Mathf.Min(0.9f, 0.62f + pulse * 0.12f + wave * 0.2f);
                 appearance.SetColor("_Tint", color);
                 renderers[i].SetPropertyBlock(appearance);
             }
+        }
+
+        private float PickupWave(int index)
+        {
+            if (game == null || game.CollectionAge >= pickupWaveDuration) return 0;
+            float progress = game.CollectionAge / pickupWaveDuration;
+            float along = (index + 0.5f) / Mathf.Max(1, pieces.Length);
+            float envelope = Mathf.Clamp01(1f - Mathf.Abs(along - progress) / 0.24f);
+            return Mathf.SmoothStep(0, 1, envelope) * (1f - progress);
         }
 
         public void ResetWake()
@@ -108,7 +119,7 @@ namespace CubeDash
                 pieces[i].position = (a + b) * 0.5f;
                 pieces[i].rotation = Quaternion.LookRotation(a - b, Vector3.up);
                 float taper = Mathf.Pow(1f - (i + 0.5f) / pieces.Length, 0.7f);
-                pieces[i].localScale = new Vector3((0.85f + game.CollectionPulse * 0.12f) * taper,
+                pieces[i].localScale = new Vector3((0.85f + game.CollectionPulse * 0.08f + PickupWave(i) * 0.1f) * taper,
                     0.012f, Vector3.Distance(a, b) + 0.015f);
             }
             UpdateAppearance(game.CollectionPulse);

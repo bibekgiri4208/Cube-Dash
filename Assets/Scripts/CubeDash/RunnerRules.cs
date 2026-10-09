@@ -13,10 +13,20 @@ namespace CubeDash
         public const float ObstacleDepth = 1.65f;
         public const float PlayerSize = 0.9f;
 
-        public static int NextSafeLane(System.Random random, int previousLane)
+        public static float DifficultyForScore(int score, int scoreForMaximumDifficulty)
+        {
+            return Mathf.Clamp01(score / (float)Math.Max(1, scoreForMaximumDifficulty));
+        }
+
+        public static int NextSafeLane(System.Random random, int previousLane, float difficulty = 0f)
         {
             // A guaranteed path never requires crossing two lanes between adjacent rows.
-            return random.Next(Math.Max(0, previousLane - 1), Math.Min(2, previousLane + 1) + 1);
+            // Long stationary stretches become rare as the score climbs, without teleporting
+            // the safe route from one outside lane to the other.
+            float stayChance = Mathf.Lerp(0.35f, 0.05f, Mathf.Clamp01(difficulty));
+            if (random.NextDouble() < stayChance) return previousLane;
+            if (previousLane == 0 || previousLane == 2) return 1;
+            return random.Next(2) == 0 ? 0 : 2;
         }
 
         public static int BlockedLanes(System.Random random, int safeLane, float difficulty)
