@@ -9,8 +9,8 @@ using Object = UnityEngine.Object;
 namespace CubeDash.Editor
 {
     /// <summary>
-    /// Authoring tool only. Adds Shield / Double Points / Fighter / Truck pickups as real prefab
-    /// and scene objects: a shared PowerUp gem prefab, three pickups inside each TrackSegment,
+    /// Authoring tool only. Adds Shield / Double Points / Fighter / Truck / Magnet pickups as real prefab
+    /// and scene objects: a shared PowerUp prefab, three separate pickups inside each TrackSegment,
     /// pick-up materials on the track, and a "Power-Up Status" line in the HUD. Safe to re-run.
     /// </summary>
     public static class CubeDashPowerUps
@@ -52,9 +52,9 @@ namespace CubeDash.Editor
 
         internal static Material[] MakePickupMaterials()
         {
-            Color[] colors = { Shield, Points, new Color(0.65f, 0.55f, 1f), new Color(0.3f, 0.46f, 1f) };
-            string[] names = { "PickupShield", "PickupPoints", "PickupFlight", "PickupTruck" };
-            Material[] materials = new Material[4];
+            Color[] colors = { Shield, Points, new Color(0.65f, 0.55f, 1f), new Color(0.3f, 0.46f, 1f), new Color(0.96f, 0.18f, 0.13f) };
+            string[] names = { "PickupShield", "PickupPoints", "PickupFlight", "PickupTruck", "PickupMagnet" };
+            Material[] materials = new Material[5];
             for (int i = 0; i < materials.Length; i++)
             {
                 string path = Materials + "CubeDash" + names[i] + ".mat";
@@ -114,6 +114,9 @@ namespace CubeDash.Editor
                 if (pickup == null) pickup = contents.AddComponent<PowerUpPickup>();
                 Set(pickup, "visual", gem);
                 Set(pickup, "visualRenderer", renderer);
+                AttachModel(contents, pickup, "ShieldPickup.prefab", "Shield Icon", "shieldVisual");
+                AttachModel(contents, pickup, "DoublePointsPickup.prefab", "2x Icon", "pointsVisual");
+                AttachModel(contents, pickup, "Magnet.prefab", "Magnet Icon", "magnetVisual");
                 GameObject fighterPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(Prefabs + "FighterPlane.prefab");
                 if (fighterPrefab != null)
                 {
@@ -147,10 +150,26 @@ namespace CubeDash.Editor
                     Set(pickup, "truckVisual", icon);
                 }
 
+                pickup.Configure(PowerUpType.Shield, pickups[0]);
                 PrefabUtility.SaveAsPrefabAsset(contents, path);
             }
             finally { PrefabUtility.UnloadPrefabContents(contents); }
             return AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        }
+
+        private static void AttachModel(GameObject root, PowerUpPickup pickup, string prefabName, string name, string property)
+        {
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(Prefabs + prefabName);
+            if (prefab == null) return;
+            Transform icon = root.transform.Find(name);
+            if (icon == null)
+            {
+                GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab, root.scene);
+                icon = instance.transform; icon.SetParent(root.transform, false); icon.name = name;
+            }
+            icon.localPosition = Vector3.zero; icon.localScale = Vector3.one * 0.8f;
+            icon.gameObject.SetActive(false);
+            Set(pickup, property, icon);
         }
 
         private static void UpdateTrackSegment(GameObject pickupPrefab)
@@ -169,7 +188,7 @@ namespace CubeDash.Editor
                     GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(pickupPrefab, root.scene);
                     instance.name = name;
                     instance.transform.SetParent(root.transform, false);
-                    instance.transform.localPosition = new Vector3(0, 1.35f, 7 + row * 14);
+                    instance.transform.localPosition = new Vector3(0, 1.35f, row * RunnerRules.RowSpacing);
                     instance.SetActive(false);
                     pickups[row] = instance.GetComponent<PowerUpPickup>();
                 }

@@ -202,7 +202,7 @@ namespace CubeDash.Tests
         }
 
         [UnityTest]
-        public IEnumerator EveryMatchingColorUsesThePitchCycleButFatalContactDoesNot()
+        public IEnumerator EveryPlayerColorUsesTheCoinPitchCycleButFatalContactDoesNot()
         {
             yield return new EnterPlayMode();
             yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/Level.unity",
@@ -221,7 +221,7 @@ namespace CubeDash.Tests
                 RunnerCube target = game.Track.Segments[1].Cubes[0];
                 for (int pickup = 0; pickup < 2; pickup++)
                 {
-                    target.Configure(color, game.Track.ColorMaterial(color));
+                    target.Configure(color, game.Track.ColorMaterial(color), true);
                     target.transform.position = new Vector3(0, 0.575f, 0.5f);
                     target.gameObject.SetActive(true);
                     yield return null;
@@ -230,7 +230,7 @@ namespace CubeDash.Tests
                 }
                 audio.Stop();
                 CubeColor wrong = color == CubeColor.Red ? CubeColor.Blue : CubeColor.Red;
-                target.Configure(wrong, game.Track.ColorMaterial(wrong));
+                target.Configure(wrong, game.Track.ColorMaterial(wrong), false);
                 target.transform.position = new Vector3(0, 0.575f, 0.5f);
                 target.gameObject.SetActive(true);
                 yield return null;

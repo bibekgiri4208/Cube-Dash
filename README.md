@@ -1,4 +1,4 @@
-# Cube Dash — Color Match
+# Cube Dash — Coin Runner
 
 Open **`Assets/Scenes/Level.unity`**. The player, colored cubes, dynamic landscapes, track, Canvas,
 trail, lighting, and original **Main Camera** are real saved scene/prefab objects, visible before Play.
@@ -7,8 +7,8 @@ trail, lighting, and original **Main Camera** are real saved scene/prefab object
 
 - Desktop-first: press **Play**, then **Space/Enter**, gamepad **A / Cross**, or click **START RUN**.
 - Move with **A/D**, **Left/Right**, gamepad **left stick**, or **D-pad left/right**.
-- **Collect cubes matching your player's color:** each cube disappears and awards **1 point**.
-- **Avoid other colors:** any wrong-color contact ends the run.
+- **Collect gold 3D coins:** each coin disappears and awards **1 point**.
+- **Avoid obstacle cubes:** touching an obstacle ends the run.
 - **P/Escape** or gamepad **Menu/Start** pauses/resumes; **B / Circle** also resumes a paused run.
 - **R** restarts; **X / Square** restarts from pause or game over. **A / Cross** confirms the focused menu action.
 - Navigate pause-menu buttons using **Up/Down**, **Tab**, **D-pad**, or the **left stick**. Mouse clicks still work.
@@ -27,25 +27,29 @@ visible behind it. Edit it under **Canvas > Safe Area > Game Over Overlay**.
 
 The default player is **red**. Choose Red, Blue, or Green using **Player Cube Color** on
 **Game Manager**. Gameplay uses explicit color identities rather than comparing shaded RGB values.
-The player and target cubes share the same saved palette materials. The best collection score
+The player and obstacle cubes use the saved palette materials; rewards always use gold coin materials. The best collection score
 is saved separately from the old distance record.
 
 ## Power-ups
 
-- **Shield:** absorbs one wrong-color cube contact.
-- **Double Points:** doubles matching-cube scoring for seven seconds.
+- **Shield:** a solid cyan shield pickup with silver emblem; absorbs one obstacle contact.
+- **Double Points:** a gold extruded **2×** pickup; doubles coin scoring for seven seconds.
+- **Magnet:** a red horseshoe magnet with silver tips; pulls nearby coins from all three lanes
+  within **8 metres** for **10 seconds**, without attracting hazards or other power-ups.
+  It works alongside Double Points and Truck, freezes on pause, and clears on restart/game over.
+  Collecting another Magnet refreshes its timer. Flight still cannot collect ground coins.
 - **Fighter Plane:** a miniature fighter pickup transforms the player into a faceted, twin-engine
   jet for **10 seconds**. It climbs above the rows, banks while steering, and emits two bounded
-  smoke/afterburner trails. Ground cubes and pickups cannot be hit or collected while airborne;
+   smoke/afterburner trails. Ground obstacles, coins and power-ups cannot be hit or collected while airborne;
   distance and scenery continue advancing at the normal speed.
 - At the end of flight, the cube returns and descends with **3 seconds of continuous landing
   shield**, displayed as a cyan bubble and HUD countdown. It protects against multiple wrong-color
   contacts, without spending an existing one-hit shield. Pause freezes flight, shielding and exhaust;
   restart clears all flight effects, timers and restores the cube/collider/trail.
 - **Truck:** a miniature blue cab-over truck pickup transforms the cube into a three-axle tractor
-  for **10 seconds**. It keeps normal lane steering and smashes every cube it touches into colored,
-   tumbling pieces, regardless of color. Matching cubes still award points (and respect Double Points);
-   other colors are destroyed without ending the run or spending a shield charge.
+   for **10 seconds**. It keeps normal lane steering and smashes obstacle cubes into colored,
+   tumbling pieces, regardless of color. Coins are collected normally (and respect Double Points),
+   without creating obstacle fragments. Obstacles are destroyed without ending the run or spending a shield charge.
    The compact truck has soft suspension bounce, body sway and steering front wheels. Both tall chrome
    stacks emit bounded, billowing smoke that rises and drifts behind the truck.
 - When the truck ends, the cube receives **3 seconds of continuous exit shield**, with a cyan bubble
@@ -54,7 +58,14 @@ is saved separately from the old distance record.
    Collecting another truck refreshes its duration. Fighter Plane pickups are ignored while the truck is active
    and become collectible again after it expires.
 
-The four bonus types share the existing pickup slots and unchanged spawn frequency. Fighter
+The five bonus types share the existing pooled pickup slots and unchanged spawn frequency.
+Power-ups occupy dedicated positions **7 metres before coin rows**, rather than sitting on coins.
+Even staggered hazards remain at least **4 metres** away. Pickups sway/bob while running and freeze on pause.
+Their Shield, 2× and Magnet meshes are saved under `Assets/3D Models`, with editable prefabs
+`Assets/Prefab/CubeDash/ShieldPickup.prefab`, `DoublePointsPickup.prefab` and `Magnet.prefab`.
+**Tools > Cube Dash > Add Magnet and 3D Power-Up Models** rebakes them and updates saved pickup slots,
+without rebuilding coins, environments or obstacles. Magnet duration and range are exposed on **Game Manager**.
+Fighter
 geometry, particles and shield are saved assets, not generated during Play. The editable model is
 `Assets/Prefab/CubeDash/FighterPlane.prefab`, with mesh `Assets/3D Models/CubeDashFighter.asset`
 and materials in `Assets/Material/FighterPlane`. **Tools > Cube Dash > Add Fighter Plane Power-Up**
@@ -128,10 +139,10 @@ GI: the endless city moves and recycles, so world-space baked lightmaps would no
 The original fog and high-quality shadow presets are retained.
 
 Lane changes ease in/out with a restrained bank and yaw; the camera follows smoothly. The ready
-cube breathes gently with a synchronized glow. Matching pickups trigger a squash-then-rebound,
+cube breathes gently with a synchronized glow. Coin pickups trigger a squash-then-rebound,
 an emission flash, a score pop, floating **+1**, and an
-original rising arcade chime. The red player gets this sound when collecting red cubes; choosing
-blue or green gives the same feedback only for that matching color, never for a fatal contact.
+original rising arcade chime. Every player color gets the same feedback for coins,
+never for a fatal obstacle contact.
 Sound is a short, locally authored PCM clip, with a five-step pitch cycle and Inspector volume
 and pitch step. Rapid pickups combine in the floating score popup rather than losing feedback.
 Pausing freezes gameplay feedback and pauses audio; restarting clears the pulse and tail history.
@@ -149,7 +160,7 @@ and hover/press feedback. The current environment remains visible around the men
   **Cube Visual** child banks and squash/stretches independently, keeping collision bounds stable.
 - **Track > Segment 00–07** are reusable `TrackSegment` prefab instances.
   Their nine row cubes use the existing **`ObstacleCube.prefab`**, now a plain color cube
-  with a `RunnerCube` component rather than a barricade.
+   with a `RunnerCube` component. Reward slots show the saved **Coin Visual** child instead of the cube mesh.
 - **City Surroundings** contains three editable `Skyscraper` prefab designs with detailed architecture
   (podium bases, banded shafts, stepped crowns, roof plant, masts and shared baked facade details). Sixteen towers are placed
   per segment across four depth rows per side, ending in a taller skyline row on the plaza slab.
@@ -178,16 +189,28 @@ and hover/press feedback. The current environment remains visible around the men
 Speed grows gently with collection score, from **12 m/s** to **30 m/s** over the first **180 points**,
 with acceleration limited to **0.8 m/s²**. Rows arrive roughly every **1.17 → 0.47 s**,
 giving more time to react and look at the environments. Recycled rows increasingly demand lane
-changes, but same-lane matches only fall from **50%** to **20%**, retaining more straight stretches.
+changes, but same-lane coin routes only fall from **50%** to **20%**, retaining more straight stretches.
 The opening remains safely delayed, and the matching route never jumps across two lanes at once.
 Tune **Score For Maximum Difficulty**, **Maximum Speed**, and **Acceleration** on **Game Manager**.
 Existing row cubes and road segments are still reused; difficulty does not add runtime objects.
 
-Each active row contains one red, one blue, and one green cube. The matching-color lane changes
-by at most one lane per row. The first row is safely delayed and begins with a center-lane match.
+Gold coins are saved in `Assets/Prefab/CubeDash/Coin.prefab`, with mesh `Assets/3D Models/CubeDashCoin.asset`
+and materials in `Assets/Material/Coins`. The double-sided model has a bevelled edge, raised rim and embossed
+star. Coins spin and bob while running, freeze on pause, and reset when their pooled slot is reused.
+Their animation never moves the gameplay hitbox. **Tools > Cube Dash > Add 3D Coins** rebakes the assets
+and updates saved reward visuals and HUD wording without changing obstacles or gameplay tuning.
+
+Track layouts now mix single-lane obstacles, open stretches, occasional two-lane blocks and staggered
+hazards instead of always forcing one safe lane. Open lanes can be empty or carry coins;
+multiple lanes can offer points, and bonuses may appear in any open lane. At least one coin route changes
+by at most one lane per row, and a two-lane block remains reachable from every previously open lane.
+Two-lane blocks never appear consecutively. The first row is safely delayed, has all three lanes open,
+and includes a center-lane coin. Staggered hazards arrive up to 3 metres before their row's rewards,
+leaving time to steer away after collection. At top difficulty, most patterns still have multiple open lanes.
 Existing segments/cubes are recycled and recolored; no geometry or UI is created at runtime.
 Swept collider checks handle low-frame-rate contacts in chronological order, prevent duplicate
-collection, and never award points for cubes after an earlier fatal touch.
+collection, and never award points for coins after an earlier fatal touch. Magnet attraction uses bounded
+swept substeps, begins at its pickup time, and never awards a direct-contact coin twice.
 
 The original Plane is retained as the starting section, and the original Main Camera remains
 assigned to Game Manager. The clean-style authoring tools are Editor-only; the completed scene
@@ -219,8 +242,8 @@ exactly so the fogged skyline dissolves into the sky without a seam.
 ## Tests
 
 **Window > General > Test Runner > EditMode > CubeDash.EditorTests** checks authored scene
-references, all-color/reachable procedural rows, reproducible seeds, swept contacts, matching
-collection, wrong-color failure, scoring/restart, pause, the trail, shadow presets, and 50 km of
+references, varied/reachable procedural layouts, reproducible seeds, swept contacts, coin
+collection, obstacle failure, scoring/restart, pause, the trail, shadow presets, and 50 km of
 fixed-size recycling. `ArcadePolishTests` additionally checks selective bloom, emissive palette,
 the non-silent/click-free pickup clip, saved audio/UI references, squash/rebound and traveling
 trail light, rapid-pickup popups, all three colors' pitch cycles, and pickup/pause/restart feedback.
@@ -236,3 +259,8 @@ chronological takeoff during long frames.
 `TruckPowerUpTests` checks the authored truck and debris pool, transformation, all-color smashing,
 steering, pause/restart, three-second multi-hit exit shielding, bounded fragments, pickup refresh,
 fighter/truck switching and chronological activation on long frames.
+`CoinPickupTests` checks the saved 3D coin, pre-Play reward visuals, collection with every player color,
+stable hitboxes, spin/bob, pause/restart, duplicate-score prevention and fixed-size pooling.
+`MagnetPowerUpTests` checks the saved Shield/2×/Magnet models, separate power-up positions through recycling,
+cross-lane coin attraction for every player color, range limits, Double Points stacking, timers/pause/restart,
+pickup animation reset, airborne suppression and chronological long-frame collection.

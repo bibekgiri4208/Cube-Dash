@@ -197,6 +197,110 @@ namespace CubeDash.Tests
             Assert.That(game.State, Is.EqualTo(CubeDashGame.RunState.Running));
         }
 
+        [UnityTest]
+        public IEnumerator GeneratedLayoutsOfferChoicesAndRecycleWithoutDriftingOrGrowing()
+        {
+            yield return new EnterPlayMode();
+            yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/Level.unity",
+                new LoadSceneParameters(LoadSceneMode.Single));
+            yield return null;
+            CubeDashGame game = Object.FindAnyObjectByType<CubeDashGame>();
+            game.enabled = false;
+            EndlessTrack track = game.Track;
+            track.Reset(42);
+            int objects = track.GetComponentsInChildren<Transform>(true).Length;
+            string initialLayout = LayoutFingerprint(track);
+            var stats = new LayoutStats();
+            foreach (TrackSegment segment in track.Segments) InspectLayout(track, segment, stats);
+            for (int section = 0; section < 60; section++)
+            {
+                track.Advance(RunnerRules.SegmentLength, 0, 0, 1, Vector2.one * 0.575f, 0,
+                    false, true, false, out _, out _);
+                TrackSegment newest = track.Segments[0];
+                foreach (TrackSegment segment in track.Segments)
+                    if (segment.transform.localPosition.z > newest.transform.localPosition.z) newest = segment;
+                InspectLayout(track, newest, stats);
+            }
+            Assert.That(stats.OpenChoices, Is.GreaterThan(stats.Rows * 0.8f));
+            Assert.That(stats.RewardChoices, Is.GreaterThan(30));
+            Assert.That(stats.EmptySlots, Is.GreaterThan(30));
+            Assert.That(stats.Staggered, Is.GreaterThan(30));
+            Assert.That(track.GetComponentsInChildren<Transform>(true).Length, Is.EqualTo(objects));
+            track.Reset(42);
+            Assert.That(LayoutFingerprint(track), Is.EqualTo(initialLayout), "Restart restores the seed and authored slot positions.");
+        }
+
+        private sealed class LayoutStats
+        {
+            public int Rows, OpenChoices, RewardChoices, EmptySlots, Staggered, PreviousMask;
+        }
+
+        private static void InspectLayout(EndlessTrack track, TrackSegment segment, LayoutStats stats)
+        {
+            for (int row = 0; row < 3; row++)
+            {
+                int blocked = 0, rewards = 0, active = 0;
+                for (int lane = 0; lane < 3; lane++)
+                {
+                    int index = row * 3 + lane;
+                    RunnerCube cube = segment.Cubes[index];
+                    Vector3 home = segment.CubeHomePosition(index);
+                    Assert.That(cube.transform.localPosition.x, Is.EqualTo((lane - 1) * track.LaneWidth));
+                    Assert.That(cube.transform.localPosition.y, Is.EqualTo(home.y));
+                    float lead = home.z - cube.transform.localPosition.z;
+                    Assert.That(lead, Is.InRange(0, RunnerRules.HazardLeadDistance));
+                    if (!cube.gameObject.activeSelf) { stats.EmptySlots++; continue; }
+                    active++;
+                    if (cube.Color == CubeColor.Red) rewards++;
+                    else blocked |= 1 << lane;
+                    if (lead > 0) stats.Staggered++;
+                }
+                if (active == 0) continue;
+                if (stats.Rows == 0)
+                {
+                    Assert.That(blocked, Is.Zero, "The opening leaves every lane safe.");
+                    Assert.That(segment.Cubes[row * 3 + 1].gameObject.activeSelf, Is.True);
+                    Assert.That(segment.Cubes[row * 3 + 1].Color, Is.EqualTo(CubeColor.Red));
+                }
+                stats.Rows++;
+                Assert.That(rewards, Is.GreaterThan(0));
+                bool narrow = (blocked & (blocked - 1)) != 0;
+                Assert.That(narrow && (stats.PreviousMask & (stats.PreviousMask - 1)) != 0, Is.False);
+                if (!narrow) stats.OpenChoices++;
+                if (rewards > 1) stats.RewardChoices++;
+                for (int oldLane = 0; oldLane < 3; oldLane++)
+                {
+                    if ((stats.PreviousMask & (1 << oldLane)) != 0) continue;
+                    bool reachable = false;
+                    for (int lane = 0; lane < 3; lane++)
+                        reachable |= (blocked & (1 << lane)) == 0 && Mathf.Abs(lane - oldLane) <= 1;
+                    Assert.That(reachable, Is.True);
+                }
+                PowerUpPickup bonus = segment.PowerUps[row];
+                if (bonus.gameObject.activeSelf)
+                {
+                    int lane = Mathf.RoundToInt(bonus.transform.localPosition.x / track.LaneWidth) + 1;
+                    Assert.That(lane, Is.InRange(0, 2));
+                    Assert.That(blocked & (1 << lane), Is.Zero, "Bonuses never force a wrong-color hit.");
+                    Assert.That(bonus.transform.localPosition.z, Is.EqualTo(segment.PowerUpHomePosition(row).z));
+                }
+                stats.PreviousMask = blocked;
+            }
+        }
+
+        private static string LayoutFingerprint(EndlessTrack track)
+        {
+            var result = new System.Text.StringBuilder();
+            foreach (TrackSegment segment in track.Segments)
+            {
+                foreach (RunnerCube cube in segment.Cubes)
+                    result.Append(cube.gameObject.activeSelf).Append(cube.Color).Append(cube.transform.localPosition);
+                foreach (PowerUpPickup pickup in segment.PowerUps)
+                    if (pickup.gameObject.activeSelf) result.Append(pickup.Type).Append(pickup.transform.localPosition);
+            }
+            return result.ToString();
+        }
+
         [UnityTearDown]
         public IEnumerator LeavePlayMode()
         {

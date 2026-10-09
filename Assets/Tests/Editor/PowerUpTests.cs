@@ -23,24 +23,31 @@ namespace CubeDash.Tests
                 foreach (TrackSegment segment in game.Track.Segments)
                 {
                     Assert.That(segment.PowerUps.Length, Is.EqualTo(3));
-                    foreach (PowerUpPickup pickup in segment.PowerUps)
+                    for (int row = 0; row < segment.PowerUps.Length; row++)
                     {
+                        PowerUpPickup pickup = segment.PowerUps[row];
                         Assert.That(pickup, Is.Not.Null);
                         Assert.That(pickup.GetComponent<BoxCollider>(), Is.Not.Null);
                         Transform gem = pickup.transform.Find("Gem");
                         Assert.That(gem, Is.Not.Null);
                         Assert.That(gem.GetComponent<Renderer>(), Is.Not.Null);
                         Assert.That(pickup.transform.localPosition.y, Is.EqualTo(1.35f));
+                        Assert.That(pickup.transform.localPosition.z,
+                            Is.EqualTo(segment.Cubes[row * 3].transform.localPosition.z - RunnerRules.PowerUpRowOffset));
+                        Assert.That(gem.gameObject.activeSelf, Is.False, "Saved pickups show their 3D model before Play.");
+                        string[] names = { "Shield Icon", "2x Icon", "Fighter Icon", "Truck Icon", "Magnet Icon" };
+                        Assert.That(pickup.transform.Find(names[(int)pickup.Type]).gameObject.activeSelf, Is.True);
                     }
                 }
                 Assert.That(game.Track.PowerUpMaterial(PowerUpType.Shield), Is.Not.Null);
                 Assert.That(game.Track.PowerUpMaterial(PowerUpType.DoublePoints), Is.Not.Null);
                 Assert.That(System.Enum.GetValues(typeof(PowerUpType)),
-                    Is.EquivalentTo(new[] { PowerUpType.Shield, PowerUpType.DoublePoints, PowerUpType.FighterPlane, PowerUpType.Truck }));
+                    Is.EquivalentTo(new[] { PowerUpType.Shield, PowerUpType.DoublePoints, PowerUpType.FighterPlane, PowerUpType.Truck, PowerUpType.Magnet }));
                 var trackSettings = new UnityEditor.SerializedObject(game.Track);
-                Assert.That(trackSettings.FindProperty("powerUpMaterials").arraySize, Is.EqualTo(4));
+                Assert.That(trackSettings.FindProperty("powerUpMaterials").arraySize, Is.EqualTo(5));
                 Assert.That(game.Track.PowerUpMaterial(PowerUpType.FighterPlane), Is.Not.Null);
                 Assert.That(game.Track.PowerUpMaterial(PowerUpType.Truck), Is.Not.Null);
+                Assert.That(game.Track.PowerUpMaterial(PowerUpType.Magnet), Is.Not.Null);
 
                 RunnerHud hud = null;
                 foreach (GameObject root in scene.GetRootGameObjects())

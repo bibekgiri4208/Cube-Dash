@@ -219,7 +219,7 @@ namespace CubeDash.Tests
             Assert.That(collected, Is.EqualTo(1));
             Assert.That(wrong.gameObject.activeSelf || match.gameObject.activeSelf, Is.False);
             Assert.That(game.Track.LastPowerUps, Does.Contain(PowerUpType.Truck));
-            Assert.That(game.Track.Debris.ActiveCount, Is.EqualTo(16));
+            Assert.That(game.Track.Debris.ActiveCount, Is.EqualTo(8), "Coins are collected, not shattered into obstacle debris.");
             Clear(game);
             Place(game, 0, CubeColor.Blue, 2);
             pickup.transform.position = new Vector3(0, 1.35f, 8); pickup.gameObject.SetActive(true);
@@ -281,7 +281,7 @@ namespace CubeDash.Tests
             Assert.That(plane.gameObject.activeSelf, Is.True, "Blocked airplanes must not be consumed.");
             Assert.That(game.Track.LastPowerUps, Is.EqualTo(new[] { PowerUpType.DoublePoints }));
             Assert.That(wrong.gameObject.activeSelf || match.gameObject.activeSelf, Is.False);
-            Assert.That(game.Track.Debris.ActiveCount, Is.EqualTo(16));
+            Assert.That(game.Track.Debris.ActiveCount, Is.EqualTo(8), "Only the obstacle creates fragments, not the coin.");
 
             // A newly collected truck also blocks a later or simultaneous plane within the same sweep.
             foreach (float planeZ in new[] { 5f, 2f })

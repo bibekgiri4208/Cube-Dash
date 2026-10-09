@@ -139,7 +139,7 @@ namespace CubeDash.Editor
             Place(heading.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 0.5f), new Vector2(0, -66), new Vector2(500, 86));
 
             Text description = card.Find("Description").GetComponent<Text>();
-            description.text = "Collect your color. Avoid the rest.";
+            description.text = "Collect coins. Dodge obstacles.";
             description.fontSize = 17;
             description.color = Muted;
             description.alignment = TextAnchor.MiddleCenter;

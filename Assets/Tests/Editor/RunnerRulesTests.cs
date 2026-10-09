@@ -63,8 +63,29 @@ namespace CubeDash.Tests
             Assert.That(x, Is.GreaterThan(2.6f - halfSize));
         }
 
+        [TestCase(30f)]
+        [TestCase(42f)]
+        public void StaggeredHazardsStillAllowAnAdjacentLaneChange(float speed)
+        {
+            const float dt = 1f / 120f;
+            const float halfSize = 1.15f;
+            float x = 0, velocity = 0, rowZ = halfSize;
+            for (float elapsed = 0; elapsed < RunnerRules.RowSpacing / speed; elapsed += dt)
+            {
+                float nextX = Mathf.SmoothDamp(x, 2.6f, ref velocity, 0.085f, 18f, dt);
+                float nextZ = rowZ - speed * dt;
+                Assert.That(RunnerRules.SweptHit(new Vector2(x, 0), new Vector2(nextX, 0),
+                    new Vector2(2.6f, rowZ), new Vector2(2.6f, nextZ), Vector2.one * halfSize), Is.False);
+                Assert.That(RunnerRules.SweptHit(new Vector2(x, 0), new Vector2(nextX, 0),
+                    new Vector2(0, rowZ + RunnerRules.RowSpacing - RunnerRules.HazardLeadDistance),
+                    new Vector2(0, nextZ + RunnerRules.RowSpacing - RunnerRules.HazardLeadDistance),
+                    Vector2.one * halfSize), Is.False, "The next row's early hazard must allow time to leave the old lane.");
+                x = nextX; rowZ = nextZ;
+            }
+        }
+
         [Test]
-        public void ColorRowsContainOneOfEachColorAndAReachableMatchingRoute()
+        public void HazardColorAssignmentKeepsOtherColorsDistinctFromTheMatchingRoute()
         {
             for (int player = 0; player < 3; player++)
             {
@@ -91,15 +112,28 @@ namespace CubeDash.Tests
             {
                 System.Random random = new System.Random(seed);
                 int previous = 1;
+                int previousMask = 0;
                 for (int row = 0; row < 1000; row++)
                 {
                     int safe = RunnerRules.NextSafeLane(random, previous);
-                    int mask = RunnerRules.BlockedLanes(random, safe, row / 999f);
+                    int mask = RunnerRules.BlockedLanes(random, safe, row / 999f, previousMask);
                     Assert.That(safe, Is.InRange(0, 2));
                     Assert.That(Mathf.Abs(safe - previous), Is.LessThanOrEqualTo(1));
                     Assert.That(mask & (1 << safe), Is.Zero);
-                    Assert.That(mask, Is.InRange(1, 6));
+                    Assert.That(mask, Is.InRange(0, 6));
+                    for (int oldLane = 0; oldLane < 3; oldLane++)
+                    {
+                        if ((previousMask & (1 << oldLane)) != 0) continue;
+                        bool reachable = false;
+                        for (int lane = 0; lane < 3; lane++)
+                            reachable |= (mask & (1 << lane)) == 0 && Mathf.Abs(oldLane - lane) <= 1;
+                        Assert.That(reachable, Is.True, "Every previously open lane must retain a reachable option.");
+                    }
+                    int rewards = RunnerRules.CollectibleLanes(random, mask, safe);
+                    Assert.That(rewards & mask, Is.Zero);
+                    Assert.That(rewards & (1 << safe), Is.Not.Zero);
                     previous = safe;
+                    previousMask = mask;
                 }
             }
         }
@@ -112,14 +146,56 @@ namespace CubeDash.Tests
             System.Random first = new System.Random(42);
             System.Random second = new System.Random(42);
             int lane = 1;
+            int previousMask = 0;
             for (int row = 0; row < 1000; row++)
             {
                 int next = RunnerRules.NextSafeLane(first, lane, difficulty);
                 Assert.That(RunnerRules.NextSafeLane(second, lane, difficulty), Is.EqualTo(next));
-                Assert.That(RunnerRules.BlockedLanes(second, next, 0.5f),
-                    Is.EqualTo(RunnerRules.BlockedLanes(first, next, 0.5f)));
+                int mask = RunnerRules.BlockedLanes(first, next, difficulty, previousMask);
+                Assert.That(RunnerRules.BlockedLanes(second, next, difficulty, previousMask), Is.EqualTo(mask));
+                Assert.That(RunnerRules.CollectibleLanes(second, mask, next),
+                    Is.EqualTo(RunnerRules.CollectibleLanes(first, mask, next)));
+                Assert.That(RunnerRules.PickLane(second, 7 & ~mask), Is.EqualTo(RunnerRules.PickLane(first, 7 & ~mask)));
                 lane = next;
+                previousMask = mask;
             }
+        }
+
+        [TestCase(0f)]
+        [TestCase(0.5f)]
+        [TestCase(1f)]
+        public void PatternsMostlyOfferMultipleOpenLanesAndNeverRepeatNarrowBlocks(float difficulty)
+        {
+            var random = new System.Random(42);
+            int[] counts = new int[3];
+            int previousMask = 0, previousCount = 0, lane = 1, rewardChoices = 0;
+            for (int row = 0; row < 10000; row++)
+            {
+                lane = RunnerRules.NextSafeLane(random, lane, difficulty);
+                int mask = RunnerRules.BlockedLanes(random, lane, difficulty, previousMask);
+                int blocked = 0;
+                for (int i = 0; i < 3; i++) if ((mask & (1 << i)) != 0) blocked++;
+                counts[blocked]++;
+                Assert.That(blocked == 2 && previousCount == 2, Is.False);
+                int rewards = RunnerRules.CollectibleLanes(random, mask, lane);
+                if ((rewards & (rewards - 1)) != 0) rewardChoices++;
+                previousMask = mask; previousCount = blocked;
+            }
+            Assert.That(counts[0], Is.InRange(900, 2800), "Open stretches provide breathing room.");
+            Assert.That(counts[1], Is.GreaterThan(6000), "Single-lane obstacles are the main pattern.");
+            Assert.That(counts[2], Is.InRange(10, 2000), "Narrow sections are occasional, never the default.");
+            Assert.That(counts[0] + counts[1], Is.GreaterThan(8000));
+            Assert.That(rewardChoices, Is.GreaterThan(3000), "Players can score along alternative routes.");
+        }
+
+        [Test]
+        public void LaneSelectionNeverChoosesABlockedLane()
+        {
+            var random = new System.Random(42);
+            for (int mask = 1; mask < 8; mask++)
+                for (int i = 0; i < 100; i++)
+                    Assert.That(mask & (1 << RunnerRules.PickLane(random, mask)), Is.Not.Zero);
+            Assert.Throws<System.ArgumentException>(() => RunnerRules.PickLane(random, 0));
         }
 
         [Test]

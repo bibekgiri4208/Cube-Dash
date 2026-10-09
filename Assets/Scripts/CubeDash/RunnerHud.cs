@@ -61,7 +61,7 @@ namespace CubeDash
         public void Initialize(CubeDashGame controller)
         {
             game = controller;
-            speed.color = game.Track.ColorMaterial(game.PlayerCubeColor).color;
+            speed.color = new Color(1f, 0.78f, 0.25f);
             scoreColor = distance.color;
             if (collectionFeedback != null) feedbackOrigin = collectionFeedback.rectTransform.anchoredPosition;
             menuGroup = overlay.GetComponent<CanvasGroup>();
@@ -118,6 +118,7 @@ namespace CubeDash
                 case PowerUpType.DoublePoints: powerUpMessage = "DOUBLE POINTS"; break;
                 case PowerUpType.FighterPlane: powerUpMessage = "FIGHTER FLIGHT"; break;
                 case PowerUpType.Truck: powerUpMessage = "TRUCK RAMPAGE"; break;
+                case PowerUpType.Magnet: powerUpMessage = "COIN MAGNET"; break;
             }
             powerUpMessageTimer = 1.5f;
         }
@@ -195,7 +196,7 @@ namespace CubeDash
         private void RefreshInputPrompts()
         {
             if (game.State == CubeDashGame.RunState.Ready)
-                description.text = "Collect " + game.PlayerCubeColor.ToString().ToUpperInvariant() + ". Dodge the rest.";
+                description.text = "Collect coins. Dodge obstacles.";
             if (menuHint != null)
             {
                 if (game.State == CubeDashGame.RunState.Ready)
@@ -275,7 +276,7 @@ namespace CubeDash
             if (shownMetres != metres)
             {
                 shownMetres = metres;
-                speed.text = "COLLECT " + game.PlayerCubeColor.ToString().ToUpperInvariant() + "  ·  " + metres + " m";
+                speed.text = "COLLECT COINS  ·  " + metres + " m";
             }
             AnimateFeedback();
             UpdatePowerUpStatus();
@@ -319,6 +320,7 @@ namespace CubeDash
                     status = AppendStatus(status, "TIMED SHIELD " + Mathf.CeilToInt(game.LandingShieldRemaining) + "s");
                 if (game.Shields > 0) status = AppendStatus(status, "SHIELD");
                 if (game.DoublePointsActive) status = AppendStatus(status, "DOUBLE POINTS " + Mathf.CeilToInt(game.DoublePointsRemaining) + "s");
+                if (game.MagnetActive) status = AppendStatus(status, "MAGNET " + Mathf.CeilToInt(game.MagnetRemaining) + "s");
             }
             powerUpStatus.text = status;
             powerUpStatus.gameObject.SetActive(status.Length > 0);

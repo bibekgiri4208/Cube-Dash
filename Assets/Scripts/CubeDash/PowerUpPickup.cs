@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace CubeDash
 {
-    public enum PowerUpType { Shield, DoublePoints, FighterPlane, Truck }
+    public enum PowerUpType { Shield, DoublePoints, FighterPlane, Truck, Magnet }
 
     /// <summary>
     /// A harmless floating bonus. Collection is resolved by EndlessTrack's own sweep, so the
@@ -16,11 +16,16 @@ namespace CubeDash
         [SerializeField] private Renderer visualRenderer = null;
         [SerializeField] private Transform fighterVisual = null;
         [SerializeField] private Transform truckVisual = null;
+        [SerializeField] private Transform shieldVisual = null;
+        [SerializeField] private Transform pointsVisual = null;
+        [SerializeField] private Transform magnetVisual = null;
         [SerializeField] private float spinSpeed = 82f;
         [SerializeField] private float bobHeight = 0.09f;
         private BoxCollider box;
         private Vector3 visualHome;
         private float phase;
+        private float age;
+        private Vector3[] modelHomes;
 
         public PowerUpType Type => type;
 
@@ -38,33 +43,59 @@ namespace CubeDash
             type = value;
             CacheVisual();
             if (visualRenderer != null) visualRenderer.sharedMaterial = material;
-            bool model = (value == PowerUpType.FighterPlane && fighterVisual != null) ||
-                (value == PowerUpType.Truck && truckVisual != null);
+            bool model = Model(value) != null;
             if (visual != null) visual.gameObject.SetActive(!model);
             if (fighterVisual != null) fighterVisual.gameObject.SetActive(value == PowerUpType.FighterPlane);
             if (truckVisual != null) truckVisual.gameObject.SetActive(value == PowerUpType.Truck);
+            if (shieldVisual != null) shieldVisual.gameObject.SetActive(value == PowerUpType.Shield);
+            if (pointsVisual != null) pointsVisual.gameObject.SetActive(value == PowerUpType.DoublePoints);
+            if (magnetVisual != null) magnetVisual.gameObject.SetActive(value == PowerUpType.Magnet);
+            age = 0;
+            Tick(0);
         }
 
         private void Awake() => CacheVisual();
 
         private void OnEnable() => phase = transform.position.z * 0.13f + transform.position.x * 0.07f;
 
-        private void Update()
+        public void Tick(float dt)
         {
-            if (visual == null) return;
-            Transform display = type == PowerUpType.FighterPlane && fighterVisual != null ? fighterVisual : visual;
-            if (type == PowerUpType.Truck && truckVisual != null) display = truckVisual;
-            float time = Time.unscaledTime;
-            display.localRotation = type == PowerUpType.FighterPlane || type == PowerUpType.Truck ? Quaternion.Euler(0, time * spinSpeed * 0.7f + phase * 57f, 0)
-                : Quaternion.Euler(18f, time * spinSpeed + phase * 57f, 42f);
-            display.localPosition = visualHome + Vector3.up * (Mathf.Sin(time * 2.4f + phase) * bobHeight);
+            CacheVisual();
+            Transform display = Model(type);
+            bool model = display != null;
+            if (!model) display = visual;
+            if (display == null) return;
+            age += Mathf.Max(0, dt);
+            bool vehicle = type == PowerUpType.FighterPlane || type == PowerUpType.Truck;
+            display.localRotation = vehicle ? Quaternion.Euler(0, age * spinSpeed * 0.7f + phase * 57f, 0)
+                : model ? Quaternion.Euler(0, Mathf.Sin(age * 1.5f + phase) * 25, 0)
+                : Quaternion.Euler(18f, age * spinSpeed + phase * 57f, 42f);
+            display.localPosition = (model ? modelHomes[(int)type] : visualHome)
+                + Vector3.up * (Mathf.Sin(age * 2.4f + phase) * bobHeight);
+        }
+
+        private Transform Model(PowerUpType value)
+        {
+            switch (value)
+            {
+                case PowerUpType.Shield: return shieldVisual;
+                case PowerUpType.DoublePoints: return pointsVisual;
+                case PowerUpType.FighterPlane: return fighterVisual;
+                case PowerUpType.Truck: return truckVisual;
+                case PowerUpType.Magnet: return magnetVisual;
+                default: return null;
+            }
         }
 
         private void CacheVisual()
         {
             if (visual == null) visual = transform.childCount > 0 ? transform.GetChild(0) : null;
             if (visualRenderer == null) visualRenderer = GetComponentInChildren<Renderer>();
+            if (modelHomes != null) return;
             if (visual != null) visualHome = visual.localPosition;
+            modelHomes = new Vector3[5];
+            for (int i = 0; i < modelHomes.Length; i++)
+                if (Model((PowerUpType)i) != null) modelHomes[i] = Model((PowerUpType)i).localPosition;
         }
     }
 }

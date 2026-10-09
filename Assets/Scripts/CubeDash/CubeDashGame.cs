@@ -46,6 +46,8 @@ namespace CubeDash
         [SerializeField] private PlayerTruck truckPresentation = null;
         [SerializeField, Min(0.1f)] private float truckDuration = 10f;
         [SerializeField, Min(0f)] private float truckShieldDuration = 3f;
+        [SerializeField, Min(0.1f)] private float magnetDuration = 10f;
+        [SerializeField, Min(1f)] private float magnetRange = 8f;
 
         public RunState State { get; private set; }
         public float Distance { get; private set; }
@@ -81,6 +83,9 @@ namespace CubeDash
         private float flightTimer;
         private float landingShieldTimer;
         private float truckTimer;
+        private float magnetTimer;
+        public bool MagnetActive => magnetTimer > 0;
+        public float MagnetRemaining => magnetTimer;
         public float CollectionPulse => absorptionPulse;
         public float CollectionAge => pickupAge;
         public int Shields => shields;
@@ -137,6 +142,7 @@ namespace CubeDash
                 bool landingProtection = landingShieldTimer > 0;
                 UpdateFlightTimers(dt);
                 UpdateTruckTimers(dt);
+                UpdateMagnetTimer(dt);
                 landingProtection |= landingShieldTimer > 0;
                 float oldX = player.position.x;
                 float x = Mathf.SmoothDamp(oldX, playerOrigin.x + (targetLane - 1) * track.LaneWidth,
@@ -156,6 +162,7 @@ namespace CubeDash
                 bool wrongColor = track.Advance(travel, oldX, x, Difficulty,
                     halfSize, playerCollider.enabled ? bounds.center.z : player.position.z,
                     shields > 0, Flying || altitude > playerOrigin.y + 0.2f, landingProtection, Trucking,
+                    MagnetActive, magnetRange, player.position, dt,
                     out int collected, out bool shieldUsed);
                 if (shieldUsed) shields--;
                 Score += collected * (doublePointsTimer > 0 ? 2 : 1);
@@ -311,6 +318,7 @@ namespace CubeDash
             doublePointsTimer = 0;
             flightTimer = landingShieldTimer = 0;
             truckTimer = 0;
+            magnetTimer = 0;
             playerRenderer.enabled = true;
             playerCollider.enabled = true;
             if (flightPresentation != null) flightPresentation.ResetPresentation();
@@ -348,6 +356,7 @@ namespace CubeDash
             bool wasFlying = Flying;
             flightTimer = landingShieldTimer = 0;
             truckTimer = 0;
+            magnetTimer = 0;
             if (wasFlying) SetFlightPresentation(false);
             SetTruckPresentation(false);
             if (flightPresentation != null) flightPresentation.ResetPresentation();
@@ -370,6 +379,7 @@ namespace CubeDash
             {
                 case PowerUpType.Shield: shields = 1; break;
                 case PowerUpType.DoublePoints: doublePointsTimer = doublePointsDuration; break;
+                case PowerUpType.Magnet: magnetTimer = Mathf.Max(0.1f, magnetDuration); break;
                 case PowerUpType.FighterPlane:
                     if (Trucking) return;
                     flightTimer = Mathf.Max(0.1f, flightDuration);
@@ -391,6 +401,11 @@ namespace CubeDash
                 collectionAudio.pitch = type == PowerUpType.DoublePoints ? 1.5f : 1.9f;
                 collectionAudio.PlayOneShot(collectionSound, collectionVolume);
             }
+        }
+
+        private void UpdateMagnetTimer(float dt)
+        {
+            if (State == RunState.Running) magnetTimer = Mathf.Max(0, magnetTimer - dt);
         }
 
         private void UpdateFlightTimers(float dt)
@@ -448,6 +463,8 @@ namespace CubeDash
             flightAltitude = Mathf.Max(2.5f, flightAltitude);
             truckDuration = Mathf.Max(0.1f, truckDuration);
             truckShieldDuration = Mathf.Max(0, truckShieldDuration);
+            magnetDuration = Mathf.Max(0.1f, magnetDuration);
+            magnetRange = Mathf.Max(1, magnetRange);
         }
 
         private void SetPlayerColor(Color color, float emission)
