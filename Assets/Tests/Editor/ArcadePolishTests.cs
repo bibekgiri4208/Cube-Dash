@@ -86,6 +86,7 @@ namespace CubeDash.Tests
             yield return null;
             CubeDashGame game = Object.FindAnyObjectByType<CubeDashGame>();
             game.StartRun();
+            float initialSpeed = game.Speed;
             Vector3 colliderScale = game.Player.localScale;
             foreach (TrackSegment segment in game.Track.Segments)
                 foreach (RunnerCube cube in segment.Cubes) cube.gameObject.SetActive(false);
@@ -105,7 +106,7 @@ namespace CubeDash.Tests
             game.ChangeLane(1);
             yield return null;
             yield return null;
-            Assert.That(game.Speed, Is.GreaterThan(14f), "Successful collections should raise the speed target.");
+            Assert.That(game.Speed, Is.GreaterThan(initialSpeed), "Successful collections should raise the speed target.");
             Assert.That(wake.Pieces[0].position.x, Is.GreaterThan(0));
             Assert.That(wake.Pieces[0].localScale.x, Is.GreaterThan(wake.Pieces[11].localScale.x));
             game.TogglePause();
@@ -118,7 +119,7 @@ namespace CubeDash.Tests
             game.StartRun();
             Assert.That(game.CollectionPulse, Is.Zero);
             Assert.That(game.Difficulty, Is.Zero);
-            Assert.That(game.Speed, Is.EqualTo(14f));
+            Assert.That(game.Speed, Is.EqualTo(initialSpeed));
             Assert.That(feedback.gameObject.activeSelf, Is.False);
             Assert.That(wake.Pieces[0].position.x, Is.Zero);
             Assert.That(game.GetComponent<AudioSource>().isPlaying, Is.False);

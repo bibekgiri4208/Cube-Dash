@@ -27,12 +27,12 @@ namespace CubeDash
 
         [Header("Runner tuning")]
         [SerializeField] private CubeColor playerCubeColor = CubeColor.Red;
-        [SerializeField, Min(1f)] private float startSpeed = 14f;
-        [SerializeField, Range(12f, 48f)] private float maximumSpeed = 42f;
+        [SerializeField, Min(1f)] private float startSpeed = 12f;
+        [SerializeField, Range(12f, 48f)] private float maximumSpeed = 30f;
         [Tooltip("How quickly speed approaches the score-based target, in metres per second squared.")]
-        [SerializeField, Min(0f)] private float acceleration = 1.2f;
+        [SerializeField, Min(0f)] private float acceleration = 0.8f;
         [Tooltip("Points needed to reach top speed and the most demanding lane patterns.")]
-        [SerializeField, Min(30)] private int scoreForMaximumDifficulty = 120;
+        [SerializeField, Min(30)] private int scoreForMaximumDifficulty = 180;
         [SerializeField, Min(12f)] private float laneChangeSpeed = 18f;
         [Tooltip("0 gives each run a fresh seed. Use a nonzero value to reproduce a track.")]
         [SerializeField] private int fixedSeed = 0;

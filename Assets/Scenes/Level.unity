@@ -1299,6 +1299,7 @@ GameObject:
   m_Component:
   - component: {fileID: 197067926}
   - component: {fileID: 197067925}
+  - component: {fileID: 197067927}
   m_Layer: 0
   m_Name: Track
   m_TagString: Untagged
@@ -1336,6 +1337,7 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 0d27641724945204a87caafa95b6b2f4, type: 2}
   - {fileID: 2100000, guid: 00744614da69c1347a7bd200f8c00aeb, type: 2}
   powerUpChance: 0.18
+  environment: {fileID: 197067927}
 --- !u!4 &197067926
 Transform:
   m_ObjectHideFlags: 0
@@ -1359,6 +1361,63 @@ Transform:
   - {fileID: 1307962422}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &197067927
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 197067924}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 788a9f0f92a54c0cb0e6aef16db0fb54, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: CubeDash::CubeDash.EnvironmentDirector
+  segmentsPerBiome: 8
+  transitionDistance: 42
+  sunlight: {fileID: 985602707}
+  skyFill: {fileID: 1538265138}
+  atmospheres:
+  - Horizon: {r: 0.77, g: 0.89, b: 0.85, a: 1}
+    Zenith: {r: 0.4699999, g: 0.72, b: 0.8399999, a: 1}
+    Ground: {r: 0.6399999, g: 0.78, b: 0.75, a: 1}
+    Sun: {r: 1, g: 0.91, b: 0.8, a: 1}
+    AmbientSky: {r: 0.66, g: 0.8, b: 0.91, a: 1}
+    AmbientEquator: {r: 0.58, g: 0.7, b: 0.73, a: 1}
+    AmbientGround: {r: 0.43, g: 0.47, b: 0.49, a: 1}
+    SunIntensity: 1.85
+  - Horizon: {r: 0.65, g: 0.82, b: 0.7, a: 1}
+    Zenith: {r: 0.31, g: 0.62, b: 0.67, a: 1}
+    Ground: {r: 0.24, g: 0.4, b: 0.28, a: 1}
+    Sun: {r: 1, g: 0.94, b: 0.78, a: 1}
+    AmbientSky: {r: 0.727, g: 0.8596, b: 0.766, a: 1}
+    AmbientEquator: {r: 0.52699995, g: 0.694, b: 0.574, a: 1}
+    AmbientGround: {r: 0.392, g: 0.52, b: 0.424, a: 1}
+    SunIntensity: 1.6
+  - Horizon: {r: 0.78, g: 0.88, b: 0.97, a: 1}
+    Zenith: {r: 0.35, g: 0.58, b: 0.82, a: 1}
+    Ground: {r: 0.49, g: 0.6, b: 0.68, a: 1}
+    Sun: {r: 0.94, g: 0.97, b: 1, a: 1}
+    AmbientSky: {r: 0.82839996, g: 0.9064, b: 0.97660005, a: 1}
+    AmbientEquator: {r: 0.69299996, g: 0.796, b: 0.883, a: 1}
+    AmbientGround: {r: 0.592, g: 0.68, b: 0.744, a: 1}
+    SunIntensity: 1.7
+  - Horizon: {r: 0.96, g: 0.81, b: 0.62, a: 1}
+    Zenith: {r: 0.52, g: 0.73, b: 0.87, a: 1}
+    Ground: {r: 0.72, g: 0.52, b: 0.31, a: 1}
+    Sun: {r: 1, g: 0.87, b: 0.65, a: 1}
+    AmbientSky: {r: 0.9688, g: 0.8518, b: 0.7036, a: 1}
+    AmbientEquator: {r: 0.888, g: 0.723, b: 0.527, a: 1}
+    AmbientGround: {r: 0.776, g: 0.616, b: 0.448, a: 1}
+    SunIntensity: 2
+  - Horizon: {r: 0.72, g: 0.9, b: 0.93, a: 1}
+    Zenith: {r: 0.27, g: 0.65, b: 0.87, a: 1}
+    Ground: {r: 0.43, g: 0.7, b: 0.7, a: 1}
+    Sun: {r: 1, g: 0.95, b: 0.83, a: 1}
+    AmbientSky: {r: 0.7816, g: 0.922, b: 0.9454, a: 1}
+    AmbientEquator: {r: 0.633, g: 0.84, b: 0.861, a: 1}
+    AmbientGround: {r: 0.544, g: 0.76, b: 0.76, a: 1}
+    SunIntensity: 1.85
 --- !u!1 &233471948
 GameObject:
   m_ObjectHideFlags: 0
@@ -6957,10 +7016,10 @@ MonoBehaviour:
   pickupEmission: 2.8
   pickupDuration: 0.35
   playerCubeColor: 0
-  startSpeed: 14
-  maximumSpeed: 42
-  acceleration: 1.2
-  scoreForMaximumDifficulty: 120
+  startSpeed: 12
+  maximumSpeed: 30
+  acceleration: 0.8
+  scoreForMaximumDifficulty: 180
   laneChangeSpeed: 18
   fixedSeed: 0
   doublePointsDuration: 7

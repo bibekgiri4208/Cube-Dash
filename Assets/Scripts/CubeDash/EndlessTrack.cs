@@ -26,6 +26,7 @@ namespace CubeDash
         [SerializeField] private Material[] powerUpMaterials = new Material[2];
         [Tooltip("Chance that a visible row carries a bonus in its safe lane.")]
         [SerializeField, Range(0f, 0.5f)] private float powerUpChance = 0.16f;
+        [SerializeField] private EnvironmentDirector environment = null;
         private readonly List<Contact> contacts = new List<Contact>(12);
         private readonly List<PowerUpContact> powerUpContacts = new List<PowerUpContact>(3);
         private readonly List<PowerUpType> collectedPowerUps = new List<PowerUpType>(3);
@@ -33,12 +34,16 @@ namespace CubeDash
         private int matchingLane = 1;
         private CubeColor playerColor;
         private bool firstVisibleRow;
+        private float travelled;
+        private int nextSectionIndex;
 
         public float LaneWidth => laneWidth;
         public TrackSegment[] Segments => segments;
         public Material ColorMaterial(CubeColor color) => colorMaterials[(int)color];
         public Material PowerUpMaterial(PowerUpType type) => powerUpMaterials[(int)type];
         public float PowerUpChance => powerUpChance;
+        public EnvironmentDirector Environment => environment;
+        public float Travelled => travelled;
         /// <summary>Bonuses collected by the most recent Advance call.</summary>
         public IReadOnlyList<PowerUpType> LastPowerUps => collectedPowerUps;
 
@@ -48,10 +53,14 @@ namespace CubeDash
             playerColor = color;
             matchingLane = 1;
             firstVisibleRow = true;
+            travelled = 0;
+            nextSectionIndex = segments.Length - 1;
+            if (environment != null) environment.ResetRun();
             for (int i = 0; i < segments.Length; i++)
             {
                 segments[i].transform.localPosition = new Vector3(0, 0, (i - 1) * RunnerRules.SegmentLength);
                 Populate(segments[i], i == 0 ? 3 : i == 1 ? 1 : 0);
+                ConfigureEnvironment(segments[i], i - 1);
             }
         }
 
@@ -80,6 +89,8 @@ namespace CubeDash
             collectedPowerUps.Clear();
             collected = 0;
             shieldUsed = false;
+            travelled += travel;
+            if (environment != null) environment.ApplyDistance(travelled, Time.deltaTime);
             float furthest = float.MinValue;
             foreach (TrackSegment segment in segments)
             {
@@ -149,6 +160,7 @@ namespace CubeDash
                 furthest += RunnerRules.SegmentLength;
                 oldest.transform.position = new Vector3(transform.position.x, transform.position.y, furthest);
                 Populate(oldest, 0, difficulty);
+                ConfigureEnvironment(oldest, nextSectionIndex++);
             }
             return hitWrongColor;
         }
@@ -176,6 +188,12 @@ namespace CubeDash
                 }
                 PlacePowerUp(segment, row, visible);
             }
+        }
+
+        private void ConfigureEnvironment(TrackSegment segment, int sectionIndex)
+        {
+            if (environment != null && segment.Environment != null)
+                segment.Environment.Configure(sectionIndex, environment.SegmentsPerBiome);
         }
 
         private void PlacePowerUp(TrackSegment segment, int row, bool visible)

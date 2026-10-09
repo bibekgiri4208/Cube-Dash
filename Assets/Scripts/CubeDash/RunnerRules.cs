@@ -21,9 +21,9 @@ namespace CubeDash
         public static int NextSafeLane(System.Random random, int previousLane, float difficulty = 0f)
         {
             // A guaranteed path never requires crossing two lanes between adjacent rows.
-            // Long stationary stretches become rare as the score climbs, without teleporting
-            // the safe route from one outside lane to the other.
-            float stayChance = Mathf.Lerp(0.35f, 0.05f, Mathf.Clamp01(difficulty));
+            // Keep some straight stretches even at high scores, without teleporting the safe
+            // route from one outside lane to the other.
+            float stayChance = Mathf.Lerp(0.5f, 0.2f, Mathf.Clamp01(difficulty));
             if (random.NextDouble() < stayChance) return previousLane;
             if (previousLane == 0 || previousLane == 2) return 1;
             return random.Next(2) == 0 ? 0 : 2;

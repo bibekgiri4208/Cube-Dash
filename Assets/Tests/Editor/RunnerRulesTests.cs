@@ -34,14 +34,14 @@ namespace CubeDash.Tests
                     lane = next;
                 }
             }
-            Assert.That(switches[0], Is.InRange(6000, 7000));
-            Assert.That(switches[1], Is.InRange(9200, 9800));
+            Assert.That(switches[0], Is.InRange(4500, 5500));
+            Assert.That(switches[1], Is.InRange(7500, 8500));
         }
 
-        [Test]
-        public void AdjacentLaneChangeRemainsClearOfWrongColorsAtTopSpeed()
+        [TestCase(30f)]
+        [TestCase(42f)]
+        public void AdjacentLaneChangeRemainsClearOfWrongColorsAtTopSpeed(float speed)
         {
-            const float speed = 42f;
             const float dt = 1f / 120f;
             const float halfSize = 1.15f; // Combined half-width/depth of the saved player and row cubes.
             float x = 0;

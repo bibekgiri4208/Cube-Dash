@@ -11,6 +11,27 @@ namespace CubeDash.Tests
     public sealed class RunnerSceneTests
     {
         [Test]
+        public void LevelUsesGentlerDifficultyTuning()
+        {
+            var scene = EditorSceneManager.OpenPreviewScene("Assets/Scenes/Level.unity");
+            try
+            {
+                CubeDashGame game = null;
+                foreach (GameObject root in scene.GetRootGameObjects())
+                    if (root.GetComponent<CubeDashGame>() != null) game = root.GetComponent<CubeDashGame>();
+                Assert.That(game, Is.Not.Null);
+                var settings = new UnityEditor.SerializedObject(game);
+                Assert.That(settings.FindProperty("startSpeed").floatValue, Is.EqualTo(12f));
+                Assert.That(settings.FindProperty("maximumSpeed").floatValue, Is.EqualTo(30f));
+                Assert.That(settings.FindProperty("acceleration").floatValue, Is.EqualTo(0.8f));
+                Assert.That(settings.FindProperty("scoreForMaximumDifficulty").intValue, Is.EqualTo(180));
+                Assert.That(RunnerRules.RowSpacing / settings.FindProperty("startSpeed").floatValue,
+                    Is.GreaterThan(1f), "The opening gives more than a second between rows.");
+            }
+            finally { EditorSceneManager.ClosePreviewScene(scene); }
+        }
+
+        [Test]
         public void LevelHasRealObjectsAndReferencesBeforePlayMode()
         {
             var scene = EditorSceneManager.OpenPreviewScene("Assets/Scenes/Level.unity");

@@ -1,6 +1,6 @@
 # Cube Dash — Color Match
 
-Open **`Assets/Scenes/Level.unity`**. The player, colored cubes, matte city, track, Canvas,
+Open **`Assets/Scenes/Level.unity`**. The player, colored cubes, dynamic landscapes, track, Canvas,
 trail, lighting, and original **Main Camera** are real saved scene/prefab objects, visible before Play.
 
 ## Play
@@ -22,7 +22,7 @@ retained for editing but hidden both in the saved scene and during Play. Desktop
 with prompts switching automatically when you use a keyboard/mouse or gamepad. Menu focus has a visible outline.
 
 Game over uses an abstract, transparent overlay: a small geometric cube motif, one score,
-and **TRY AGAIN**, without explanatory paragraphs or duplicate HUD stats. The city remains
+and **TRY AGAIN**, without explanatory paragraphs or duplicate HUD stats. The current landscape remains
 visible behind it. Edit it under **Canvas > Safe Area > Game Over Overlay**.
 
 The default player is **red**. Choose Red, Blue, or Green using **Player Cube Color** on
@@ -32,8 +32,30 @@ is saved separately from the old distance record.
 
 ## Visual direction
 
-The scene keeps the colorful blue track, beveled cubes, mint/stone city, and pale horizon,
-with selective HDR bloom on the cubes and trail instead of washing out the entire city.
+### Changing environments
+
+The run travels through **City → Jungle → Mountains → Desert → Beach**, then loops. Each region
+lasts **336 metres** (eight track sections), so scenery changes with distance, not frame rate or score.
+New landscapes approach naturally along the road; existing visible sections never suddenly swap.
+Sky, fog, sunlight and ambient colors blend across each boundary, without environment-name text
+on the HUD. The blue road and the red/blue/green gameplay palette remain unchanged.
+
+- **Jungle:** layered broadleaf canopies, bushes, river and rocky forest ridges.
+- **Mountains:** snow-capped peaks, slate boulders and evergreen trees.
+- **Desert:** golden dunes, sandstone mesas and branching cacti.
+- **Beach:** palms, turquoise ocean, shoreline, stilt huts and timber jetties.
+- Slowly drifting clouds and ocean/river ripples freeze on pause and reset on restart.
+
+Each non-city region has three deterministic mesh layouts. Saved scenery roots are pooled with
+the eight track sections; recycling toggles roots and swaps shared meshes without instantiating
+objects or adding gameplay colliders. Environment selection uses no obstacle random numbers.
+Tune **Segments Per Biome** and **Transition Distance** on **Track > Environment Director**.
+Assets are under `Assets/Prefab/CubeDash/Environments`, `Assets/Material/Environments` and
+`Assets/3D Models/Environments`. **Tools > Cube Dash > Apply Dynamic Environments** rebakes the
+saved landscapes and reconnects the scene without rebuilding the road, cubes or existing city.
+
+The scene keeps the colorful blue track, beveled cubes, and an opening mint/stone city,
+with selective HDR bloom on the cubes and trail instead of washing out the landscapes.
 Warm soft sunlight, cool shadow-free sky fill, and three-color ambient illumination improve
 shaded faces and contact lighting. This is an ambient/indirect-light approximation, not baked
 GI: the endless city moves and recycles, so world-space baked lightmaps would not stay aligned.
@@ -53,7 +75,7 @@ pieces sample the actual driven path by distance, connect through lane changes, 
 speed. Pickup light ripples from head to tip, freezing when paused and clearing on restart.
 It uses a fixed-size history and the existing twelve meshes, with no runtime object churn.
 The HUD uses rounded navy panels, clear coral actions, responsive placement, animated menu entry,
-and hover/press feedback. The city remains visible around the menu cards.
+and hover/press feedback. The current environment remains visible around the menu cards.
 
 ## Edit
 
@@ -87,9 +109,10 @@ and hover/press feedback. The city remains visible around the menu cards.
 
 ## Difficulty
 
-Speed now grows with collection score, from **14 m/s** to **42 m/s** over the first **120 points**,
-with smooth acceleration rather than abrupt tier jumps. Rows arrive roughly every **1.0 → 0.33 s**.
-Recycled rows increasingly demand lane changes: same-lane matches fall from **35%** to **5%**.
+Speed grows gently with collection score, from **12 m/s** to **30 m/s** over the first **180 points**,
+with acceleration limited to **0.8 m/s²**. Rows arrive roughly every **1.17 → 0.47 s**,
+giving more time to react and look at the environments. Recycled rows increasingly demand lane
+changes, but same-lane matches only fall from **50%** to **20%**, retaining more straight stretches.
 The opening remains safely delayed, and the matching route never jumps across two lanes at once.
 Tune **Score For Maximum Difficulty**, **Maximum Speed**, and **Acceleration** on **Game Manager**.
 Existing row cubes and road segments are still reused; difficulty does not add runtime objects.
@@ -137,3 +160,5 @@ the non-silent/click-free pickup clip, saved audio/UI references, squash/rebound
 trail light, rapid-pickup popups, all three colors' pitch cycles, and pickup/pause/restart feedback.
 `DesktopInputTests` uses virtual gamepads to check drift/hold/reversal handling, steering,
 menu navigation, single-confirm resume/retry, controller disconnect/reconnect, and the shared desktop fallback actions.
+`EnvironmentTests` checks biome boundaries, saved scenery/layouts, collider-free decoration,
+fixed-size recycling, smooth atmosphere transitions, pause and restart behavior.

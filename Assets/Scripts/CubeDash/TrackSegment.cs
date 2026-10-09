@@ -10,8 +10,10 @@ namespace CubeDash
         [SerializeField] private RunnerCube[] cubes = new RunnerCube[9];
         [Tooltip("Optional bonus pickup per row, in row order.")]
         [SerializeField] private PowerUpPickup[] powerUps = new PowerUpPickup[3];
+        [SerializeField] private SegmentEnvironment environment = null;
         public BoxCollider[] Obstacles => obstacles;
         public RunnerCube[] Cubes => cubes;
         public PowerUpPickup[] PowerUps => powerUps;
+        public SegmentEnvironment Environment => environment;
     }
 }
