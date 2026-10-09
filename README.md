@@ -40,10 +40,14 @@ New landscapes approach naturally along the road; existing visible sections neve
 Sky, fog, sunlight and ambient colors blend across each boundary, without environment-name text
 on the HUD. The blue road and the red/blue/green gameplay palette remain unchanged.
 
-- **Jungle:** layered broadleaf canopies, bushes, river and rocky forest ridges.
-- **Mountains:** snow-capped peaks, slate boulders and evergreen trees.
-- **Desert:** golden dunes, sandstone mesas and branching cacti.
-- **Beach:** palms, turquoise ocean, shoreline, stilt huts and timber jetties.
+- **Jungle:** tapered trunks, visible branches and buttress roots, rounded layered canopies,
+  fern undergrowth, a river and rolling forest hills.
+- **Mountains:** asymmetric craggy ridges with broken snowlines, weathered boulders,
+  foothills and five-tier evergreens with scalloped branch silhouettes.
+- **Desert:** smooth wind-shaped dunes, eroded sandstone bluffs with exposed strata,
+  and rounded, curved cactus arms.
+- **Beach:** leaning ringed palm trunks, curved fronds with individual leaflets and coconuts,
+  turquoise ocean, shoreline, stilt huts and timber jetties.
 - Slowly drifting clouds and ocean/river ripples freeze on pause and reset on restart.
 
 Each non-city region has three deterministic mesh layouts. Saved scenery roots are pooled with
@@ -53,6 +57,9 @@ Tune **Segments Per Biome** and **Transition Distance** on **Track > Environment
 Assets are under `Assets/Prefab/CubeDash/Environments`, `Assets/Material/Environments` and
 `Assets/3D Models/Environments`. **Tools > Cube Dash > Apply Dynamic Environments** rebakes the
 saved landscapes and reconnects the scene without rebuilding the road, cubes or existing city.
+**Tools > Cube Dash > Rebuild Environment Models** refreshes just the model meshes/prefabs,
+preserving scene settings, difficulty and HUD. The richer meshes are still shared and pooled;
+no trees, terrain or colliders are generated during a run.
 
 The scene keeps the colorful blue track, beveled cubes, and an opening mint/stone city,
 with selective HDR bloom on the cubes and trail instead of washing out the landscapes.

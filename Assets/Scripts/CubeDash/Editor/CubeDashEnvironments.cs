@@ -14,7 +14,9 @@ namespace CubeDash.Editor
         private const string Prefabs = "Assets/Prefab/CubeDash/Environments";
         private const string Materials = "Assets/Material/Environments";
         private const string Meshes = "Assets/3D Models/Environments";
-        private static Mesh cube, cylinder, cone, rock, dune;
+        private static Mesh cube, cylinder, cone, rock, dune, hill, trunk, branch, pineTier, palmTrunk, frond, cactusStem, cactusArm;
+        private static Mesh[] crowns, peaks, mesas;
+        private static readonly List<Mesh> ownedMeshes = new List<Mesh>();
         private static Material bark, leaf, lightLeaf, stone, snow, sand, redStone, grass, water, foam, wood;
 
         [MenuItem("Tools/Cube Dash/Apply Dynamic Environments")]
@@ -29,9 +31,7 @@ namespace CubeDash.Editor
             CubeDashGame game = Object.FindAnyObjectByType<CubeDashGame>();
             if (game == null) throw new InvalidOperationException("The authored Cube Dash level is required.");
             Folder(Prefabs); Folder(Materials); Folder(Meshes);
-            cube = PrimitiveMesh(PrimitiveType.Cube);
-            cylinder = PrimitiveMesh(PrimitiveType.Cylinder);
-            cone = MakeCone(); rock = MakeRock(); dune = MakeDune();
+            InitializeModels();
             try
             {
                 MakeMaterials();
@@ -53,7 +53,76 @@ namespace CubeDash.Editor
                 EditorSceneManager.SaveScene(scene);
                 Debug.Log("Dynamic environments saved: city, jungle, mountains, desert and beach; three landscape layouts each, pooled scenery and distance-blended atmosphere.");
             }
-            finally { Object.DestroyImmediate(cone); Object.DestroyImmediate(rock); Object.DestroyImmediate(dune); }
+            finally { ReleaseModels(); }
+        }
+
+        [MenuItem("Tools/Cube Dash/Rebuild Environment Models")]
+        public static void RebuildModelsFromCommandLine()
+        {
+            // Only rebake model assets. Preserve the open scene, tuning, atmosphere and HUD.
+            Folder(Prefabs); Folder(Materials); Folder(Meshes);
+            InitializeModels();
+            try
+            {
+                MakeMaterials();
+                for (int i = 1; i < BiomeRules.Count; i++) BuildScenery((EnvironmentBiome)i);
+                AssetDatabase.SaveAssets();
+                Debug.Log("Environment models rebuilt: branched trees, curved palms, rugged snow-covered ridges, rolling hills and eroded dunes/bluffs.");
+            }
+            finally { ReleaseModels(); }
+        }
+
+        private static void InitializeModels()
+        {
+            cube = PrimitiveMesh(PrimitiveType.Cube);
+            cylinder = PrimitiveMesh(PrimitiveType.Cylinder);
+            cone = Own(MakeCone());
+            rock = Own(EnvironmentModelMeshes.Foliage(37, true));
+            dune = Own(EnvironmentModelMeshes.Hill(29, true));
+            hill = Own(EnvironmentModelMeshes.Hill(17, false));
+            trunk = Own(EnvironmentModelMeshes.Tube(new[]
+            {
+                Vector3.zero, new Vector3(0.01f, 0.07f, 0), new Vector3(0.10f, 0.28f, 0.02f),
+                new Vector3(-0.06f, 0.53f, 0.04f), new Vector3(0.12f, 0.78f, 0.03f), new Vector3(0.18f, 1, 0)
+            }, new[] { 0.65f, 0.43f, 0.31f, 0.24f, 0.17f, 0.08f }, levelRings: true));
+            branch = Own(EnvironmentModelMeshes.Tube(new[] { Vector3.zero, new Vector3(0.04f, 0.55f, 0), Vector3.up },
+                new[] { 0.5f, 0.26f, 0.07f }, 8));
+            pineTier = Own(EnvironmentModelMeshes.PineTier(13));
+            frond = Own(EnvironmentModelMeshes.PalmFrond());
+            Vector3[] palmCenters = new Vector3[17];
+            float[] palmRadii = new float[palmCenters.Length];
+            for (int ring = 0; ring < palmCenters.Length; ring++)
+            {
+                float t = ring / (float)(palmCenters.Length - 1);
+                palmCenters[ring] = new Vector3(t * t * 2.2f, t, t * t * 0.3f);
+                palmRadii[ring] = Mathf.Lerp(0.52f, 0.25f, t) * (ring % 2 == 0 ? 1.06f : 0.96f);
+            }
+            palmTrunk = Own(EnvironmentModelMeshes.Tube(palmCenters, palmRadii, 10, levelRings: true));
+            cactusStem = Own(EnvironmentModelMeshes.Tube(new[]
+            {
+                Vector3.zero, new Vector3(0, 0.18f, 0), new Vector3(0.035f, 0.5f, 0),
+                new Vector3(0.025f, 0.85f, 0), new Vector3(0.02f, 0.97f, 0), new Vector3(0.02f, 1, 0)
+            }, new[] { 0.48f, 0.52f, 0.5f, 0.47f, 0.31f, 0.03f }, 12, levelRings: true));
+            cactusArm = Own(EnvironmentModelMeshes.Tube(new[]
+            {
+                Vector3.zero, new Vector3(0.16f, 0.01f, 0), new Vector3(0.30f, 0.06f, 0),
+                new Vector3(0.36f, 0.16f, 0), new Vector3(0.36f, 0.38f, 0),
+                new Vector3(0.36f, 0.48f, 0), new Vector3(0.36f, 0.51f, 0)
+            }, new[] { 0.115f, 0.115f, 0.11f, 0.10f, 0.10f, 0.07f, 0.01f }, 10));
+            crowns = new Mesh[3]; peaks = new Mesh[3]; mesas = new Mesh[3];
+            for (int i = 0; i < 3; i++)
+            {
+                crowns[i] = Own(EnvironmentModelMeshes.Foliage(11 + i * 17));
+                peaks[i] = Own(EnvironmentModelMeshes.Mountain(23 + i * 13));
+                mesas[i] = Own(EnvironmentModelMeshes.Mesa(7 + i * 11));
+            }
+        }
+
+        private static Mesh Own(Mesh mesh) { ownedMeshes.Add(mesh); return mesh; }
+        private static void ReleaseModels()
+        {
+            foreach (Mesh mesh in ownedMeshes) Object.DestroyImmediate(mesh);
+            ownedMeshes.Clear();
         }
 
         private static void MakeMaterials()
@@ -135,14 +204,17 @@ namespace CubeDash.Editor
                 for (int row = 0; row < 5; row++)
                 {
                     float z = 4 + row * 8 + Range(random, -2, 2);
-                    Tree(g, new Vector3(side * Range(random, 12, 19), -9, z), Range(random, 12, 19), false);
-                    Tree(g, new Vector3(side * Range(random, 34, 49), -9, z), Range(random, 19, 27), false);
-                    g.Add(rock, stone, new Vector3(side * Range(random, 10, 23), -7, z + 2), new Vector3(4, 3, 4), Range(random, 0, 180));
-                    for (int bush = 0; bush < 2; bush++)
-                        g.Add(rock, lightLeaf, new Vector3(side * Range(random, 8, 23), -7, z + bush * 3), new Vector3(5, 4, 5));
+                    Tree(g, new Vector3(side * Range(random, 16, 23), -9, z), Range(random, 14, 20), false, random);
+                    float forestX = side * Range(random, 36, 49);
+                    float forestFloor = -9 + EnvironmentModelMeshes.HillHeight(
+                        (forestX - side * 46) / 16, (z - 21) / 23, 17, false) * 13;
+                    Tree(g, new Vector3(forestX, forestFloor, z), Range(random, 18, 25), false, random);
+                    Boulder(g, stone, new Vector3(side * Range(random, 13, 24), -9, z + 2), new Vector3(4, 3, 4), random);
+                    Bush(g, new Vector3(side * Range(random, 11, 24), -9, z + 3), random);
+                    Fern(g, new Vector3(side * Range(random, 10, 17), -8.3f, z + 1), random);
                 }
                 // A distant continuous ridge frames the canopy without intruding into the lanes.
-                g.Add(dune, grass, new Vector3(side * 46, -9, 21), new Vector3(28, 16, 46));
+                g.Add(hill, grass, new Vector3(side * 46, -9, 21), new Vector3(32, 13, 46));
             }
         }
 
@@ -150,20 +222,26 @@ namespace CubeDash.Editor
         {
             for (int side = -1; side <= 1; side += 2)
             {
-                for (int peak = 0; peak < 3; peak++)
+                for (int peak = 0; peak < 2; peak++)
                 {
-                    float height = Range(random, 32, 52), width = Range(random, 20, 29);
-                    Vector3 basePosition = new Vector3(side * Range(random, 35, 45), -9, 6 + peak * 14);
-                    float angle = Range(random, 0, 70);
-                    g.Add(cone, stone, basePosition, new Vector3(width, height, 22), angle);
-                    g.Add(cone, snow, basePosition + Vector3.up * height * 0.68f,
-                        new Vector3(width * 0.32f + 0.1f, height * 0.32f + 0.1f, 7.15f), angle);
+                    float height = Range(random, 32, 47), width = Range(random, 38, 48);
+                    Vector3 basePosition = new Vector3(side * Range(random, 45, 53), -9, 8 + peak * 22);
+                    float angle = Range(random, -20, 20);
+                    Mesh form = peaks[random.Next(peaks.Length)];
+                    Vector3 scale = new Vector3(width, height, 30);
+                    g.AddSurface(form, 0, stone, basePosition, scale, angle);
+                    g.AddSurface(form, 1, snow, basePosition, scale, angle);
+                    Vector3 spur = basePosition + new Vector3(-side * 7, 0, 6);
+                    Vector3 spurScale = new Vector3(width * 0.65f, height * 0.38f, 26);
+                    g.AddSurface(form, 0, stone, spur, spurScale, angle + 25);
+                    g.AddSurface(form, 1, stone, spur, spurScale, angle + 25);
                 }
                 for (int row = 0; row < 4; row++)
                 {
-                    Tree(g, new Vector3(side * Range(random, 12, 23), -9, 4 + row * 10), Range(random, 9, 15), true);
-                    g.Add(rock, stone, new Vector3(side * Range(random, 13, 24), -5, 8 + row * 9), new Vector3(7, 9, 6), Range(random, 0, 180));
+                    Tree(g, new Vector3(side * Range(random, 15, 24), -9, 4 + row * 10), Range(random, 11, 17), true, random);
+                    Boulder(g, stone, new Vector3(side * Range(random, 15, 26), -9, 8 + row * 9), new Vector3(7, 7, 6), random);
                 }
+                g.Add(hill, stone, new Vector3(side * 38, -9, 21), new Vector3(31, 8, 44));
             }
         }
 
@@ -174,13 +252,15 @@ namespace CubeDash.Editor
                 for (int row = 0; row < 3; row++)
                 {
                     float z = 5 + row * 14;
-                    g.Add(dune, sand, new Vector3(side * Range(random, 24, 34), -9, z), new Vector3(28, Range(random, 7, 13), 25), Range(random, -15, 15));
+                    g.Add(dune, sand, new Vector3(side * Range(random, 26, 34), -9, z), new Vector3(32, Range(random, 6, 11), 27), Range(random, -15, 15));
                     Vector3 mesa = new Vector3(side * Range(random, 42, 51), -9, z);
                     float height = Range(random, 16, 26);
-                    g.Add(cube, redStone, mesa + Vector3.up * height * 0.5f, new Vector3(12, height, 11), 8);
-                    g.Add(cube, sand, mesa + Vector3.up * (height + 0.3f), new Vector3(14, 1.4f, 13), 8);
+                    Mesh bluff = mesas[random.Next(mesas.Length)];
+                    Vector3 scale = new Vector3(21, height, 19);
+                    g.AddSurface(bluff, 0, redStone, mesa, scale, 8);
+                    g.AddSurface(bluff, 1, sand, mesa, scale, 8);
                     Cactus(g, new Vector3(side * Range(random, 12, 20), -9, z), Range(random, 5, 9));
-                    g.Add(rock, redStone, new Vector3(side * Range(random, 11, 23), -7.5f, z + 5), new Vector3(4, 3, 3));
+                    Boulder(g, redStone, new Vector3(side * Range(random, 12, 23), -9, z + 5), new Vector3(4, 3, 3), random);
                 }
             }
         }
@@ -190,15 +270,17 @@ namespace CubeDash.Editor
             for (int row = 0; row < 4; row++)
             {
                 float z = 4 + row * 10;
-                Palm(g, new Vector3(-Range(random, 13, 24), -9, z), Range(random, 13, 18), Range(random, 0, 180));
-                g.Add(rock, stone, new Vector3(Range(random, 12, 20), -7, z), new Vector3(6, 5, 5));
-                g.Add(rock, lightLeaf, new Vector3(-Range(random, 10, 28), -7.7f, z + 3), new Vector3(4, 3, 4));
+                Palm(g, new Vector3(-Range(random, 18, 25), -9, z), Range(random, 14, 19), Range(random, 0, 180));
+                Boulder(g, stone, new Vector3(Range(random, 13, 21), -9, z), new Vector3(6, 4, 5), random);
+                Bush(g, new Vector3(-Range(random, 12, 28), -9, z + 3), random);
             }
             // Stilt huts and a wooden jetty give the coastline a recognizable silhouette.
             float hutZ = Range(random, 10, 28);
             for (int i = 0; i < 2; i++)
             {
-                Vector3 p = new Vector3(-34 - i * 16, -5.5f, hutZ);
+                float hutX = -34 - i * 16;
+                float groundHeight = -9 + EnvironmentModelMeshes.HillHeight((hutX + 46) / 15, (hutZ - 21) / 22, 29, true) * 4;
+                Vector3 p = new Vector3(hutX, groundHeight + 3.5f, hutZ);
                 g.Add(cube, wood, p, new Vector3(7, 5, 6));
                 g.Add(cone, sand, p + Vector3.up * 2.5f, new Vector3(11, 4.5f, 10), 45);
                 for (int leg = -1; leg <= 1; leg += 2)
@@ -207,44 +289,98 @@ namespace CubeDash.Editor
             g.Add(cube, wood, new Vector3(20, -6.5f, hutZ), new Vector3(18, 0.4f, 3));
             for (int post = 0; post < 4; post++)
                 g.Add(cylinder, wood, new Vector3(13 + post * 4.5f, -7.4f, hutZ), new Vector3(0.5f, 2.5f, 0.5f));
-            g.Add(dune, sand, new Vector3(-43, -9, 21), new Vector3(36, 7, 44));
+            g.Add(dune, sand, new Vector3(-46, -9, 21), new Vector3(30, 4, 44));
         }
 
-        private static void Tree(Geometry g, Vector3 p, float height, bool pine)
+        private static void Tree(Geometry g, Vector3 p, float height, bool pine, System.Random random)
         {
-            g.Add(cylinder, bark, p + Vector3.up * height * 0.36f, new Vector3(1.2f, height * 0.36f, 1.2f));
+            float yaw = Range(random, 0, 360), diameter = height * (pine ? 0.065f : 0.09f);
+            g.Add(trunk, bark, p, new Vector3(diameter, height * 0.83f, diameter), yaw);
             if (pine)
             {
-                for (int tier = 0; tier < 3; tier++)
-                    g.Add(cone, tier == 1 ? lightLeaf : leaf, p + Vector3.up * height * (0.22f + tier * 0.2f),
-                        new Vector3(height * (0.6f - tier * 0.12f), height * 0.38f, height * (0.6f - tier * 0.12f)), tier * 35);
+                for (int tier = 0; tier < 5; tier++)
+                {
+                    float width = height * (0.55f - tier * 0.075f);
+                    g.Add(pineTier, tier % 3 == 1 ? lightLeaf : leaf,
+                        p + Vector3.up * height * (0.18f + tier * 0.145f),
+                        new Vector3(width, height * 0.29f, width), yaw + tier * 47);
+                }
             }
             else
             {
-                g.Add(rock, leaf, p + Vector3.up * height * 0.78f, new Vector3(height * 0.72f, height * 0.6f, height * 0.66f));
-                g.Add(rock, lightLeaf, p + new Vector3(height * 0.18f, height * 0.86f, 0), new Vector3(height * 0.52f, height * 0.38f, height * 0.52f), 25);
+                for (int limb = 0; limb < 5; limb++)
+                {
+                    float angle = (yaw + limb * 72) * Mathf.Deg2Rad;
+                    Vector3 direction = new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle));
+                    Vector3 end = p + direction * height * Range(random, 0.13f, 0.19f)
+                        + Vector3.up * height * Range(random, 0.68f, 0.81f);
+                    Limb(g, p + Vector3.up * height * (0.39f + limb * 0.045f), end, diameter * 0.5f);
+                    g.Add(crowns[random.Next(crowns.Length)], limb % 3 == 0 ? lightLeaf : leaf, end,
+                        new Vector3(height * 0.38f, height * Range(random, 0.23f, 0.30f), height * 0.34f), yaw + limb * 33);
+                }
+                g.Add(crowns[random.Next(crowns.Length)], lightLeaf, p + Vector3.up * height * 0.91f,
+                    new Vector3(height * 0.43f, height * 0.32f, height * 0.40f), yaw);
+                for (int root = 0; root < 4; root++)
+                {
+                    float angle = (yaw + root * 90) * Mathf.Deg2Rad;
+                    Limb(g, p + new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle)) * diameter * 1.25f,
+                        p + Vector3.up * diameter * 1.9f, diameter * 0.46f);
+                }
             }
+        }
+
+        private static void Limb(Geometry g, Vector3 start, Vector3 end, float diameter)
+        {
+            Vector3 direction = end - start;
+            g.Add(branch, bark, start, new Vector3(diameter, direction.magnitude, diameter),
+                Quaternion.FromToRotation(Vector3.up, direction.normalized));
+        }
+
+        private static void Boulder(Geometry g, Material material, Vector3 basePosition, Vector3 size, System.Random random)
+            => g.Add(rock, material, basePosition + Vector3.up * size.y * 0.38f, size,
+                Quaternion.Euler(Range(random, -12, 12), Range(random, 0, 360), Range(random, -9, 9)));
+
+        private static void Bush(Geometry g, Vector3 p, System.Random random)
+        {
+            for (int cluster = 0; cluster < 3; cluster++)
+                g.Add(crowns[cluster], cluster == 1 ? lightLeaf : leaf,
+                    p + new Vector3((cluster - 1) * 1.15f, 1.4f + cluster * 0.18f, 0),
+                    new Vector3(3.4f, 3, 3.1f), Range(random, 0, 180));
+        }
+
+        private static void Fern(Geometry g, Vector3 p, System.Random random)
+        {
+            float yaw = Range(random, 0, 360);
+            for (int leafIndex = 0; leafIndex < 5; leafIndex++)
+                g.Add(frond, leafIndex % 2 == 0 ? lightLeaf : leaf, p,
+                    Vector3.one * 2.3f, Quaternion.Euler(0, yaw + leafIndex * 72, 12));
         }
 
         private static void Cactus(Geometry g, Vector3 p, float height)
         {
-            g.Add(cylinder, leaf, p + Vector3.up * height * 0.5f, new Vector3(1.3f, height * 0.5f, 1.3f));
+            g.Add(cactusStem, leaf, p, new Vector3(1.4f, height, 1.4f));
             for (int side = -1; side <= 1; side += 2)
             {
-                g.Add(cube, leaf, p + new Vector3(side * 1.5f, height * 0.5f, 0), new Vector3(3, 1.1f, 1.1f));
-                g.Add(cylinder, lightLeaf, p + new Vector3(side * 2.6f, height * 0.64f, 0), new Vector3(1.1f, height * 0.16f, 1.1f));
+                g.Add(cactusArm, side == 1 ? lightLeaf : leaf, p + Vector3.up * height * (side == 1 ? 0.35f : 0.43f),
+                    Vector3.one * height * (side == 1 ? 0.7f : 0.58f), side == 1 ? 0 : 180);
             }
         }
 
         private static void Palm(Geometry g, Vector3 p, float height, float yaw)
         {
-            g.Add(cylinder, bark, p + Vector3.up * height * 0.5f, new Vector3(1, height * 0.5f, 1), yaw);
-            for (int frond = 0; frond < 7; frond++)
+            float diameter = height * 0.07f;
+            Quaternion orientation = Quaternion.Euler(0, yaw, 0);
+            g.Add(palmTrunk, bark, p, new Vector3(diameter, height, diameter), orientation);
+            Vector3 crown = p + orientation * new Vector3(2.2f * diameter, height, 0.3f * diameter);
+            g.Add(crowns[0], leaf, crown, new Vector3(1.4f, 0.7f, 1.4f), yaw);
+            for (int leafIndex = 0; leafIndex < 9; leafIndex++)
             {
-                Quaternion rotation = Quaternion.Euler(0, yaw + frond * 360f / 7, -14);
-                Vector3 center = p + Vector3.up * height + rotation * new Vector3(3, -0.2f, 0);
-                g.Add(rock, frond % 2 == 0 ? leaf : lightLeaf, center, new Vector3(9, 0.7f, 2), rotation);
+                Quaternion rotation = Quaternion.Euler(0, yaw + leafIndex * 40, leafIndex % 3 == 0 ? 12 : -4);
+                float length = height * (leafIndex % 2 == 0 ? 0.40f : 0.35f);
+                g.Add(frond, leafIndex % 3 == 0 ? lightLeaf : leaf, crown, Vector3.one * length, rotation);
             }
+            for (int fruit = 0; fruit < 3; fruit++)
+                g.Add(rock, wood, crown + new Vector3((fruit - 1) * 0.28f, -0.4f, 0), Vector3.one * 0.7f);
         }
 
         private static void UpdateTrackPrefab(GameObject[] scenery)
@@ -341,6 +477,11 @@ namespace CubeDash.Editor
                 groups[Array.IndexOf(palette, material)].Add(new CombineInstance
                 { mesh = mesh, transform = Matrix4x4.TRS(position, rotation, scale) });
             }
+            public void AddSurface(Mesh mesh, int surface, Material material, Vector3 position, Vector3 scale, float yaw)
+            {
+                groups[Array.IndexOf(palette, material)].Add(new CombineInstance
+                { mesh = mesh, subMeshIndex = surface, transform = Matrix4x4.TRS(position, Quaternion.Euler(0, yaw, 0), scale) });
+            }
             public Mesh Bake()
             {
                 Mesh result = new Mesh { indexFormat = IndexFormat.UInt32 };
@@ -378,35 +519,6 @@ namespace CubeDash.Editor
             return FlatMesh(vertices);
         }
 
-        private static Mesh MakeRock()
-        {
-            Vector3[] ring = { new Vector3(0.5f, 0, 0), new Vector3(0, 0, 0.5f), new Vector3(-0.5f, 0, 0), new Vector3(0, 0, -0.5f) };
-            List<Vector3> vertices = new List<Vector3>();
-            for (int i = 0; i < 4; i++)
-            {
-                vertices.Add(ring[i]); vertices.Add(Vector3.up * 0.5f); vertices.Add(ring[(i + 1) % 4]);
-                vertices.Add(ring[i]); vertices.Add(ring[(i + 1) % 4]); vertices.Add(Vector3.down * 0.5f);
-            }
-            return FlatMesh(vertices);
-        }
-
-        private static Mesh MakeDune()
-        {
-            List<Vector3> vertices = new List<Vector3>();
-            for (int i = 0; i < 12; i++)
-            {
-                float a = i * Mathf.PI / 6, b = (i + 1) * Mathf.PI / 6;
-                Vector3 first = new Vector3(Mathf.Cos(a) * 0.5f, 0, Mathf.Sin(a) * 0.5f);
-                Vector3 second = new Vector3(Mathf.Cos(b) * 0.5f, 0, Mathf.Sin(b) * 0.5f);
-                Vector3 innerA = first * 0.52f + Vector3.up * 0.75f;
-                Vector3 innerB = second * 0.52f + Vector3.up * 0.75f;
-                vertices.Add(first); vertices.Add(innerA); vertices.Add(second);
-                vertices.Add(second); vertices.Add(innerA); vertices.Add(innerB);
-                vertices.Add(innerA); vertices.Add(new Vector3(-0.07f, 1, 0)); vertices.Add(innerB);
-            }
-            return FlatMesh(vertices);
-        }
-
         private static Mesh FlatMesh(List<Vector3> vertices)
         {
             Mesh mesh = new Mesh();
@@ -414,6 +526,7 @@ namespace CubeDash.Editor
             int[] triangles = new int[vertices.Count];
             for (int i = 0; i < triangles.Length; i++) triangles[i] = i;
             mesh.triangles = triangles;
+            mesh.uv = new Vector2[vertices.Count];
             mesh.RecalculateNormals(); mesh.RecalculateBounds();
             return mesh;
         }

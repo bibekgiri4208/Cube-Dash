@@ -37,6 +37,56 @@ namespace CubeDash.Tests
         }
 
         [Test]
+        public void NaturalLandscapesUseDetailedValidMeshesAndKeepTheRoadClear()
+        {
+            foreach (EnvironmentBiome biome in new[] { EnvironmentBiome.Jungle, EnvironmentBiome.Mountains,
+                EnvironmentBiome.Desert, EnvironmentBiome.Beach })
+            {
+                GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                    "Assets/Prefab/CubeDash/Environments/" + biome + ".prefab");
+                Assert.That(prefab, Is.Not.Null);
+                foreach (Mesh mesh in prefab.GetComponent<BiomeScenery>().Layouts)
+                {
+                    Assert.That(mesh.vertexCount, Is.InRange(4000, 90000), "Detailed scenery must remain within its mesh budget.");
+                    Vector3[] vertices = mesh.vertices, normals = mesh.normals;
+                    Assert.That(normals.Length, Is.EqualTo(vertices.Length));
+                    int[] indices = mesh.triangles;
+                    for (int triangle = 0; triangle < indices.Length; triangle += 3)
+                    {
+                        Vector3 a = vertices[indices[triangle]], b = vertices[indices[triangle + 1]], c = vertices[indices[triangle + 2]];
+                        Assert.That(Vector3.Cross(b - a, c - a).sqrMagnitude, Is.GreaterThan(1e-12f),
+                            "Model triangles must not collapse into lines.");
+                        for (int corner = 0; corner < 3; corner++)
+                        {
+                            int index = indices[triangle + corner];
+                            Vector3 vertex = vertices[index];
+                            Assert.That(float.IsNaN(vertex.x) || float.IsNaN(vertex.y) || float.IsNaN(vertex.z) ||
+                                float.IsInfinity(vertex.x) || float.IsInfinity(vertex.y) || float.IsInfinity(vertex.z), Is.False);
+                            Assert.That(normals[index].sqrMagnitude, Is.InRange(0.9f, 1.1f));
+                            Assert.That(Mathf.Abs(vertex.x), Is.GreaterThan(5f), "Scenery must not cover the playable road.");
+                        }
+                    }
+                    if (biome == EnvironmentBiome.Mountains)
+                        Assert.That(mesh.GetIndexCount(4), Is.GreaterThan(100), "Snow should follow the rugged peaks.");
+                    if (biome == EnvironmentBiome.Beach)
+                    {
+                        float canopyTop = Mathf.Max(SurfaceTop(mesh, 1), SurfaceTop(mesh, 2));
+                        Assert.That(SurfaceTop(mesh, 0), Is.LessThanOrEqualTo(canopyTop + 0.15f),
+                            "Palm trunks must end inside their crowns, not stretch into spikes above the leaves.");
+                    }
+                }
+            }
+        }
+
+        private static float SurfaceTop(Mesh mesh, int surface)
+        {
+            float top = float.MinValue;
+            Vector3[] vertices = mesh.vertices;
+            foreach (int index in mesh.GetTriangles(surface)) top = Mathf.Max(top, vertices[index].y);
+            return top;
+        }
+
+        [Test]
         public void LevelHasFiveSavedBiomesAndThreeLayoutsWithoutSceneryColliders()
         {
             var scene = EditorSceneManager.OpenPreviewScene("Assets/Scenes/Level.unity");
