@@ -26,6 +26,7 @@ namespace CubeDash
         [SerializeField] private GameObject gameOverOverlay = null;
         [SerializeField] private Text gameOverScore = null;
         [SerializeField] private Text collectionFeedback = null;
+        [SerializeField] private Text powerUpStatus = null;
         public GameObject GameOverOverlay => gameOverOverlay;
         public Text GameOverScore => gameOverScore;
         private Rect lastSafeArea;
@@ -50,6 +51,8 @@ namespace CubeDash
         private Button pauseQuitButton;
         private Text menuHint;
         private Text retryHint;
+        private string powerUpMessage;
+        private float powerUpMessageTimer;
         private Button primaryButton;
         private Button retryButton;
         private Button quitButton;
@@ -70,6 +73,7 @@ namespace CubeDash
             pauseQuit = card.Find("Quit")?.gameObject;
             pauseQuitButton = card.Find("Quit")?.GetComponent<Button>();
             menuHint = card.Find("Keyboard Hint")?.GetComponent<Text>();
+            if (powerUpStatus == null) powerUpStatus = safeRoot.Find("Power-Up Status")?.GetComponent<Text>();
             primaryButton = card.Find("Primary Action")?.GetComponent<Button>();
             controls.SetActive(false);
             InputSystemUIInputModule module = EventSystem.current != null ? EventSystem.current.GetComponent<InputSystemUIInputModule>() : null;
@@ -104,6 +108,16 @@ namespace CubeDash
                 collectionFeedback.rectTransform.anchoredPosition = feedbackOrigin;
                 collectionFeedback.gameObject.SetActive(true);
             }
+        }
+
+        public void NotifyPowerUp(PowerUpType type)
+        {
+            switch (type)
+            {
+                case PowerUpType.Shield: powerUpMessage = "SHIELD UP"; break;
+                case PowerUpType.DoublePoints: powerUpMessage = "DOUBLE POINTS"; break;
+            }
+            powerUpMessageTimer = 1.5f;
         }
 
         public void PrimaryAction()
@@ -250,6 +264,7 @@ namespace CubeDash
                 speed.text = "COLLECT " + game.PlayerCubeColor.ToString().ToUpperInvariant() + "  ·  " + metres + " m";
             }
             AnimateFeedback();
+            UpdatePowerUpStatus();
             Rect area = Screen.safeArea;
             Vector2 screen = new Vector2(Screen.width, Screen.height);
             if (screen.x <= 0 || screen.y <= 0 || (area == lastSafeArea && screen == lastScreen)) return;
@@ -268,6 +283,33 @@ namespace CubeDash
             if (objectivePanel != null) ((RectTransform)objectivePanel.transform).anchoredPosition = new Vector2(0, objectiveY);
             Transform controlsHint = controls.transform.Find("Controls Hint");
             if (controlsHint != null) controlsHint.gameObject.SetActive(safeRoot.rect.width >= 580);
+        }
+
+        private void UpdatePowerUpStatus()
+        {
+            if (powerUpStatus == null) return;
+            if (powerUpMessageTimer > 0) powerUpMessageTimer = Mathf.Max(0, powerUpMessageTimer - Time.unscaledDeltaTime);
+            if (game.State != CubeDashGame.RunState.Running)
+            {
+                powerUpStatus.gameObject.SetActive(false);
+                return;
+            }
+            string status;
+            if (powerUpMessageTimer > 0) status = powerUpMessage;
+            else
+            {
+                status = "";
+                if (game.Shields > 0) status = "SHIELD";
+                if (game.DoublePointsActive) status = AppendStatus(status, "DOUBLE POINTS " + Mathf.CeilToInt(game.DoublePointsRemaining) + "s");
+            }
+            powerUpStatus.text = status;
+            powerUpStatus.gameObject.SetActive(status.Length > 0);
+            powerUpStatus.rectTransform.anchoredPosition = new Vector2(0, safeRoot.rect.width < 780 ? -190 : -92);
+        }
+
+        private static string AppendStatus(string current, string value)
+        {
+            return current.Length == 0 ? value : current + "   \xB7   " + value;
         }
 
         private void AnimateFeedback()

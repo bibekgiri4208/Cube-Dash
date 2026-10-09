@@ -37,6 +37,9 @@ namespace CubeDash
         [Tooltip("0 gives each run a fresh seed. Use a nonzero value to reproduce a track.")]
         [SerializeField] private int fixedSeed = 0;
 
+        [Header("Power-ups")]
+        [SerializeField, Min(0f)] private float doublePointsDuration = 7f;
+
         public RunState State { get; private set; }
         public float Distance { get; private set; }
         public float Speed { get; private set; }
@@ -66,8 +69,13 @@ namespace CubeDash
         private float laneVelocity;
         private float animationTime;
         private float pickupAge = 1f;
+        private int shields;
+        private float doublePointsTimer;
         public float CollectionPulse => absorptionPulse;
         public float CollectionAge => pickupAge;
+        public int Shields => shields;
+        public bool DoublePointsActive => doublePointsTimer > 0;
+        public float DoublePointsRemaining => doublePointsTimer;
         public Transform Player => player;
         public Camera GameCamera => gameCamera;
         public EndlessTrack Track => track;
@@ -120,8 +128,10 @@ namespace CubeDash
                 Distance += travel;
                 Bounds bounds = playerCollider.bounds;
                 bool wrongColor = track.Advance(travel, oldX, x, Difficulty,
-                    new Vector2(bounds.extents.x, bounds.extents.z), bounds.center.z, out int collected);
-                Score += collected;
+                    new Vector2(bounds.extents.x, bounds.extents.z), bounds.center.z,
+                    shields > 0, out int collected, out bool shieldUsed);
+                if (shieldUsed) shields--;
+                Score += collected * (doublePointsTimer > 0 ? 2 : 1);
                 if (collected > 0)
                 {
                     absorptionPulse = 1f;
@@ -133,7 +143,9 @@ namespace CubeDash
                         collectionAudio.PlayOneShot(collectionSound, collectionVolume);
                     }
                 }
+                for (int i = 0; i < track.LastPowerUps.Count; i++) ApplyPowerUp(track.LastPowerUps[i]);
                 if (wrongColor) Crash();
+                doublePointsTimer = Mathf.Max(0, doublePointsTimer - dt);
             }
             if (State != RunState.Paused) UpdatePlayerAnimation(dt);
             if (State != RunState.Paused) UpdateCamera(dt);
@@ -263,6 +275,8 @@ namespace CubeDash
             laneVelocity = 0;
             pickupAge = 1;
             animationTime = 0;
+            shields = 0;
+            doublePointsTimer = 0;
             gameCamera.transform.position = cameraOrigin;
             cameraFollow = cameraOrigin;
             gameCamera.fieldOfView = cameraFov;
@@ -303,6 +317,21 @@ namespace CubeDash
                 PlayerPrefs.Save();
             }
             hud.Show(State);
+        }
+
+        private void ApplyPowerUp(PowerUpType type)
+        {
+            switch (type)
+            {
+                case PowerUpType.Shield: shields = 1; break;
+                case PowerUpType.DoublePoints: doublePointsTimer = doublePointsDuration; break;
+            }
+            hud.NotifyPowerUp(type);
+            if (collectionAudio != null && collectionSound != null)
+            {
+                collectionAudio.pitch = type == PowerUpType.DoublePoints ? 1.5f : 1.9f;
+                collectionAudio.PlayOneShot(collectionSound, collectionVolume);
+            }
         }
 
         private void OnApplicationFocus(bool focused)

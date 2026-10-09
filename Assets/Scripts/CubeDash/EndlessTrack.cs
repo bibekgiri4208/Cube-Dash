@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace CubeDash
 {
-    /// <summary>Recycles authored track sections and resolves color-cube contacts in time order.</summary>
+    /// <summary>Recycles authored track sections and resolves color-cube and bonus contacts in time order.</summary>
     public sealed class EndlessTrack : MonoBehaviour
     {
         private struct Contact
@@ -12,11 +12,23 @@ namespace CubeDash
             public float Time;
         }
 
+        private struct PowerUpContact
+        {
+            public PowerUpPickup Pickup;
+            public float Time;
+        }
+
         [SerializeField, Min(2.2f)] private float laneWidth = 2.6f;
         [SerializeField] private TrackSegment[] segments = new TrackSegment[0];
         [Tooltip("Red, Blue, Green, in that order. Also used by the player.")]
         [SerializeField] private Material[] colorMaterials = new Material[3];
+        [Tooltip("Shield, Double Points, in that order.")]
+        [SerializeField] private Material[] powerUpMaterials = new Material[2];
+        [Tooltip("Chance that a visible row carries a bonus in its safe lane.")]
+        [SerializeField, Range(0f, 0.5f)] private float powerUpChance = 0.16f;
         private readonly List<Contact> contacts = new List<Contact>(12);
+        private readonly List<PowerUpContact> powerUpContacts = new List<PowerUpContact>(3);
+        private readonly List<PowerUpType> collectedPowerUps = new List<PowerUpType>(3);
         private System.Random random;
         private int matchingLane = 1;
         private CubeColor playerColor;
@@ -25,6 +37,10 @@ namespace CubeDash
         public float LaneWidth => laneWidth;
         public TrackSegment[] Segments => segments;
         public Material ColorMaterial(CubeColor color) => colorMaterials[(int)color];
+        public Material PowerUpMaterial(PowerUpType type) => powerUpMaterials[(int)type];
+        public float PowerUpChance => powerUpChance;
+        /// <summary>Bonuses collected by the most recent Advance call.</summary>
+        public IReadOnlyList<PowerUpType> LastPowerUps => collectedPowerUps;
 
         public void Reset(int seed, CubeColor color = CubeColor.Red)
         {
@@ -42,15 +58,28 @@ namespace CubeDash
         public bool Advance(float travel, float previousPlayerX, float playerX, float difficulty,
             Vector2 playerHalfSize, float playerZ = 0f)
         {
-            return Advance(travel, previousPlayerX, playerX, difficulty, playerHalfSize, playerZ, out _);
+            return Advance(travel, previousPlayerX, playerX, difficulty, playerHalfSize, playerZ, false,
+                out _, out _);
         }
 
         public bool Advance(float travel, float previousPlayerX, float playerX, float difficulty,
             Vector2 playerHalfSize, float playerZ, out int collected)
         {
+            return Advance(travel, previousPlayerX, playerX, difficulty, playerHalfSize, playerZ, false,
+                out collected, out _);
+        }
+
+        /// <param name="shield">Absorbs the first wrong-color contact instead of ending the run.</param>
+        public bool Advance(float travel, float previousPlayerX, float playerX, float difficulty,
+            Vector2 playerHalfSize, float playerZ, bool shield,
+            out int collected, out bool shieldUsed)
+        {
             Physics.SyncTransforms();
             contacts.Clear();
+            powerUpContacts.Clear();
+            collectedPowerUps.Clear();
             collected = 0;
+            shieldUsed = false;
             float furthest = float.MinValue;
             foreach (TrackSegment segment in segments)
             {
@@ -64,6 +93,18 @@ namespace CubeDash
                         new Vector2(bounds.center.x, bounds.center.z - travel), size, out float time))
                         contacts.Add(new Contact { Cube = cube, Time = time });
                 }
+                PowerUpPickup[] pickups = segment.PowerUps;
+                for (int i = 0; i < pickups.Length; i++)
+                {
+                    PowerUpPickup pickup = pickups[i];
+                    if (pickup == null || !pickup.gameObject.activeInHierarchy || !pickup.Collider.enabled) continue;
+                    Bounds bounds = pickup.Collider.bounds;
+                    Vector2 size = playerHalfSize + new Vector2(bounds.extents.x, bounds.extents.z);
+                    if (RunnerRules.SweptHit(new Vector2(previousPlayerX, playerZ), new Vector2(playerX, playerZ),
+                        new Vector2(bounds.center.x, bounds.center.z),
+                        new Vector2(bounds.center.x, bounds.center.z - travel), size, out float time))
+                        powerUpContacts.Add(new PowerUpContact { Pickup = pickup, Time = time });
+                }
                 segment.transform.position += Vector3.back * travel;
                 furthest = Mathf.Max(furthest, segment.transform.position.z);
             }
@@ -75,12 +116,27 @@ namespace CubeDash
                 if (order == 0) return (first.Cube.Color == playerColor ? 1 : 0).CompareTo(second.Cube.Color == playerColor ? 1 : 0);
                 return order;
             });
+            float fatalTime = float.MaxValue;
             bool hitWrongColor = false;
             foreach (Contact contact in contacts)
             {
-                if (contact.Cube.Color != playerColor) { hitWrongColor = true; break; }
+                if (contact.Cube.Color != playerColor)
+                {
+                    if (shield) { shield = false; shieldUsed = true; contact.Cube.gameObject.SetActive(false); continue; }
+                    hitWrongColor = true;
+                    fatalTime = contact.Time;
+                    break;
+                }
                 contact.Cube.gameObject.SetActive(false);
                 collected++;
+            }
+
+            powerUpContacts.Sort((first, second) => first.Time.CompareTo(second.Time));
+            foreach (PowerUpContact contact in powerUpContacts)
+            {
+                if (contact.Time > fatalTime) break;
+                contact.Pickup.gameObject.SetActive(false);
+                collectedPowerUps.Add(contact.Pickup.Type);
             }
 
             while (true)
@@ -118,7 +174,30 @@ namespace CubeDash
                     cube.transform.localPosition = position;
                     cube.gameObject.SetActive(visible);
                 }
+                PlacePowerUp(segment, row, visible);
             }
+        }
+
+        private void PlacePowerUp(TrackSegment segment, int row, bool visible)
+        {
+            PowerUpPickup[] pickups = segment.PowerUps;
+            if (row >= pickups.Length) return;
+            PowerUpPickup pickup = pickups[row];
+            if (pickup == null) return;
+            bool spawn = visible && powerUpMaterials != null && powerUpMaterials.Length > 0 &&
+                random.NextDouble() < powerUpChance;
+            if (!spawn)
+            {
+                pickup.gameObject.SetActive(false);
+                return;
+            }
+            // Always in the safe lane so a bonus never forces a collision.
+            PowerUpType type = (PowerUpType)random.Next(2);
+            pickup.Configure(type, PowerUpMaterial(type));
+            Vector3 position = pickup.transform.localPosition;
+            position.x = (matchingLane - 1) * laneWidth;
+            pickup.transform.localPosition = position;
+            pickup.gameObject.SetActive(true);
         }
     }
 }
