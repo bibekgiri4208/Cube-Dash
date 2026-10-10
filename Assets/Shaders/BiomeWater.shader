@@ -17,6 +17,10 @@ Shader "CubeDash/Biome Water"
         _ShoreX ("Shoreline X", Float) = 7
         _ShallowWidth ("Shallows width", Float) = 22
         _CoastLimits ("Boundary bay (entrance, exit, start Z, end Z)", Vector) = (0, 0, 0, 42)
+        _RiverCenter ("River center X", Float) = -29
+        _RiverHalfWidth ("River half width", Float) = 2.5
+        _FlowSpeed ("River current speed", Range(0, 3)) = 1.2
+        _RiverFoam ("River bank foam", Range(0, 1)) = 0.35
     }
     SubShader
     {
@@ -30,6 +34,7 @@ Shader "CubeDash/Biome Water"
             float _WaveHeight, _ShoreMode, _ShoreX, _ShallowWidth;
             float _WaveSpeed, _Choppiness, _FoamStrength, _TideHeight, _TideDistance, _TidePeriod;
             float4 _CoastLimits;
+            float _RiverCenter, _RiverHalfWidth, _FlowSpeed, _RiverFoam;
         CBUFFER_END
         float _CubeDashEnvironmentTime;
         struct Attributes { float4 positionOS : POSITION; UNITY_VERTEX_INPUT_INSTANCE_ID };
@@ -70,16 +75,21 @@ Shader "CubeDash/Biome Water"
             float boundary = smoothstep(0, 3, BoundaryDistance(metres));
             if (_ShoreMode < 0.5)
             {
-                // Keep the Jungle river's original gentle motion; ocean tides never affect it.
-                float2 p = surface.xz;
-                float a = dot(p, float2(0.94, 0.34)) * 0.48 - t * 1.05;
-                float b = dot(p, float2(-0.46, 0.89)) * 0.83 - t * 1.6;
-                float c = dot(p, float2(0.22, -0.98)) * 1.31 + t * 0.78;
-                float2 slope = (float2(0.94, 0.34) * cos(a) * 0.48
-                    + float2(-0.46, 0.89) * cos(b) * 0.83 * 0.42
-                    + float2(0.22, -0.98) * cos(c) * 1.31 * 0.18) * _WaveHeight * boundary;
+                // River ripples advect downstream and flatten against both banks; no ocean tides.
+                float2 p = surface.xz - float2(0, t * _FlowSpeed);
+                float bank = max(0, _RiverHalfWidth - abs(surface.x - _RiverCenter));
+                float edge = smoothstep(0, 0.65, bank);
+                float a = dot(p, float2(2.1, 1.35));
+                float b = dot(p, float2(-3.4, 2.6));
+                float c = dot(p, float2(5.8, 4.1));
+                float height = (sin(a) + sin(b) * 0.4 + sin(c) * 0.12) * _WaveHeight * boundary;
+                float2 slope = (float2(2.1, 1.35) * cos(a)
+                    + float2(-3.4, 2.6) * cos(b) * 0.4
+                    + float2(5.8, 4.1) * cos(c) * 0.12) * _WaveHeight * boundary * edge;
+                float u = saturate(bank / 0.65);
+                slope.x += height * (6 * u * (1 - u) / 0.65) * -sign(surface.x - _RiverCenter);
                 normal = normalize(float3(-slope.x, 1, -slope.y)); crest = 0;
-                return float3(0, (sin(a) + sin(b) * 0.42 + sin(c) * 0.18) * _WaveHeight * boundary, 0);
+                return float3(0, height * edge, 0);
             }
             float coast = surface.x - BeachShoreline(surface.xz, t, _ShoreX, _TideDistance, _TidePeriod);
             float attenuation = smoothstep(0, 8, max(0, coast)) * boundary;
@@ -164,6 +174,28 @@ Shader "CubeDash/Biome Water"
                 float3 motion = WaterMotion(input.surface, input.metres, normal, crest);
                 float distanceToCamera = distance(_WorldSpaceCameraPos, input.world);
                 float detailFade = 1 - smoothstep(25, 110, distanceToCamera);
+                if (_ShoreMode < 0.5)
+                {
+                    float2 flow = input.surface.xz - float2(0, t * _FlowSpeed);
+                    float bank = max(0, _RiverHalfWidth - abs(input.surface.x - _RiverCenter));
+                    float shallow = 1 - smoothstep(0.05, 1.8, bank);
+                    float current = FoamNoise(float2(flow.x * 3.5, flow.y * 0.38));
+                    float eddy = FoamNoise(flow * float2(1.4, 0.75) + float2(sin(flow.y * 0.6) * 0.3, 0));
+                    half3 color = lerp(_BaseColor.rgb, _ShallowColor.rgb, shallow * 0.85);
+                    color *= 0.94 + current * 0.12 * detailFade;
+                    color += _ShallowColor.rgb * pow(saturate(eddy * 1.35), 5) * shallow * detailFade * 0.07;
+                    float3 view = normalize(_WorldSpaceCameraPos - input.world);
+                    float fresnel = 0.035 + 0.42 * pow(1 - saturate(dot(normal, view)), 5);
+                    color = lerp(color, lerp(unity_FogColor.rgb, _ReflectionColor.rgb, 0.5), fresnel);
+                    Light sun = GetMainLight(TransformWorldToShadowCoord(input.world));
+                    color *= 0.7 + saturate(dot(normal, sun.direction)) * 0.35 * sun.shadowAttenuation;
+                    color += sun.color * pow(saturate(dot(normal, normalize(view + sun.direction))), 110) * 0.28 * sun.shadowAttenuation;
+                    float foam = (1 - smoothstep(0.08, 0.6, bank)) * smoothstep(0.48, 0.8, eddy)
+                        + smoothstep(0.82, 0.96, current) * 0.16 * detailFade;
+                    color = lerp(color, _FoamColor.rgb, saturate(foam * _RiverFoam));
+                    half fog = ComputeFogFactorZ0ToFar(max(0, distanceToCamera - _ProjectionParams.y));
+                    return half4(MixFog(color, fog), 1);
+                }
                 normal.xz += float2(sin(input.surface.z * 3.7 + input.surface.x * 1.1 + t * 2.1),
                     cos(input.surface.x * 4.3 - input.surface.z * 0.9 - t * 1.7)) * 0.045 * detailFade;
                 normal = normalize(normal);

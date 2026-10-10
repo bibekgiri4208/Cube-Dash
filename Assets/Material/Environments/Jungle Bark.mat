@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: River Water
-  m_Shader: {fileID: 4800000, guid: 6d092e7c7b984a1e80d5a860c16e7c56, type: 3}
+  m_Name: Jungle Bark
+  m_Shader: {fileID: 4800000, guid: 2934da08ce7b4d6cab5f20b3ec9b48a1, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -25,25 +25,18 @@ Material:
     m_TexEnvs: []
     m_Ints: []
     m_Floats:
-    - _Choppiness: 0.55
-    - _FlowSpeed: 1.2
-    - _FoamStrength: 0.9
-    - _RiverCenter: -29
-    - _RiverFoam: 0.35
-    - _RiverHalfWidth: 2.5
-    - _ShallowWidth: 22
-    - _ShoreMode: 0
+    - _CoastalWetness: 0
+    - _DetailScale: 1.4
+    - _DetailType: 1
+    - _Metallic: 0
     - _ShoreX: 7
-    - _TideDistance: 0
-    - _TideHeight: 0
+    - _Smoothness: 0.18
+    - _TideDistance: 0.85
     - _TidePeriod: 40
-    - _WaveHeight: 0.035
-    - _WaveSpeed: 1
     m_Colors:
-    - _BaseColor: {r: 0.035, g: 0.19, b: 0.16, a: 1}
-    - _CoastLimits: {r: 0, g: 0, b: 0, a: 42}
-    - _FoamColor: {r: 0.75, g: 0.85, b: 0.73, a: 1}
-    - _ReflectionColor: {r: 0.34, g: 0.54, b: 0.49, a: 1}
-    - _ShallowColor: {r: 0.16, g: 0.39, b: 0.28, a: 1}
+    - _BaseColor: {r: 0.25, g: 0.19, b: 0.12, a: 1}
+    - _EndTint: {r: 0.5, g: 0.61, b: 0.6, a: 1}
+    - _LandEnd: {r: 0, g: 42, b: 18, a: 0}
+    - _SecondaryColor: {r: 0.23079997, g: 0.19239998, b: 0.12959996, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

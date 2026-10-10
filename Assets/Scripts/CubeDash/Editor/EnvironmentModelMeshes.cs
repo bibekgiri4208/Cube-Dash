@@ -296,6 +296,33 @@ namespace CubeDash.Editor
             return mesh;
         }
 
+        public static Mesh RiverSurface(bool apron = false)
+        {
+            float[] x = new float[21];
+            for (int i = 0; i < x.Length; i++) x[i] = -31.5f + i * 0.25f;
+            return WaterSurface(x, apron ? 256 : 84);
+        }
+
+        public static Mesh JungleRiverbed()
+        {
+            float[] x = { -1024, -64, -33, -32, -31.5f, -31, -30, -29, -28, -27, -26.5f, -26, -25, 0, 64, 1024 };
+            var vertices = new List<Vector3>(); var triangles = new List<int>();
+            for (int row = 0; row < 2; row++)
+                foreach (float across in x)
+                {
+                    float distance = Mathf.Abs(across + 29);
+                    float depth = distance >= 2.5f ? Mathf.SmoothStep(0, 0.12f, Mathf.InverseLerp(3, 2.5f, distance))
+                        : Mathf.SmoothStep(0.12f, 1.4f, Mathf.InverseLerp(2.5f, 1.4f, distance));
+                    vertices.Add(new Vector3(across / 2048, (-9 - depth + 9.3f) / 0.6f, row - 0.5f));
+                }
+            for (int column = 0; column < x.Length - 1; column++)
+            {
+                Triangle(triangles, column, column + x.Length, column + 1);
+                Triangle(triangles, column + 1, column + x.Length, column + x.Length + 1);
+            }
+            return Finish("Jungle floor and sloping riverbed", vertices, new[] { triangles }, true);
+        }
+
         public static float BeachFloorHeight(float x)
         {
             float depth = Mathf.SmoothStep(0, 1, Mathf.InverseLerp(5.2f, 12, x)) * 4;

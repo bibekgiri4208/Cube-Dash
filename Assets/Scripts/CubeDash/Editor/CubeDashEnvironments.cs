@@ -16,9 +16,12 @@ namespace CubeDash.Editor
         private const string Meshes = "Assets/3D Models/Environments";
         private static Mesh cube, cylinder, rock, dune, hill, trunk, branch, pineTier, palmTrunk, frond, cactusStem, cactusArm, roof;
         private static Mesh[] crowns, peaks, mesas;
+        private static Vector3[] hillVertices;
+        private static int[] hillTriangles;
         private static readonly List<Mesh> ownedMeshes = new List<Mesh>();
         private static Material bark, leaf, lightLeaf, stone, snow, sand, redStone, grass, water, foam, wood;
         private static Material riverWater, wetSand, thatch, glass, trim, moss, dryGrass;
+        private static Material jungleBark, jungleLeaf, jungleHighlight;
         private const float LandscapeExtent = 1024f;
 
         [MenuItem("Tools/Cube Dash/Apply Dynamic Environments")]
@@ -78,6 +81,86 @@ namespace CubeDash.Editor
             finally { ReleaseModels(); }
         }
 
+        [MenuItem("Tools/Cube Dash/Improve Jungle River and Trees")]
+        public static void ImproveJungleFromCommandLine()
+        {
+            // Keep all other biome assets, scenery roots, atmosphere and gameplay settings intact.
+            InitializeModels();
+            try
+            {
+                string[] names = { "Bark", "Deep Foliage", "Sunlit Foliage", "Mountain Slate", "Snow", "Golden Sand",
+                    "Sandstone", "Forest Floor", "Shore Foam", "Beach Timber", "Roof Thatch", "Facade Glass", "Ivory Trim", "Rock Moss", "Dry Grass" };
+                Material[] palette = new Material[names.Length];
+                for (int i = 0; i < names.Length; i++)
+                {
+                    palette[i] = AssetDatabase.LoadAssetAtPath<Material>(Materials + "/" + names[i] + ".mat");
+                    if (palette[i] == null) throw new InvalidOperationException("Missing authored environment material: " + names[i]);
+                }
+                bark = palette[0]; leaf = palette[1]; lightLeaf = palette[2]; stone = palette[3]; grass = palette[7]; moss = palette[13];
+                MakeJungleMaterials();
+                palette[0] = jungleBark; palette[1] = jungleLeaf; palette[2] = jungleHighlight;
+                riverWater = AssetDatabase.LoadAssetAtPath<Material>(Materials + "/River Water.mat");
+                ConfigureRiver(); AssetDatabase.SaveAssets();
+                Mesh[] layouts = BakeLayouts(EnvironmentBiome.Jungle, palette);
+                Mesh river = SaveMesh(EnvironmentModelMeshes.RiverSurface(), "River Surface");
+                Mesh apron = SaveMesh(EnvironmentModelMeshes.RiverSurface(true), "River Apron Surface");
+                Mesh floor = SaveMesh(EnvironmentModelMeshes.JungleRiverbed(), "Jungle Riverbed");
+                string path = Prefabs + "/Jungle.prefab";
+                GameObject root = PrefabUtility.LoadPrefabContents(path);
+                try
+                {
+                    Transform details = root.transform.Find("Landscape Details");
+                    details.GetComponent<MeshFilter>().sharedMesh = layouts[0];
+                    details.GetComponent<Renderer>().sharedMaterials = palette;
+                    SetArray(root.GetComponent<BiomeScenery>(), "layouts", layouts);
+                    Transform water = root.transform.Find("River");
+                    water.GetComponent<MeshFilter>().sharedMesh = river;
+                    water.GetComponent<Renderer>().sharedMaterial = riverWater;
+                    water.localPosition = new Vector3(0, -9.12f, 0);
+                    root.transform.Find("Landscape Ground").GetComponent<MeshFilter>().sharedMesh = floor;
+                    for (int edge = 0; edge < 2; edge++)
+                    {
+                        Transform horizon = root.transform.Find(edge == 0 ? "Rear Horizon" : "Forward Horizon");
+                        horizon.Find("Ground Apron").GetComponent<MeshFilter>().sharedMesh = floor;
+                        Transform existing = horizon.Find("River Apron");
+                        if (existing == null) existing = Part(horizon, "River Apron", apron, riverWater, Vector3.zero, Vector3.one, false).transform;
+                        existing.GetComponent<MeshFilter>().sharedMesh = apron;
+                        existing.GetComponent<Renderer>().sharedMaterial = riverWater;
+                        existing.localPosition = new Vector3(0, -9.12f, edge == 0 ? -LandscapeExtent : 42);
+                        existing.localScale = new Vector3(1, 1, LandscapeExtent / RunnerRules.SegmentLength);
+                    }
+                    PrefabUtility.SaveAsPrefabAsset(root, path);
+                }
+                finally { PrefabUtility.UnloadPrefabContents(root); }
+                AssetDatabase.SaveAssets();
+                Debug.Log("Jungle-only assets saved: downstream river flow, bank shallows/foam, submerged riverbed and horizon continuity; cohesive broadleaf crowns, grounded undergrowth and dedicated forest palette. Ocean, other biomes, ambience and scene untouched.");
+            }
+            finally { ReleaseModels(); }
+        }
+
+        private static void MakeJungleMaterials()
+        {
+            jungleBark = Material("Jungle Bark", new Color(0.25f, 0.19f, 0.12f));
+            jungleLeaf = Material("Jungle Foliage", new Color(0.12f, 0.38f, 0.22f));
+            jungleHighlight = Material("Jungle Canopy Highlights", new Color(0.16f, 0.44f, 0.25f));
+            Surface(jungleBark, 1, 1.4f); Surface(jungleLeaf, 2, 1.4f); Surface(jungleHighlight, 2, 1.4f);
+            jungleLeaf.SetFloat("_Smoothness", 0.08f); jungleHighlight.SetFloat("_Smoothness", 0.08f);
+        }
+
+        private static void ConfigureRiver()
+        {
+            if (riverWater == null) throw new InvalidOperationException("The authored River Water material is required.");
+            riverWater.SetColor("_BaseColor", new Color(0.035f, 0.19f, 0.16f));
+            riverWater.SetColor("_ShallowColor", new Color(0.16f, 0.39f, 0.28f));
+            riverWater.SetColor("_ReflectionColor", new Color(0.34f, 0.54f, 0.49f));
+            riverWater.SetColor("_FoamColor", new Color(0.75f, 0.85f, 0.73f));
+            riverWater.SetFloat("_WaveHeight", 0.035f); riverWater.SetFloat("_ShoreMode", 0);
+            riverWater.SetFloat("_RiverCenter", -29); riverWater.SetFloat("_RiverHalfWidth", 2.5f);
+            riverWater.SetFloat("_FlowSpeed", 1.2f); riverWater.SetFloat("_RiverFoam", 0.35f);
+            riverWater.SetFloat("_TideHeight", 0); riverWater.SetFloat("_TideDistance", 0);
+            EditorUtility.SetDirty(riverWater);
+        }
+
         private static void InitializeModels()
         {
             cube = PrimitiveMesh(PrimitiveType.Cube);
@@ -86,6 +169,7 @@ namespace CubeDash.Editor
             rock = Own(EnvironmentModelMeshes.Foliage(37, true));
             dune = Own(EnvironmentModelMeshes.Hill(29, true));
             hill = Own(EnvironmentModelMeshes.Hill(17, false));
+            hillVertices = hill.vertices; hillTriangles = hill.triangles;
             trunk = Own(EnvironmentModelMeshes.Tube(new[]
             {
                 Vector3.zero, new Vector3(0.01f, 0.07f, 0), new Vector3(0.10f, 0.28f, 0.02f),
@@ -129,6 +213,7 @@ namespace CubeDash.Editor
         {
             foreach (Mesh mesh in ownedMeshes) Object.DestroyImmediate(mesh);
             ownedMeshes.Clear();
+            hillVertices = null; hillTriangles = null;
         }
 
         private static void MakeMaterials()
@@ -161,8 +246,7 @@ namespace CubeDash.Editor
             water.SetColor("_ShallowColor", new Color(0.12f, 0.64f, 0.63f));
             CubeDashOceanWaves.ConfigureWater(water);
             CubeDashOceanWaves.ConfigureSand(wetSand);
-            riverWater.SetColor("_ShallowColor", new Color(0.13f, 0.45f, 0.39f));
-            riverWater.SetFloat("_WaveHeight", 0.035f); riverWater.SetFloat("_ShoreMode", 0);
+            MakeJungleMaterials(); ConfigureRiver();
             AssetDatabase.SaveAssets();
         }
 
@@ -196,6 +280,42 @@ namespace CubeDash.Editor
         {
             Material[] palette = { bark, leaf, lightLeaf, stone, snow, sand, redStone, grass, foam, wood,
                 thatch, glass, trim, moss, dryGrass };
+            if (biome == EnvironmentBiome.Jungle) { palette[0] = jungleBark; palette[1] = jungleLeaf; palette[2] = jungleHighlight; }
+            Mesh[] layouts = BakeLayouts(biome, palette);
+
+            GameObject root = new GameObject(biome + " Surroundings");
+            try
+            {
+                Material floor = biome == EnvironmentBiome.Jungle ? grass : biome == EnvironmentBiome.Mountains ? stone
+                    : biome == EnvironmentBiome.Beach ? CubeDashOceanWaves.CoastalSand() : sand;
+                Mesh floorMesh = biome == EnvironmentBiome.Beach ? SaveMesh(EnvironmentModelMeshes.BeachSeabed(), "Beach Seabed")
+                    : biome == EnvironmentBiome.Jungle ? SaveMesh(EnvironmentModelMeshes.JungleRiverbed(), "Jungle Riverbed") : cube;
+                Part(root.transform, "Landscape Ground", floorMesh, floor, new Vector3(0, -9.3f, 21), new Vector3(LandscapeExtent * 2, 0.6f, 42));
+                if (biome == EnvironmentBiome.Beach)
+                {
+                    Mesh ocean = SaveMesh(EnvironmentModelMeshes.OceanSurface(), "Ocean Surface");
+                    Part(root.transform, "Ocean", ocean, water, new Vector3(0, -8.72f, 0), Vector3.one, false);
+                    Part(root.transform, "Shoreline", SaveMesh(EnvironmentModelMeshes.BeachSeabed(true), "Shoreline Sand"),
+                        wetSand, new Vector3(5.9f, -9, 21), new Vector3(2.2f, 0.06f, 42), false);
+                }
+                if (biome == EnvironmentBiome.Jungle)
+                {
+                    Mesh river = SaveMesh(EnvironmentModelMeshes.RiverSurface(), "River Surface");
+                    Part(root.transform, "River", river, riverWater, new Vector3(0, -9.12f, 0), Vector3.one, false);
+                }
+                GameObject details = Part(root.transform, "Landscape Details", layouts[0], palette, Vector3.zero, Vector3.one);
+                AddHorizonAprons(root.transform, floor, biome == EnvironmentBiome.Beach);
+                if (biome == EnvironmentBiome.Beach) AddCoastalTransition(root.transform);
+                BiomeScenery scenery = root.AddComponent<BiomeScenery>();
+                Set(scenery, "details", details.GetComponent<MeshFilter>());
+                SetArray(scenery, "layouts", layouts);
+                return PrefabUtility.SaveAsPrefabAsset(root, Prefabs + "/" + biome + ".prefab");
+            }
+            finally { Object.DestroyImmediate(root); }
+        }
+
+        private static Mesh[] BakeLayouts(EnvironmentBiome biome, Material[] palette)
+        {
             Mesh[] layouts = new Mesh[3];
             for (int layout = 0; layout < layouts.Length; layout++)
             {
@@ -211,34 +331,7 @@ namespace CubeDash.Editor
                 layouts[layout] = SaveMesh(geometry.Bake(), biome + " Layout " + (layout + 1));
             }
 
-            GameObject root = new GameObject(biome + " Surroundings");
-            try
-            {
-                Material floor = biome == EnvironmentBiome.Jungle ? grass : biome == EnvironmentBiome.Mountains ? stone
-                    : biome == EnvironmentBiome.Beach ? CubeDashOceanWaves.CoastalSand() : sand;
-                Mesh floorMesh = biome == EnvironmentBiome.Beach ? SaveMesh(EnvironmentModelMeshes.BeachSeabed(), "Beach Seabed") : cube;
-                Part(root.transform, "Landscape Ground", floorMesh, floor, new Vector3(0, -9.3f, 21), new Vector3(LandscapeExtent * 2, 0.6f, 42));
-                if (biome == EnvironmentBiome.Beach)
-                {
-                    Mesh ocean = SaveMesh(EnvironmentModelMeshes.OceanSurface(), "Ocean Surface");
-                    Part(root.transform, "Ocean", ocean, water, new Vector3(0, -8.72f, 0), Vector3.one, false);
-                    Part(root.transform, "Shoreline", SaveMesh(EnvironmentModelMeshes.BeachSeabed(true), "Shoreline Sand"),
-                        wetSand, new Vector3(5.9f, -9, 21), new Vector3(2.2f, 0.06f, 42), false);
-                }
-                if (biome == EnvironmentBiome.Jungle)
-                {
-                    Mesh river = SaveMesh(EnvironmentModelMeshes.WaterSurface(new[] { -31.5f, -30.5f, -29.5f, -28.5f, -27.5f, -26.5f }), "River Surface");
-                    Part(root.transform, "River", river, riverWater, new Vector3(0, -8.8f, 0), Vector3.one, false);
-                }
-                GameObject details = Part(root.transform, "Landscape Details", layouts[0], palette, Vector3.zero, Vector3.one);
-                AddHorizonAprons(root.transform, floor, biome == EnvironmentBiome.Beach);
-                if (biome == EnvironmentBiome.Beach) AddCoastalTransition(root.transform);
-                BiomeScenery scenery = root.AddComponent<BiomeScenery>();
-                Set(scenery, "details", details.GetComponent<MeshFilter>());
-                SetArray(scenery, "layouts", layouts);
-                return PrefabUtility.SaveAsPrefabAsset(root, Prefabs + "/" + biome + ".prefab");
-            }
-            finally { Object.DestroyImmediate(root); }
+            return layouts;
         }
 
         private static void Jungle(Geometry g, System.Random random)
@@ -248,18 +341,18 @@ namespace CubeDash.Editor
                 for (int row = 0; row < 5; row++)
                 {
                     float z = 4 + row * 8 + Range(random, -2, 2);
-                    Tree(g, new Vector3(side * Range(random, 16, 23), -9, z), Range(random, 14, 20), false, random);
+                    JungleTree(g, new Vector3(side * Range(random, 16, 23), -9, z), Range(random, 16, 19), random);
                     float forestX = side * Range(random, 36, 49);
-                    float forestFloor = -9 + EnvironmentModelMeshes.HillHeight(
-                        (forestX - side * 46) / 16, (z - 21) / 23, 17, false) * 13;
-                    Tree(g, new Vector3(forestX, forestFloor, z), Range(random, 18, 25), false, random);
-                    Boulder(g, stone, new Vector3(side * Range(random, 13, 24), -9, z + 2), new Vector3(4, 3, 4), random);
-                    Bush(g, new Vector3(side * Range(random, 11, 24), -9, z + 3), random);
-                    Fern(g, new Vector3(side * Range(random, 10, 17), -8.3f, z + 1), random);
-                    g.Add(crowns[row % 3], moss, new Vector3(side * Range(random, 14, 24), -7.9f, z + 2), new Vector3(2.2f, 0.7f, 2.3f));
+                    float forestFloor = JungleGroundHeight(forestX, z);
+                    JungleTree(g, new Vector3(forestX, forestFloor, z), Range(random, 19, 22), random);
+                    Vector3 rockBase = new Vector3(side * Range(random, 13, 24), -9, z + 2);
+                    Boulder(g, stone, rockBase, new Vector3(4, 3, 4), random);
+                    Bush(g, new Vector3(side * Range(random, 11, 24), -9, z + 3), random, true);
+                    Fern(g, new Vector3(side * Range(random, 10, 17), -8.95f, z + 1), random);
+                    g.Add(crowns[row % 3], moss, rockBase + Vector3.up * 2.2f, new Vector3(2.2f, 0.5f, 2.3f));
                 }
                 // A distant continuous ridge frames the canopy without intruding into the lanes.
-                g.Add(hill, grass, new Vector3(side * 46, -9, 21), new Vector3(32, 13, 46));
+                g.Add(hill, grass, new Vector3(side * 49, -9, 21), new Vector3(32, 13, 46));
                 g.Add(hill, grass, new Vector3(side * 115, -9, 21), new Vector3(135, 20, 65));
             }
         }
@@ -349,44 +442,91 @@ namespace CubeDash.Editor
                 GrassTuft(g, new Vector3(-Range(random, 12, 28), -9, 3 + clump * 8), 0.8f, random);
         }
 
+        private static void JungleTree(Geometry g, Vector3 p, float height, System.Random random)
+        {
+            p.y = JungleGroundHeight(p.x, p.z) - 0.12f;
+            float yaw = Range(random, 0, 360), diameter = height * 0.085f;
+            GroundedStem(g, trunk, jungleBark, p, new Vector3(diameter, height * 0.8f, diameter), Quaternion.Euler(0, yaw, 0), 10);
+            // A connected central crown and overlapping shoulder lobes, not separate bright balls.
+            g.Add(crowns[0], jungleLeaf, p + Vector3.up * height * 0.79f,
+                new Vector3(height * 0.5f, height * 0.34f, height * 0.46f), yaw);
+            for (int limb = 0; limb < 5; limb++)
+            {
+                float angle = (yaw + limb * 72) * Mathf.Deg2Rad;
+                Vector3 direction = new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle));
+                Vector3 end = p + direction * height * 0.15f + Vector3.up * height * Range(random, 0.72f, 0.76f);
+                Limb(g, p + Vector3.up * height * (0.48f + limb * 0.025f), end, diameter * 0.4f, jungleBark);
+                g.Add(crowns[limb % crowns.Length], jungleLeaf, end,
+                    new Vector3(height * 0.36f, height * 0.28f, height * 0.34f), yaw + limb * 33);
+            }
+            g.Add(crowns[1], jungleHighlight, p + Vector3.up * height * 0.87f,
+                new Vector3(height * 0.39f, height * 0.24f, height * 0.37f), yaw + 15);
+            for (int root = 0; root < 4; root++)
+            {
+                float angle = (yaw + root * 90) * Mathf.Deg2Rad;
+                Vector3 foot = p + new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle)) * diameter * 1.05f;
+                foot.y = JungleGroundHeight(foot.x, foot.z) - 0.12f;
+                Limb(g, foot, p + Vector3.up * diameter * 1.65f, diameter * 0.4f, jungleBark, true);
+            }
+        }
+
+        private static float JungleGroundHeight(float x, float z)
+        {
+            float height = -9;
+            int side = x < 0 ? -1 : 1;
+            for (int tile = -1; tile <= 1; tile++)
+            {
+                Vector3 center = new Vector3(side * 49, -9, 21 + tile * 42);
+                height = Mathf.Max(height, -9 + SampleHillMesh((x - center.x) / 32, (z - center.z) / 46) * 13);
+                center.x = side * 115;
+                height = Mathf.Max(height, -9 + SampleHillMesh((x - center.x) / 135, (z - center.z) / 65) * 20);
+            }
+            return height;
+        }
+
+        private static void GroundedStem(Geometry geometry, Mesh original, Material material,
+            Vector3 position, Vector3 scale, Quaternion rotation, int sides)
+        {
+            Mesh mesh = Own(Object.Instantiate(original));
+            Vector3[] vertices = mesh.vertices;
+            Matrix4x4 transform = Matrix4x4.TRS(position, rotation, scale);
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                vertices[i] = transform.MultiplyPoint3x4(vertices[i]);
+                if (i < sides || i == vertices.Length - 2)
+                    vertices[i].y = JungleGroundHeight(vertices[i].x, vertices[i].z) - 0.12f;
+            }
+            mesh.vertices = vertices; mesh.RecalculateNormals(); mesh.RecalculateBounds();
+            geometry.Add(mesh, material, Vector3.zero, Vector3.one);
+        }
+
+        private static float SampleHillMesh(float x, float z)
+        {
+            // Sample the actual saved triangle surface, not its smoother analytic profile.
+            Vector3[] vertices = hillVertices; int[] indices = hillTriangles;
+            for (int i = 0; i < indices.Length; i += 3)
+            {
+                Vector3 a = vertices[indices[i]], b = vertices[indices[i + 1]], c = vertices[indices[i + 2]];
+                float denominator = (b.z - c.z) * (a.x - c.x) + (c.x - b.x) * (a.z - c.z);
+                if (Mathf.Abs(denominator) < 1e-8f) continue;
+                float u = ((b.z - c.z) * (x - c.x) + (c.x - b.x) * (z - c.z)) / denominator;
+                float v = ((c.z - a.z) * (x - c.x) + (a.x - c.x) * (z - c.z)) / denominator;
+                if (u >= -0.00001f && v >= -0.00001f && u + v <= 1.00001f) return a.y * u + b.y * v + c.y * (1 - u - v);
+            }
+            return 0;
+        }
+
         private static void Tree(Geometry g, Vector3 p, float height, bool pine, System.Random random)
         {
-            float yaw = Range(random, 0, 360), diameter = height * (pine ? 0.065f : 0.09f);
+            if (!pine) { JungleTree(g, p, height, random); return; }
+            float yaw = Range(random, 0, 360), diameter = height * 0.065f;
             g.Add(trunk, bark, p, new Vector3(diameter, height * 0.83f, diameter), yaw);
-            if (pine)
+            for (int tier = 0; tier < 5; tier++)
             {
-                for (int tier = 0; tier < 5; tier++)
-                {
-                    float width = height * (0.55f - tier * 0.075f);
-                    g.Add(pineTier, tier % 3 == 1 ? lightLeaf : leaf,
-                        p + Vector3.up * height * (0.18f + tier * 0.145f),
-                        new Vector3(width, height * 0.29f, width), yaw + tier * 47);
-                }
-            }
-            else
-            {
-                for (int limb = 0; limb < 5; limb++)
-                {
-                    float angle = (yaw + limb * 72) * Mathf.Deg2Rad;
-                    Vector3 direction = new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle));
-                    Vector3 end = p + direction * height * Range(random, 0.13f, 0.19f)
-                        + Vector3.up * height * Range(random, 0.68f, 0.81f);
-                    Limb(g, p + Vector3.up * height * (0.39f + limb * 0.045f), end, diameter * 0.5f);
-                    g.Add(crowns[random.Next(crowns.Length)], limb % 3 == 0 ? lightLeaf : leaf, end,
-                        new Vector3(height * 0.38f, height * Range(random, 0.23f, 0.30f), height * 0.34f), yaw + limb * 33);
-                    if (limb % 2 == 0)
-                        g.Add(crowns[(limb + 1) % crowns.Length], lightLeaf,
-                            end + direction * height * 0.07f + Vector3.up * height * 0.055f,
-                            new Vector3(height * 0.19f, height * 0.16f, height * 0.18f), yaw + limb * 47);
-                }
-                g.Add(crowns[random.Next(crowns.Length)], lightLeaf, p + Vector3.up * height * 0.91f,
-                    new Vector3(height * 0.43f, height * 0.32f, height * 0.40f), yaw);
-                for (int root = 0; root < 4; root++)
-                {
-                    float angle = (yaw + root * 90) * Mathf.Deg2Rad;
-                    Limb(g, p + new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle)) * diameter * 1.25f,
-                        p + Vector3.up * diameter * 1.9f, diameter * 0.46f);
-                }
+                float width = height * (0.55f - tier * 0.075f);
+                g.Add(pineTier, tier % 3 == 1 ? lightLeaf : leaf,
+                    p + Vector3.up * height * (0.18f + tier * 0.145f),
+                    new Vector3(width, height * 0.29f, width), yaw + tier * 47);
             }
         }
 
@@ -541,6 +681,7 @@ namespace CubeDash.Editor
 
         private static void AddHorizonAprons(Transform parent, Material floor, bool ocean)
         {
+            bool jungle = parent.Find("River") != null;
             GameObject[] ends = new GameObject[2];
             for (int edge = 0; edge < ends.Length; edge++)
             {
@@ -553,7 +694,8 @@ namespace CubeDash.Editor
                 if (existing == null)
                 {
                     float center = edge == 0 ? -LandscapeExtent * 0.5f : 42 + LandscapeExtent * 0.5f;
-                    Mesh floorMesh = ocean ? SaveMesh(EnvironmentModelMeshes.BeachSeabed(), "Beach Seabed") : cube;
+                    Mesh floorMesh = ocean ? SaveMesh(EnvironmentModelMeshes.BeachSeabed(), "Beach Seabed")
+                        : jungle ? SaveMesh(EnvironmentModelMeshes.JungleRiverbed(), "Jungle Riverbed") : cube;
                     Part(end.transform, "Ground Apron", floorMesh, floor, new Vector3(0, -9.3f, center),
                         new Vector3(LandscapeExtent * 2, 0.6f, LandscapeExtent), false);
                     if (ocean)
@@ -561,6 +703,13 @@ namespace CubeDash.Editor
                         Mesh surface = SaveMesh(EnvironmentModelMeshes.OceanSurface(true), "Ocean Apron Surface");
                         Part(end.transform, "Ocean Apron", surface, water,
                             new Vector3(0, -8.72f, edge == 0 ? -LandscapeExtent : 42),
+                             new Vector3(1, 1, LandscapeExtent / RunnerRules.SegmentLength), false);
+                    }
+                    if (jungle)
+                    {
+                        Mesh surface = SaveMesh(EnvironmentModelMeshes.RiverSurface(true), "River Apron Surface");
+                        Part(end.transform, "River Apron", surface, riverWater,
+                            new Vector3(0, -9.12f, edge == 0 ? -LandscapeExtent : 42),
                             new Vector3(1, 1, LandscapeExtent / RunnerRules.SegmentLength), false);
                     }
                 }
@@ -571,10 +720,16 @@ namespace CubeDash.Editor
             Set(backdrop, "behind", ends[0]); Set(backdrop, "ahead", ends[1]);
         }
 
-        private static void Limb(Geometry g, Vector3 start, Vector3 end, float diameter)
+        private static void Limb(Geometry g, Vector3 start, Vector3 end, float diameter, Material material = null, bool groundFoot = false)
         {
             Vector3 direction = end - start;
-            g.Add(branch, bark, start, new Vector3(diameter, direction.magnitude, diameter),
+            if (groundFoot)
+            {
+                GroundedStem(g, branch, material != null ? material : bark, start, new Vector3(diameter, direction.magnitude, diameter),
+                    Quaternion.FromToRotation(Vector3.up, direction.normalized), 8);
+                return;
+            }
+            g.Add(branch, material != null ? material : bark, start, new Vector3(diameter, direction.magnitude, diameter),
                 Quaternion.FromToRotation(Vector3.up, direction.normalized));
         }
 
@@ -582,10 +737,10 @@ namespace CubeDash.Editor
             => g.Add(rock, material, basePosition + Vector3.up * size.y * 0.38f, size,
                 Quaternion.Euler(Range(random, -12, 12), Range(random, 0, 360), Range(random, -9, 9)));
 
-        private static void Bush(Geometry g, Vector3 p, System.Random random)
+        private static void Bush(Geometry g, Vector3 p, System.Random random, bool jungle = false)
         {
             for (int cluster = 0; cluster < 3; cluster++)
-                g.Add(crowns[cluster], cluster == 1 ? lightLeaf : leaf,
+                g.Add(crowns[cluster], jungle ? jungleLeaf : cluster == 1 ? lightLeaf : leaf,
                     p + new Vector3((cluster - 1) * 1.15f, 1.4f + cluster * 0.18f, 0),
                     new Vector3(3.4f, 3, 3.1f), Range(random, 0, 180));
         }
@@ -594,7 +749,7 @@ namespace CubeDash.Editor
         {
             float yaw = Range(random, 0, 360);
             for (int leafIndex = 0; leafIndex < 5; leafIndex++)
-                g.Add(frond, leafIndex % 2 == 0 ? lightLeaf : leaf, p,
+                g.Add(frond, jungleLeaf, p,
                     Vector3.one * 2.3f, Quaternion.Euler(0, yaw + leafIndex * 72, 12));
         }
 

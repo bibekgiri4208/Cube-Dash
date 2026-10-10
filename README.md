@@ -124,6 +124,16 @@ on the HUD. The blue road and the red/blue/green gameplay palette remain unchang
   on the existing stepped towers.
 - **Jungle:** tapered trunks, visible branches and buttress roots, fuller rounded canopies,
   bark grain, fern undergrowth, mossy rocks, a river and layered distant hills.
+  All three layouts now use one cohesive broadleaf tree family with connected crowns, restrained
+  highlights and dedicated `Jungle Bark`, `Jungle Foliage` and `Jungle Canopy Highlights` materials.
+  Trunk bases and individual root feet conform to the actual hill triangles; ferns are grounded
+  and moss sits on rocks instead of floating above the forest floor. Other biomes retain their palette.
+  The river has downstream-advection ripples, bank shallows, subtle foam/eddies and green forest
+  reflections, with a sloping submerged bed and matching horizon extensions. River animation uses
+  the shared pause/reset clock, but no ocean tides or coastal surf. Tune **Flow Speed**, **River Foam**
+  and colors on `Assets/Material/Environments/River Water.mat`.
+  **Tools > Cube Dash > Improve Jungle River and Trees** rebakes only Jungle assets; the saved
+  playable scene inherits them without setup, and ambience/gameplay settings remain unchanged.
 - **Mountains:** detailed asymmetric craggy ridges with broken snowlines, weathered rock grain,
   scree, distant peaks and five-tier evergreens with scalloped branch silhouettes.
 - **Desert:** wind-shaped dunes with subtle sand ripples, layered sandstone bluffs,
@@ -148,8 +158,8 @@ on the HUD. The blue road and the red/blue/green gameplay palette remain unchang
   match those settings on `Coastal Sand.mat` and `Wet Sand.mat` in the same folder.
   **Tools > Cube Dash > Improve Beach Ocean Waves** rebakes just these ocean/beach assets,
   preserving the scene, scenery layouts and gameplay; the saved level needs no setup command.
-  River water uses
-  a separate, calmer material. This is opaque stylized water, not screen-space reflection/refraction.
+  River water uses a separate, calmer current/bank shading branch and material.
+  This is opaque stylized water, not screen-space reflection/refraction.
 - Beach boundaries form curved bays rather than rectangular water edges. Shore foam and a rocky
   headland close the exit; sand blends into the next city plaza. Per-section property blocks keep
   boundary clipping/blending local, including horizon aprons, and reset when sections recycle.
