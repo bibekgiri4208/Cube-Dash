@@ -37,10 +37,12 @@ is saved separately from the old distance record.
 - **Magnet:** a red horseshoe magnet with silver tips; pulls nearby coins from all three lanes
   within **8 metres** for **10 seconds**, without attracting hazards or other power-ups.
   It works alongside Double Points and Truck, freezes on pause, and clears on restart/game over.
-  Collecting another Magnet refreshes its timer. Flight still cannot collect ground coins.
+  Collecting another Magnet refreshes its timer. Magnet also pulls coins across lanes while flying.
 - **Fighter Plane:** a miniature fighter pickup transforms the player into a faceted, twin-engine
   jet for **10 seconds**. It climbs above the rows, banks while steering, and emits two bounded
-   smoke/afterburner trails. Ground obstacles, coins and power-ups cannot be hit or collected while airborne;
+    smoke/afterburner trails. Flight automatically attracts nearby ground coins from the plane's current lane,
+   lifting them up to the plane without needing a Magnet pickup. An active Magnet expands this to nearby coins
+   across all lanes, and Double Points still applies. Ground obstacles and power-ups remain out of reach while airborne;
   distance and scenery continue advancing at the normal speed.
 - At the end of flight, the cube returns and descends with **3 seconds of continuous landing
   shield**, displayed as a cyan bubble and HUD countdown. It protects against multiple wrong-color
@@ -51,10 +53,12 @@ is saved separately from the old distance record.
    tumbling pieces, regardless of color. Coins are collected normally (and respect Double Points),
    without creating obstacle fragments. Obstacles are destroyed without ending the run or spending a shield charge.
    The compact truck has soft suspension bounce, body sway and steering front wheels. Both tall chrome
-   stacks emit bounded, billowing smoke that rises and drifts behind the truck.
+    stacks emit bounded, billowing smoke that rises and drifts behind the truck.
+    Six tire-contact emitters add light gray smoke along the road, with stronger haze during steering
+    and at higher speeds. Stopped tires produce no new smoke; the short-lived puffs fade naturally.
 - When the truck ends, the cube receives **3 seconds of continuous exit shield**, with a cyan bubble
    and HUD countdown. Pause freezes the truck timer, wheels and debris; restart clears everything.
-   Stack smoke also freezes on pause and clears when the truck ends or the run restarts.
+    Stack and tire smoke also freeze on pause and clear when the truck ends or the run restarts.
    Collecting another truck refreshes its duration. Fighter Plane pickups are ignored while the truck is active
    and become collectible again after it expires.
 
@@ -82,6 +86,9 @@ rebakes and reconnects it. Truck duration and exit-shield duration are exposed o
 preserving the level and gameplay tuning.
 **Tools > Cube Dash > Rebuild Reference Truck Model** rebakes the reference-style geometry and palette
 without changing the level, power-up durations, smaller player scale or smoke/steering behavior.
+**Tools > Cube Dash > Add Truck Tire Smoke** updates only the truck/player/pickup prefabs and tire-smoke
+material, preserving existing geometry and gameplay. Emitters are wheel siblings so smoke never spins
+with the tires; each has a fixed 48-particle limit and creates no runtime objects or colliders.
 **Obstacle Fragments** is a fixed pool of 128 saved pieces: impacts create no objects,
 rigidbodies or gameplay colliders, and fragments disappear after 1.15 seconds.
 
@@ -254,13 +261,15 @@ mesh budgets, road clearance, wide coastal coverage, matching wave-surface seams
 detail, shader depth/shadow passes, horizon-apron ownership during recycling, fixed-size pools,
 complete city windows between floor bands, isolated coastal blends, smooth transitions, pause and restart.
 `FighterPowerUpTests` additionally checks saved fighter geometry and bounded particles, pickup
-transformation, flight/pause/restart, timed landing protection, airborne contact suppression and
+transformation, flight/pause/restart, timed landing protection, automatic current-lane coin attraction,
+Magnet/Double Points stacking in flight, airborne hazard/power-up suppression and
 chronological takeoff during long frames.
 `TruckPowerUpTests` checks the authored truck and debris pool, transformation, all-color smashing,
 steering, pause/restart, three-second multi-hit exit shielding, bounded fragments, pickup refresh,
-fighter/truck switching and chronological activation on long frames.
+fighter/truck switching and chronological activation on long frames. It also checks the six saved tire-smoke
+emitters, speed/steering response, stationary emission suppression, particle limits and pause/reset cleanup.
 `CoinPickupTests` checks the saved 3D coin, pre-Play reward visuals, collection with every player color,
 stable hitboxes, spin/bob, pause/restart, duplicate-score prevention and fixed-size pooling.
 `MagnetPowerUpTests` checks the saved Shield/2×/Magnet models, separate power-up positions through recycling,
 cross-lane coin attraction for every player color, range limits, Double Points stacking, timers/pause/restart,
-pickup animation reset, airborne suppression and chronological long-frame collection.
+pickup animation reset, airborne Magnet collection and chronological long-frame collection.

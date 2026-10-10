@@ -2,12 +2,13 @@ using UnityEngine;
 
 namespace CubeDash
 {
-    /// <summary>Animates the saved truck, suspension, steering and bounded stack smoke with gameplay.</summary>
+    /// <summary>Animates the saved truck, suspension, steering and bounded stack/tire smoke with gameplay.</summary>
     public sealed class PlayerTruck : MonoBehaviour
     {
         [SerializeField] private Transform truck = null;
         [SerializeField] private Transform[] wheels = new Transform[0];
         [SerializeField] private ParticleSystem[] exhaust = new ParticleSystem[0];
+        [SerializeField] private ParticleSystem[] tireSmoke = new ParticleSystem[0];
         [SerializeField] private Vector2 contactHalfSize = new Vector2(0.74f, 1.62f);
         private Vector3 home;
         private Quaternion homeRotation = Quaternion.identity;
@@ -21,6 +22,7 @@ namespace CubeDash
         public Transform Truck => truck;
         public Transform[] Wheels => wheels;
         public ParticleSystem[] Exhaust => exhaust;
+        public ParticleSystem[] TireSmoke => tireSmoke;
         public Vector2 ContactHalfSize => contactHalfSize;
 
         private void Awake()
@@ -37,7 +39,13 @@ namespace CubeDash
             if (!value) { ResetPresentation(); return; }
             driving = true;
             if (truck != null) truck.gameObject.SetActive(true);
-            foreach (ParticleSystem system in exhaust)
+            StartSmoke(exhaust);
+            StartSmoke(tireSmoke);
+        }
+
+        private static void StartSmoke(ParticleSystem[] systems)
+        {
+            foreach (ParticleSystem system in systems)
             {
                 if (system == null) continue;
                 system.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
@@ -77,6 +85,17 @@ namespace CubeDash
                 var velocity = system.velocityOverLifetime; velocity.z = -Mathf.Max(1.5f, speed * 0.32f);
                 system.Simulate(dt, false, false, false);
             }
+            foreach (ParticleSystem system in tireSmoke)
+            {
+                if (system == null) continue;
+                float skid = Mathf.Clamp01(Mathf.Abs(laneVelocity) / 12f);
+                var emission = system.emission;
+                emission.rateOverTime = (Mathf.Lerp(10, 24, Mathf.Clamp01(speed / 30)) + skid * 14) * moving;
+                var velocity = system.velocityOverLifetime;
+                velocity.x = -laneVelocity * 0.08f;
+                velocity.z = -Mathf.Max(1, speed * 0.45f);
+                system.Simulate(dt, false, false, false);
+            }
         }
 
         public void ResetPresentation()
@@ -93,6 +112,8 @@ namespace CubeDash
             for (int i = 0; i < wheels.Length; i++)
                 if (wheels[i] != null) wheels[i].localRotation = wheelRotations != null ? wheelRotations[i] : Quaternion.identity;
             foreach (ParticleSystem system in exhaust)
+                if (system != null) system.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
+            foreach (ParticleSystem system in tireSmoke)
                 if (system != null) system.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
         }
 

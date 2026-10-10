@@ -10,6 +10,7 @@ namespace CubeDash
         {
             public RunnerCube Cube;
             public float Time;
+            public bool Attracted;
         }
 
         private struct PowerUpContact
@@ -91,7 +92,7 @@ namespace CubeDash
             => Advance(travel, previousPlayerX, playerX, difficulty, playerHalfSize, playerZ, shield, false, false,
                 out collected, out shieldUsed);
 
-        /// <param name="airborne">Flight advances the world without contacting ground cubes or bonuses.</param>
+        /// <param name="airborne">Flight ignores ground hazards/bonuses and automatically attracts current-lane coins.</param>
         /// <param name="landingShield">Continuous protection: absorbs every wrong-color hit without spending a shield charge.</param>
         public bool Advance(float travel, float previousPlayerX, float playerX, float difficulty,
             Vector2 playerHalfSize, float playerZ, bool shield, bool airborne, bool landingShield,
@@ -124,7 +125,7 @@ namespace CubeDash
             {
                 foreach (RunnerCube cube in segment.Cubes)
                 {
-                    if (cube.gameObject.activeInHierarchy) cube.TickCoin(dt, magnet && !airborne);
+                    if (cube.gameObject.activeInHierarchy) cube.TickCoin(dt, magnet || airborne);
                     if (airborne || !cube.gameObject.activeInHierarchy || !cube.Collider.enabled) continue;
                     Bounds bounds = cube.Collider.bounds;
                     Vector2 size = playerHalfSize + new Vector2(bounds.extents.x, bounds.extents.z);
@@ -167,8 +168,14 @@ namespace CubeDash
             foreach (PowerUpContact contact in powerUpContacts)
                 if (contact.Pickup.Type == PowerUpType.Magnet && contact.Time < takeoffTime)
                     magnetTime = Mathf.Min(magnetTime, contact.Time);
-            if (!airborne && magnetTime <= 1 && magnetRange > 0 && dt > 0)
-                PullCoins(travel, previousPlayerX, playerX, playerZ, magnetRange, magnetTarget, dt, magnetTime, takeoffTime);
+            float flightTime = airborne ? 0 : takeoffTime;
+            if (magnetRange > 0 && dt > 0)
+            {
+                if (magnetTime <= 1)
+                    PullCoins(travel, previousPlayerX, playerX, playerZ, magnetRange, magnetTarget, dt, magnetTime, false);
+                else if (flightTime <= 1)
+                    PullCoins(travel, previousPlayerX, playerX, playerZ, magnetRange, magnetTarget, dt, flightTime, true);
+            }
             contacts.Sort((first, second) =>
             {
                 int order = first.Time.CompareTo(second.Time);
@@ -182,7 +189,7 @@ namespace CubeDash
                 // A coin can have both a direct contact and a magnet contact, but scores only once.
                 if (!contact.Cube.gameObject.activeSelf) continue;
                 // Takeoff applies at its swept pickup time, even on a long/low-FPS frame.
-                if (contact.Time >= takeoffTime) continue;
+                if (contact.Time >= takeoffTime && !contact.Attracted) continue;
                 if (contact.Time >= truckTime)
                 {
                     if (debris != null && contact.Cube.Color != playerColor)
@@ -231,7 +238,7 @@ namespace CubeDash
         }
 
         private void PullCoins(float travel, float previousX, float playerX, float playerZ, float range,
-            Vector3 target, float dt, float activationTime, float takeoffTime)
+            Vector3 target, float dt, float activationTime, bool laneOnly)
         {
             Vector2 playerFrom = new Vector2(previousX, playerZ), playerTo = new Vector2(playerX, playerZ);
             foreach (TrackSegment segment in segments)
@@ -242,7 +249,15 @@ namespace CubeDash
                     if (!RunnerRules.SweptRange(playerFrom, playerTo, new Vector2(start.x, start.z),
                         new Vector2(end.x, end.z), range, out float enter, out float exit)) continue;
                     enter = Mathf.Max(enter, activationTime);
-                    exit = Mathf.Min(exit, takeoffTime);
+                    if (laneOnly)
+                    {
+                        // Use the authored slot's lane, not the coin's moving attraction visual.
+                        Vector2 laneCenter = new Vector2(coin.transform.position.x, playerZ);
+                        if (!RunnerRules.SweptHit(playerFrom, playerTo, laneCenter, laneCenter,
+                            new Vector2(laneWidth * 0.5f, range), out float laneEnter, out float laneExit)) continue;
+                        enter = Mathf.Max(enter, laneEnter);
+                        exit = Mathf.Min(exit, laneExit);
+                    }
                     if (enter >= exit) continue;
                     Vector3 pulled = Vector3.Lerp(start, end, enter);
                     float cursor = enter;
@@ -255,9 +270,15 @@ namespace CubeDash
                         Vector3 position = Vector3.MoveTowards(pulled + Vector3.back * (travel * (next - cursor)),
                             destination, 30 * dt * (next - cursor));
                         if (RunnerRules.SweptHit(Vector2.Lerp(playerFrom, playerTo, cursor), Vector2.Lerp(playerFrom, playerTo, next),
-                            new Vector2(pulled.x, pulled.z), new Vector2(position.x, position.z), Vector2.one * 0.45f, out float time))
+                            new Vector2(pulled.x, pulled.z), new Vector2(position.x, position.z), Vector2.one * 0.45f,
+                            out float time, out float contactExit) &&
+                            RunnerRules.SweptHit(new Vector2(target.y, 0), new Vector2(target.y, 0),
+                                new Vector2(pulled.y, 0), new Vector2(position.y, 0), new Vector2(0.6f, 1),
+                                out float heightEnter, out float heightExit) &&
+                            Mathf.Max(time, heightEnter) <= Mathf.Min(contactExit, heightExit))
                         {
-                            contacts.Add(new Contact { Cube = coin, Time = Mathf.Lerp(cursor, next, time) });
+                            time = Mathf.Max(time, heightEnter);
+                            contacts.Add(new Contact { Cube = coin, Time = Mathf.Lerp(cursor, next, time), Attracted = true });
                             pulled = Vector3.Lerp(pulled, position, time);
                             cursor = Mathf.Lerp(cursor, next, time);
                             break;

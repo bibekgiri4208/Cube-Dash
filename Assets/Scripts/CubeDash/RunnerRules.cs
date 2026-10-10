@@ -108,14 +108,17 @@ namespace CubeDash
 
         public static bool SweptHit(Vector2 playerFrom, Vector2 playerTo,
             Vector2 obstacleFrom, Vector2 obstacleTo, Vector2 halfSize, out float hitTime)
+            => SweptHit(playerFrom, playerTo, obstacleFrom, obstacleTo, halfSize, out hitTime, out _);
+
+        public static bool SweptHit(Vector2 playerFrom, Vector2 playerTo,
+            Vector2 obstacleFrom, Vector2 obstacleTo, Vector2 halfSize, out float enter, out float exit)
         {
-            hitTime = 0;
             // Sweep relative motion through the Minkowski-expanded obstacle. This also
             // detects a hit when a frame moves an obstacle completely past the cube.
             Vector2 from = playerFrom - obstacleFrom;
             Vector2 delta = (playerTo - obstacleTo) - from;
-            float enter = 0f;
-            float exit = 1f;
+            enter = 0f;
+            exit = 1f;
             for (int axis = 0; axis < 2; axis++)
             {
                 if (Mathf.Abs(delta[axis]) < 0.00001f)
@@ -130,7 +133,6 @@ namespace CubeDash
                 exit = Mathf.Min(exit, last);
                 if (enter > exit) return false;
             }
-            hitTime = enter;
             return true;
         }
     }

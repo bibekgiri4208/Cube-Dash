@@ -70,6 +70,26 @@ namespace CubeDash.Editor
             Debug.Log("Reference truck saved: boxy blue sleeper, navy band, squared hollow stacks, ladder frame, faceted tanks, fifth wheel, ten tires and curved rear mudguards. Existing gameplay and level preserved.");
         }
 
+        [MenuItem("Tools/Cube Dash/Add Truck Tire Smoke")]
+        public static void AddTireSmokeFromCommandLine()
+        {
+            string path = Prefabs + "Truck.prefab";
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(path) == null)
+                throw new InvalidOperationException("Add the Truck power-up before adding tire smoke.");
+            Material smoke = TireSmokeMaterial();
+            GameObject root = PrefabUtility.LoadPrefabContents(path);
+            try
+            {
+                AddTireEmitters(root.transform, smoke);
+                PrefabUtility.SaveAsPrefabAsset(root, path);
+            }
+            finally { PrefabUtility.UnloadPrefabContents(root); }
+            UpdatePlayer(AssetDatabase.LoadAssetAtPath<GameObject>(path));
+            DisablePickupSmoke();
+            AssetDatabase.SaveAssets();
+            Debug.Log("Truck tire smoke saved: six bounded road-contact emitters, stronger haze while steering, gameplay-only simulation and clean resets. Existing exhaust, models, level and gameplay preserved.");
+        }
+
         private static GameObject BuildReferenceTruck()
         {
             if (!AssetDatabase.IsValidFolder(Materials)) AssetDatabase.CreateFolder("Assets/Material", "Truck");
@@ -126,6 +146,7 @@ namespace CubeDash.Editor
                     }
                 StackSmoke(root.transform, -1, smoke);
                 StackSmoke(root.transform, 1, smoke);
+                AddTireEmitters(root.transform, TireSmokeMaterial());
                 return PrefabUtility.SaveAsPrefabAsset(root, path);
             }
             finally { if (exists) PrefabUtility.UnloadPrefabContents(root); else Object.DestroyImmediate(root); }
@@ -153,9 +174,12 @@ namespace CubeDash.Editor
                 var wheels = settings.FindProperty("wheels"); wheels.arraySize = 6;
                 for (int i = 0; i < 6; i++) wheels.GetArrayElementAtIndex(i).objectReferenceValue =
                     visual.Find((i < 3 ? "Left" : "Right") + " Wheel " + (i % 3 + 1));
-                ParticleSystem[] systems = visual.GetComponentsInChildren<ParticleSystem>(true);
-                var exhaust = settings.FindProperty("exhaust"); exhaust.arraySize = systems.Length;
-                for (int i = 0; i < systems.Length; i++) exhaust.GetArrayElementAtIndex(i).objectReferenceValue = systems[i];
+                var exhaust = settings.FindProperty("exhaust"); exhaust.arraySize = 2;
+                exhaust.GetArrayElementAtIndex(0).objectReferenceValue = visual.Find("Left Stack Smoke").GetComponent<ParticleSystem>();
+                exhaust.GetArrayElementAtIndex(1).objectReferenceValue = visual.Find("Right Stack Smoke").GetComponent<ParticleSystem>();
+                var tires = settings.FindProperty("tireSmoke"); tires.arraySize = 6;
+                for (int i = 0; i < 6; i++) tires.GetArrayElementAtIndex(i).objectReferenceValue =
+                    visual.Find((i < 3 ? "Left" : "Right") + " Tire Smoke " + (i % 3 + 1)).GetComponent<ParticleSystem>();
                 settings.FindProperty("contactHalfSize").vector2Value = new Vector2(0.74f, 1.62f);
                 settings.ApplyModifiedPropertiesWithoutUndo();
                 PrefabUtility.SaveAsPrefabAsset(root, path);
@@ -204,6 +228,64 @@ namespace CubeDash.Editor
             }
             material.SetColor("_Tint", new Color(0.36f, 0.38f, 0.42f, 0.72f));
             material.enableInstancing = true; EditorUtility.SetDirty(material); return material;
+        }
+
+        private static Material TireSmokeMaterial()
+        {
+            string path = Materials + "/Tire Smoke.mat";
+            Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material == null)
+            {
+                material = new Material(Shader.Find("CubeDash/Jet Particle")) { name = "Tire Smoke" };
+                AssetDatabase.CreateAsset(material, path);
+            }
+            material.SetColor("_Tint", new Color(0.78f, 0.81f, 0.83f, 0.52f));
+            material.enableInstancing = true; EditorUtility.SetDirty(material); return material;
+        }
+
+        private static void AddTireEmitters(Transform parent, Material material)
+        {
+            foreach (int side in new[] { -1, 1 })
+                for (int axle = 0; axle < 3; axle++)
+                {
+                    string name = (side < 0 ? "Left" : "Right") + " Tire Smoke " + (axle + 1);
+                    Transform child = parent.Find(name);
+                    if (child == null) { child = new GameObject(name, typeof(ParticleSystem)).transform; child.SetParent(parent, false); }
+                    // Siblings of the wheels: emitters never rotate with the rolling tire mesh.
+                    Transform wheel = parent.Find((side < 0 ? "Left" : "Right") + " Wheel " + (axle + 1));
+                    child.localPosition = new Vector3(side * 1.2f, 0.1f, wheel.localPosition.z - 0.22f);
+                    child.localRotation = Quaternion.Euler(-90, 0, 0);
+                    ParticleSystem system = child.GetComponent<ParticleSystem>();
+                    system.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
+                    system.useAutoRandomSeed = false; system.randomSeed = (uint)(827 + axle * 137 + (side > 0 ? 593 : 0));
+                    var main = system.main;
+                    main.loop = true; main.playOnAwake = false; main.useUnscaledTime = false;
+                    main.duration = 1; main.simulationSpace = ParticleSystemSimulationSpace.World;
+                    main.scalingMode = ParticleSystemScalingMode.Hierarchy; main.maxParticles = 48;
+                    main.startLifetime = new ParticleSystem.MinMaxCurve(0.35f, 0.65f);
+                    main.startSpeed = new ParticleSystem.MinMaxCurve(0.15f, 0.4f);
+                    main.startSize = new ParticleSystem.MinMaxCurve(0.18f, 0.28f);
+                    main.startRotation = new ParticleSystem.MinMaxCurve(0, Mathf.PI * 2);
+                    main.startColor = Color.white;
+                    var emission = system.emission; emission.enabled = true; emission.rateOverTime = 0;
+                    var shape = system.shape; shape.enabled = true; shape.shapeType = ParticleSystemShapeType.Cone;
+                    shape.angle = 22; shape.radius = 0.09f;
+                    var velocity = system.velocityOverLifetime; velocity.enabled = true;
+                    velocity.space = ParticleSystemSimulationSpace.World; velocity.x = 0; velocity.y = 0.45f; velocity.z = -5.4f;
+                    var noise = system.noise; noise.enabled = true; noise.strength = 0.06f;
+                    noise.frequency = 1.2f; noise.scrollSpeed = 0.6f; noise.quality = ParticleSystemNoiseQuality.Low;
+                    var size = system.sizeOverLifetime; size.enabled = true;
+                    size.size = new ParticleSystem.MinMaxCurve(1, AnimationCurve.EaseInOut(0, 0.7f, 1, 3.5f));
+                    var color = system.colorOverLifetime; color.enabled = true;
+                    Gradient fade = new Gradient();
+                    fade.SetKeys(new[] { new GradientColorKey(new Color(0.8f, 0.83f, 0.86f), 0), new GradientColorKey(Color.white, 1) },
+                        new[] { new GradientAlphaKey(0, 0), new GradientAlphaKey(0.65f, 0.12f),
+                            new GradientAlphaKey(0.35f, 0.5f), new GradientAlphaKey(0, 1) });
+                    color.color = fade;
+                    ParticleSystemRenderer renderer = child.GetComponent<ParticleSystemRenderer>();
+                    renderer.sharedMaterial = material; renderer.renderMode = ParticleSystemRenderMode.Billboard;
+                    renderer.shadowCastingMode = ShadowCastingMode.Off; renderer.receiveShadows = false;
+                }
         }
 
         private static void StackSmoke(Transform parent, int side, Material material)

@@ -560,6 +560,18 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1946959247077630595, guid: 20fce613bef7d914a86c19a6f43e47d1, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2551028045923362247, guid: 20fce613bef7d914a86c19a6f43e47d1, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2745403097454435780, guid: 20fce613bef7d914a86c19a6f43e47d1, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3655393857912631722, guid: 20fce613bef7d914a86c19a6f43e47d1, type: 3}
       propertyPath: m_Name
       value: Truck Icon
@@ -568,7 +580,19 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3824679014774465386, guid: 20fce613bef7d914a86c19a6f43e47d1, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7273988831346193896, guid: 20fce613bef7d914a86c19a6f43e47d1, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7581306530143194128, guid: 20fce613bef7d914a86c19a6f43e47d1, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7673749104021515527, guid: 20fce613bef7d914a86c19a6f43e47d1, type: 3}
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}

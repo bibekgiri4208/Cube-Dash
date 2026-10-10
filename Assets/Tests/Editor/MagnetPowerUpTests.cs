@@ -175,7 +175,8 @@ namespace CubeDash.Tests
             Clear(game); RunnerCube airborneCoin = Coin(game, 0, 2.6f, 3);
             game.Track.Advance(12, 0, 0, 0, Vector2.one * 0.575f, 0, false, true, false, false,
                 true, 8, game.Player.position, 1, out collected, out _);
-            Assert.That(collected, Is.Zero); Assert.That(airborneCoin.gameObject.activeSelf, Is.True);
+            Assert.That(collected, Is.EqualTo(1), "An active Magnet also pulls coins from adjacent lanes during flight.");
+            Assert.That(airborneCoin.gameObject.activeSelf, Is.False);
         }
 
         [UnityTest]

@@ -20,11 +20,12 @@ namespace CubeDash.Tests
             Assert.That(body.subMeshCount, Is.EqualTo(10));
             Assert.That(body.vertexCount, Is.InRange(2000, 12000));
             Assert.That(body.bounds.max.y, Is.GreaterThan(4), "Twin stacks extend above the cab.");
-            Assert.That(prefab.transform.childCount, Is.EqualTo(8));
+            Assert.That(prefab.transform.childCount, Is.EqualTo(14));
             ParticleSystem[] smoke = prefab.GetComponentsInChildren<ParticleSystem>(true);
-            Assert.That(smoke.Length, Is.EqualTo(2));
-            foreach (ParticleSystem system in smoke)
+            Assert.That(smoke.Length, Is.EqualTo(8));
+            foreach (string side in new[] { "Left", "Right" })
             {
+                ParticleSystem system = prefab.transform.Find(side + " Stack Smoke").GetComponent<ParticleSystem>();
                 Assert.That(Mathf.Abs(system.transform.localPosition.x), Is.EqualTo(0.96f).Within(0.001f));
                 Assert.That(system.transform.localPosition.y, Is.EqualTo(4.28f).Within(0.001f));
                 Assert.That(system.transform.localPosition.z, Is.EqualTo(0.14f).Within(0.001f));
@@ -32,6 +33,20 @@ namespace CubeDash.Tests
                 Assert.That(system.main.maxParticles, Is.EqualTo(80));
                 Assert.That(system.main.simulationSpace, Is.EqualTo(ParticleSystemSimulationSpace.World));
                 Assert.That(system.GetComponent<ParticleSystemRenderer>().sharedMaterial.shader.name, Is.EqualTo("CubeDash/Jet Particle"));
+                for (int axle = 1; axle <= 3; axle++)
+                {
+                    ParticleSystem tires = prefab.transform.Find(side + " Tire Smoke " + axle).GetComponent<ParticleSystem>();
+                    Assert.That(tires.transform.parent, Is.SameAs(prefab.transform), "Tire smoke must not spin with the wheel.");
+                    Assert.That(Mathf.Abs(tires.transform.localPosition.x), Is.EqualTo(1.2f).Within(0.001f));
+                    Assert.That(tires.transform.localPosition.y, Is.EqualTo(0.1f).Within(0.001f));
+                    Assert.That(tires.transform.localPosition.z,
+                        Is.EqualTo(prefab.transform.Find(side + " Wheel " + axle).localPosition.z - 0.22f).Within(0.001f));
+                    Assert.That(tires.main.playOnAwake, Is.False);
+                    Assert.That(tires.main.maxParticles, Is.EqualTo(48));
+                    Assert.That(tires.main.simulationSpace, Is.EqualTo(ParticleSystemSimulationSpace.World));
+                    Assert.That(tires.collision.enabled, Is.False);
+                    Assert.That(tires.GetComponent<ParticleSystemRenderer>().sharedMaterial.name, Is.EqualTo("Tire Smoke"));
+                }
             }
             Assert.That(prefab.GetComponentsInChildren<Collider>(true), Is.Empty);
             Mesh frontWheel = prefab.transform.Find("Left Wheel 1").GetComponent<MeshFilter>().sharedMesh;
@@ -60,6 +75,7 @@ namespace CubeDash.Tests
                 Assert.That(game.TruckPresentation.Truck.gameObject.activeSelf, Is.False);
                 Assert.That(game.TruckPresentation.Wheels.Length, Is.EqualTo(6));
                 Assert.That(game.TruckPresentation.Exhaust.Length, Is.EqualTo(2));
+                Assert.That(game.TruckPresentation.TireSmoke.Length, Is.EqualTo(6));
                 Assert.That(game.TruckPresentation.Truck.localScale.x, Is.EqualTo(0.48f).Within(0.001f));
                 Assert.That(game.TruckPresentation.ContactHalfSize, Is.EqualTo(new Vector2(0.74f, 1.62f)));
                 Assert.That(new SerializedObject(game).FindProperty("truckDuration").floatValue, Is.EqualTo(10));
@@ -72,7 +88,7 @@ namespace CubeDash.Tests
                         Transform icon = pickup.transform.Find("Truck Icon");
                         Assert.That(icon, Is.Not.Null);
                         foreach (ParticleSystem system in icon.GetComponentsInChildren<ParticleSystem>(true))
-                            Assert.That(system.gameObject.activeSelf, Is.False, "Pickup icons never emit stack smoke.");
+                            Assert.That(system.gameObject.activeSelf, Is.False, "Pickup icons never emit stack or tire smoke.");
                     }
             }
             finally { EditorSceneManager.ClosePreviewScene(scene); }
@@ -304,9 +320,62 @@ namespace CubeDash.Tests
             PowerUpPickup truck = PlacePickup(game, 1, PowerUpType.Truck, 5);
             match = Place(game, 0, CubeColor.Red, 8);
             Assert.That(game.Track.Advance(10, 0, 0, 0, Vector2.one * 0.575f, 0, out collected), Is.False);
-            Assert.That(collected, Is.Zero);
+            Assert.That(collected, Is.EqualTo(1), "Flight attracts the later coin without collecting the truck pickup.");
             Assert.That(game.Track.LastPowerUps, Is.EqualTo(new[] { PowerUpType.FighterPlane }));
-            Assert.That(truck.gameObject.activeSelf && match.gameObject.activeSelf, Is.True);
+            Assert.That(truck.gameObject.activeSelf, Is.True);
+            Assert.That(match.gameObject.activeSelf, Is.False);
+        }
+
+        [UnityTest]
+        public IEnumerator TireSmokeRespondsToSpeedAndSteeringFreezesOnPauseAndClearsWithoutGrowingThePool()
+        {
+            yield return new EnterPlayMode();
+            yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/Level.unity", new LoadSceneParameters(LoadSceneMode.Single));
+            yield return null;
+            CubeDashGame game = Object.FindAnyObjectByType<CubeDashGame>();
+            game.StartRun(); Clear(game); game.enabled = false;
+            PlayerTruck presentation = game.TruckPresentation;
+            int objects = game.Player.GetComponentsInChildren<Transform>(true).Length;
+            Apply(game, PowerUpType.Truck);
+            presentation.Tick(0.2f, 0, 0);
+            foreach (ParticleSystem system in presentation.TireSmoke)
+            {
+                Assert.That(system.particleCount, Is.Zero, "Stopped tires do not emit smoke.");
+                Assert.That(system.emission.rateOverTime.constant, Is.Zero);
+            }
+            presentation.Tick(0.3f, 12, 0);
+            float straightRate = presentation.TireSmoke[0].emission.rateOverTime.constant;
+            foreach (ParticleSystem system in presentation.TireSmoke)
+            {
+                Assert.That(system.particleCount, Is.GreaterThan(0));
+                Assert.That(system.particleCount, Is.LessThanOrEqualTo(48));
+                Assert.That(system.isPaused, Is.True, "Tire smoke is simulated only by gameplay Tick.");
+            }
+            presentation.Tick(0.1f, 12, 12);
+            Assert.That(presentation.TireSmoke[0].emission.rateOverTime.constant, Is.GreaterThan(straightRate));
+            presentation.Tick(0.1f, 30, 0);
+            Assert.That(presentation.TireSmoke[0].emission.rateOverTime.constant, Is.GreaterThan(straightRate));
+            game.enabled = true; game.TogglePause();
+            float time = presentation.TireSmoke[0].time;
+            int count = presentation.TireSmoke[0].particleCount;
+            yield return null; yield return null;
+            Assert.That(presentation.TireSmoke[0].time, Is.EqualTo(time));
+            Assert.That(presentation.TireSmoke[0].particleCount, Is.EqualTo(count));
+            game.TogglePause(); yield return null; yield return null;
+            Assert.That(presentation.TireSmoke[0].time, Is.GreaterThan(time));
+            game.enabled = false;
+            presentation.Tick(1, 0, 0);
+            foreach (ParticleSystem system in presentation.TireSmoke) Assert.That(system.particleCount, Is.Zero);
+            presentation.Tick(0.3f, 30, 0);
+            Apply(game, PowerUpType.Truck);
+            Assert.That(presentation.TireSmoke[0].particleCount, Is.GreaterThan(0), "Refresh keeps the existing smoke trail.");
+            TickTruck(game, game.TruckRemaining);
+            foreach (ParticleSystem system in presentation.TireSmoke) Assert.That(system.particleCount, Is.Zero);
+            Apply(game, PowerUpType.Truck); presentation.Tick(0.3f, 30, 0); game.StartRun();
+            foreach (ParticleSystem system in presentation.TireSmoke) Assert.That(system.particleCount, Is.Zero);
+            Apply(game, PowerUpType.Truck); presentation.Tick(0.3f, 30, 0); presentation.enabled = false;
+            foreach (ParticleSystem system in presentation.TireSmoke) Assert.That(system.particleCount, Is.Zero);
+            Assert.That(game.Player.GetComponentsInChildren<Transform>(true).Length, Is.EqualTo(objects));
         }
 
         private static PowerUpPickup PlacePickup(CubeDashGame game, int slot, PowerUpType type, float z)
