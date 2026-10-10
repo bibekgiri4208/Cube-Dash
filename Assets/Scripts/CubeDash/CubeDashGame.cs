@@ -18,6 +18,7 @@ namespace CubeDash
         [Header("Arcade feedback")]
         [SerializeField] private AudioSource collectionAudio = null;
         [SerializeField] private AudioClip collectionSound = null;
+        [SerializeField] private RunnerAudio audioPresentation = null;
         [SerializeField, Range(0f, 1f)] private float collectionVolume = 0.65f;
         [SerializeField, Range(0f, 0.1f)] private float collectionPitchStep = 0.045f;
         [SerializeField, Range(0.04f, 0.2f)] private float laneSmoothTime = 0.085f;
@@ -101,6 +102,7 @@ namespace CubeDash
         public Transform Player => player;
         public Camera GameCamera => gameCamera;
         public EndlessTrack Track => track;
+        public RunnerAudio AudioPresentation => audioPresentation;
 
         private void Awake()
         {
@@ -112,6 +114,7 @@ namespace CubeDash
                 return;
             }
             playerOrigin = player.position;
+            if (audioPresentation == null) audioPresentation = GetComponent<RunnerAudio>();
             if (flightPresentation == null) flightPresentation = player.GetComponent<PlayerFlight>();
             if (truckPresentation == null) truckPresentation = player.GetComponent<PlayerTruck>();
             if (playerVisual == null) playerVisual = player;
@@ -188,6 +191,7 @@ namespace CubeDash
             if (State == RunState.Running && truckPresentation != null)
                 truckPresentation.Tick(dt, Speed, laneVelocity);
             hud.UpdateStats();
+            if (audioPresentation != null) audioPresentation.Tick(dt, State, Flying, Trucking, Speed, laneVelocity);
         }
 
         private void UpdatePlayerAnimation(float dt)
@@ -288,6 +292,7 @@ namespace CubeDash
 
         private void OnDisable()
         {
+            if (audioPresentation != null) audioPresentation.ResetSounds();
             activeGamepad = null;
             stickInput.Reset();
             menuStickInput.Reset();
@@ -328,6 +333,7 @@ namespace CubeDash
             cameraFollow = cameraOrigin;
             gameCamera.fieldOfView = cameraFov;
             if (collectionAudio != null) { collectionAudio.Stop(); collectionAudio.pitch = 1f; }
+            if (audioPresentation != null) audioPresentation.ResetSounds();
             playerRenderer.sharedMaterial = track.ColorMaterial(playerCubeColor);
             playerColor = playerRenderer.sharedMaterial.color;
             SetPlayerColor(playerColor, cubeEmission);
@@ -348,6 +354,7 @@ namespace CubeDash
                 if (State == RunState.Paused) collectionAudio.Pause();
                 else collectionAudio.UnPause();
             }
+            if (audioPresentation != null) audioPresentation.SetPaused(State == RunState.Paused);
             hud.Show(State);
         }
 
@@ -361,6 +368,7 @@ namespace CubeDash
             SetTruckPresentation(false);
             if (flightPresentation != null) flightPresentation.ResetPresentation();
             State = RunState.GameOver;
+            if (audioPresentation != null) audioPresentation.ResetSounds();
             shake = 0.25f;
             SetPlayerColor(playerColor * 0.7f, 0.1f);
             int score = Score;
@@ -396,11 +404,7 @@ namespace CubeDash
                     break;
             }
             hud.NotifyPowerUp(type);
-            if (collectionAudio != null && collectionSound != null)
-            {
-                collectionAudio.pitch = type == PowerUpType.DoublePoints ? 1.5f : 1.9f;
-                collectionAudio.PlayOneShot(collectionSound, collectionVolume);
-            }
+            if (audioPresentation != null) audioPresentation.PlayPickup(type);
         }
 
         private void UpdateMagnetTimer(float dt)

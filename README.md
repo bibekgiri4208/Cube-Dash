@@ -127,6 +127,11 @@ on the HUD. The blue road and the red/blue/green gameplay palette remain unchang
   boundary clipping/blending local, including horizon aprons, and reset when sections recycle.
 - Slowly drifting clouds, waves and surf freeze on pause and reset on restart.
 
+The skybox now uses deeper biome-specific blues, two cloud layers with soft shaded billows,
+a restrained sun disc/halo aligned with the sunlight, and seamless direction-space cloud noise.
+Clouds fade into the existing biome horizon/fog, avoiding stretched bands or abrupt sky changes.
+Coverage, scale, opacity and drift are editable on `Assets/Material/CubeDashHorizon.mat`.
+
 Each non-city region has three deterministic mesh layouts. Saved scenery roots are pooled with
 the eight track sections; recycling toggles roots and swaps shared meshes without instantiating
 objects or adding gameplay colliders. Environment selection uses no obstacle random numbers.
@@ -153,6 +158,21 @@ never for a fatal obstacle contact.
 Sound is a short, locally authored PCM clip, with a five-step pitch cycle and Inspector volume
 and pitch step. Rapid pickups combine in the floating score popup rather than losing feedback.
 Pausing freezes gameplay feedback and pauses audio; restarting clears the pulse and tail history.
+
+Power-ups have five original, distinct PCM pickup cues: a shield shimmer, ascending **2×** notes,
+airplane launch sweep, low truck rev and electric Magnet trill. Coin pickup audio remains unchanged
+and uses its own source. Airplane mode uses an actual F-22 recording; Truck uses a recorded heavy-vehicle
+engine, replacing the earlier synthetic tones. Both are CC0 recordings shared by qubodup, with credits
+and retained sources in `Assets/Audio/VehicleSources/CREDITS.md`. Six-second loops use stable recorded
+sections, filtering and half-second crossfades, with restrained speed-responsive pitch and steering rev.
+Loops fade in, do not restart
+on refreshed power-ups, pause/resume with gameplay, and stop on expiry, restart, game over or disable.
+`RunnerAudio` on **Game Manager** exposes separate pickup/airplane/truck volumes; its three saved child
+AudioSources are non-spatial and never autoplay. All seven clips live in `Assets/Audio` and are edited
+offline, not synthesized during Play. **Tools > Cube Dash > Refine Vehicle Engine Audio** rebakes only
+the two engine loops without changing pickups, sky, volume settings or the level.
+**Tools > Cube Dash > Improve Sky and Power-Up Audio** rebakes
+the sky/audio assets without rebuilding the level or changing gameplay, biome fog or lighting.
 
 The tail is a longer, soft-edged luminous ribbon, tapered and faded from head to tip. Its saved
 pieces sample the actual driven path by distance, connect through lane changes, and lengthen with
@@ -273,3 +293,5 @@ stable hitboxes, spin/bob, pause/restart, duplicate-score prevention and fixed-s
 `MagnetPowerUpTests` checks the saved Shield/2×/Magnet models, separate power-up positions through recycling,
 cross-lane coin attraction for every player color, range limits, Double Points stacking, timers/pause/restart,
 pickup animation reset, airborne Magnet collection and chronological long-frame collection.
+`SkyAndAudioTests` checks saved sky/sun settings, independent pickup/engine sources, non-silent PCM
+clips and loop seams, engine mode/speed/pause/expiry/refresh/restart behavior, and coin-pitch isolation.

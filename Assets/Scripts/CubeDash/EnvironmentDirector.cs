@@ -75,6 +75,7 @@ namespace CubeDash
                 runtimeSky.SetColor("_ZenithColor", Color.Lerp(a.Zenith, b.Zenith, blend));
                 runtimeSky.SetColor("_GroundColor", Color.Lerp(a.Ground, b.Ground, blend));
                 runtimeSky.SetColor("_SunColor", Color.Lerp(a.Sun, b.Sun, blend) * 1.2f);
+                if (sunlight != null) runtimeSky.SetVector("_SunDirection", -sunlight.transform.forward);
             }
             if (sunlight != null)
             {
