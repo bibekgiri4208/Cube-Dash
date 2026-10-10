@@ -8,18 +8,22 @@ namespace CubeDash
         [SerializeField] private AudioSource pickupSource = null;
         [SerializeField] private AudioSource flightSource = null;
         [SerializeField] private AudioSource truckSource = null;
+        [SerializeField] private AudioSource supercarSource = null;
         [Tooltip("Shield, Double Points, Fighter Plane, Truck, Magnet.")]
         [SerializeField] private AudioClip[] pickupClips = new AudioClip[5];
         [SerializeField, Range(0, 1)] private float pickupVolume = 0.55f;
         [SerializeField, Range(0, 1)] private float flightVolume = 0.24f;
         [SerializeField, Range(0, 1)] private float truckVolume = 0.3f;
-        private bool flightActive, truckActive, paused;
+        [SerializeField, Range(0, 1)] private float supercarVolume = 0.3f;
+        private bool flightActive, truckActive, supercarActive, paused;
 
         public AudioSource PickupSource => pickupSource;
         public AudioSource FlightSource => flightSource;
         public AudioSource TruckSource => truckSource;
+        public AudioSource SupercarSource => supercarSource;
         public bool FlightActive => flightActive;
         public bool TruckActive => truckActive;
+        public bool SupercarActive => supercarActive;
         public AudioClip PickupClip(PowerUpType type) => (int)type < pickupClips.Length ? pickupClips[(int)type] : null;
 
         public void PlayPickup(PowerUpType type)
@@ -30,13 +34,14 @@ namespace CubeDash
             pickupSource.PlayOneShot(clip, pickupVolume);
         }
 
-        public void Tick(float dt, CubeDashGame.RunState state, bool flying, bool trucking, float speed, float steering)
+        public void Tick(float dt, CubeDashGame.RunState state, bool flying, bool trucking, float speed, float steering, bool drivingCar = false)
         {
             SetPaused(state == CubeDashGame.RunState.Paused);
             if (paused) return;
             if (state != CubeDashGame.RunState.Running) { ResetSounds(); return; }
             SetEngine(flightSource, flying && !trucking, ref flightActive);
             SetEngine(truckSource, trucking, ref truckActive);
+            SetEngine(supercarSource, drivingCar && !flying && !trucking, ref supercarActive);
             float pace = Mathf.Clamp01(speed / 30);
             float response = 1 - Mathf.Exp(-6 * Mathf.Max(0, dt));
             if (flightActive && flightSource != null)
@@ -49,6 +54,12 @@ namespace CubeDash
                 truckSource.volume = Mathf.Lerp(truckSource.volume, truckVolume * Mathf.Lerp(0.8f, 1, pace), response);
                 float rev = Mathf.Lerp(0.86f, 1.12f, pace) + Mathf.Clamp01(Mathf.Abs(steering) / 18) * 0.03f;
                 truckSource.pitch = Mathf.Lerp(truckSource.pitch, rev, response);
+            }
+            if (supercarActive && supercarSource != null)
+            {
+                supercarSource.volume = Mathf.Lerp(supercarSource.volume, supercarVolume * Mathf.Lerp(0.8f, 1, pace), response);
+                float rev = Mathf.Lerp(0.85f, 1.35f, pace) + Mathf.Clamp01(Mathf.Abs(steering) / 18) * 0.06f;
+                supercarSource.pitch = Mathf.Lerp(supercarSource.pitch, rev, response);
             }
         }
 
@@ -69,6 +80,7 @@ namespace CubeDash
             PauseSource(pickupSource, value);
             PauseSource(flightSource, value);
             PauseSource(truckSource, value);
+            PauseSource(supercarSource, value);
         }
 
         private static void PauseSource(AudioSource source, bool value)
@@ -79,10 +91,11 @@ namespace CubeDash
 
         public void ResetSounds()
         {
-            flightActive = truckActive = paused = false;
+            flightActive = truckActive = supercarActive = paused = false;
             if (pickupSource != null) pickupSource.Stop();
             if (flightSource != null) { flightSource.Stop(); flightSource.volume = 0; flightSource.pitch = 1; }
             if (truckSource != null) { truckSource.Stop(); truckSource.volume = 0; truckSource.pitch = 1; }
+            if (supercarSource != null) { supercarSource.Stop(); supercarSource.volume = 0; supercarSource.pitch = 1; }
         }
 
         private void OnDisable() => ResetSounds();

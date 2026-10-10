@@ -63,7 +63,7 @@ namespace CubeDash.Tests
             GameObject player = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/CubeDash/PlayerCube.prefab");
             Assert.That(player.GetComponent<PlayerSupercar>(), Is.Not.Null);
             Transform car = player.transform.Find("Supercar Visual"); Assert.That(car.gameObject.activeSelf, Is.False);
-            Assert.That(car.localScale.x, Is.EqualTo(0.72f));
+            Assert.That(car.localScale, Is.EqualTo(Vector3.one * 0.576f));
             Assert.That(car.localPosition.y, Is.EqualTo(-0.575f));
             Assert.That((wheel.bounds.size.x + 2.1f) * car.localScale.x, Is.LessThan(2.6f));
         }
@@ -167,6 +167,55 @@ namespace CubeDash.Tests
             Assert.That(game.State, Is.EqualTo(CubeDashGame.RunState.GameOver)); Assert.That(game.SupercarEnabled, Is.False);
             Assert.That(game.SupercarPresentation.Car.gameObject.activeSelf, Is.False);
             Assert.That(game.PressSupercarEnter(3), Is.False); game.StartRun(); Assert.That(game.PressSupercarEnter(3.1), Is.False);
+        }
+
+        [UnityTest]
+        public IEnumerator EngineFollowsCarSelectionSpeedPausePowerUpPriorityAndCleanup()
+        {
+            yield return new EnterPlayMode();
+            yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/Level.unity", new LoadSceneParameters(LoadSceneMode.Single));
+            yield return null;
+            CubeDashGame game = Object.FindAnyObjectByType<CubeDashGame>(); game.StartRun(); Clear(game);
+            RunnerAudio audio = game.AudioPresentation;
+            int sources = game.GetComponentsInChildren<AudioSource>(true).Length;
+            Assert.That(audio.SupercarActive, Is.False);
+            Toggle(game, 1); yield return null;
+            Assert.That(audio.SupercarActive, Is.True);
+            Assert.That(audio.SupercarSource.volume, Is.GreaterThan(0));
+            Assert.That(audio.SupercarSource.clip, Is.Not.SameAs(audio.TruckSource.clip));
+            audio.Tick(1, game.State, false, false, 12, 0, true);
+            float lowPitch = audio.SupercarSource.pitch;
+            audio.Tick(1, game.State, false, false, 30, 18, true);
+            Assert.That(audio.SupercarSource.pitch, Is.GreaterThan(lowPitch));
+            Assert.That(audio.SupercarSource.pitch, Is.InRange(0.85f, 1.41f));
+            game.TogglePause();
+            float pitch = audio.SupercarSource.pitch, volume = audio.SupercarSource.volume;
+            audio.Tick(1, game.State, false, false, 12, 0, true); yield return null;
+            Assert.That(audio.SupercarSource.pitch, Is.EqualTo(pitch));
+            Assert.That(audio.SupercarSource.volume, Is.EqualTo(volume));
+            game.TogglePause(); yield return null;
+            Assert.That(audio.SupercarActive, Is.True);
+            Apply(game, PowerUpType.Truck); yield return null;
+            Assert.That(audio.TruckActive, Is.True); Assert.That(audio.SupercarActive, Is.False);
+            Assert.That(audio.SupercarSource.volume, Is.Zero);
+            TickTimer(game, "UpdateTruckTimers", game.TruckRemaining + 0.1f); yield return null;
+            Assert.That(audio.SupercarActive, Is.True); Assert.That(audio.TruckActive, Is.False);
+            Apply(game, PowerUpType.FighterPlane); yield return null;
+            Assert.That(audio.FlightActive, Is.True); Assert.That(audio.SupercarActive, Is.False);
+            TickTimer(game, "UpdateFlightTimers", game.FlightRemaining + 0.1f); yield return null;
+            Assert.That(audio.SupercarActive, Is.True); Assert.That(audio.FlightActive, Is.False);
+            Toggle(game, 2); yield return null;
+            Assert.That(audio.SupercarActive, Is.False); Assert.That(audio.SupercarSource.volume, Is.Zero);
+            Toggle(game, 3); yield return null; game.StartRun(); Clear(game);
+            Assert.That(audio.SupercarActive, Is.False);
+            Assert.That(audio.SupercarSource.pitch, Is.EqualTo(1));
+            Toggle(game, 4); yield return null;
+            typeof(CubeDashGame).GetMethod("Crash", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(game, null);
+            Assert.That(audio.SupercarActive, Is.False); Assert.That(audio.SupercarSource.volume, Is.Zero);
+            game.StartRun(); Clear(game); Toggle(game, 5); yield return null;
+            game.enabled = false;
+            Assert.That(audio.SupercarActive, Is.False);
+            Assert.That(game.GetComponentsInChildren<AudioSource>(true).Length, Is.EqualTo(sources));
         }
 
         [UnityTest]

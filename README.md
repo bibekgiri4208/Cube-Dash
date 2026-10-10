@@ -71,7 +71,7 @@ remain unchanged. The reference car stays cyan/charcoal; the HUD's existing colo
 matching-color wake still identify the player's gameplay color. Magnet, Shield and Double Points
 continue to work. Truck and Fighter Plane temporarily take visual priority, then restore a selected
 Supercar when they expire. You can toggle the selection during those power-ups. Pause freezes the
-car's wheels/steering; restart or game over clears the selection and pending Enter presses. Menu
+car's wheels/steering and engine audio; restart or game over clears the selection and pending Enter presses. Menu
 confirmation presses never arm the in-run double-press.
 
 The hand-built, reference-derived car includes a low faceted body with real wheel openings,
@@ -84,6 +84,14 @@ with body/wheel meshes under `Assets/3D Models` and materials under `Assets/Mate
 **Tools > Cube Dash > Add Reference Supercar** (`CubeDash.Editor.CubeDashSupercar.ApplyFromCommandLine`)
 rebakes/reconnects only the car, player prefab and game reference. The saved level is ready to play;
 **Game Manager > Supercar Double Press Window** adjusts the input interval.
+The player car is now **20% smaller**, with unchanged collision bounds and road-height placement.
+Its separate, original six-second `Assets/Audio/SupercarEngineLoop.wav` adds an exhaust growl with
+speed-responsive pitch and a small steering rev. It fades in, pauses/resumes with gameplay, stops
+when returning to the cube, and yields to Truck/Plane engines before resuming the selected car.
+Restart, game over and disable clear it. Tune **Game Manager > Runner Audio > Supercar Volume**.
+**Tools > Cube Dash > Refine Supercar Size and Engine Audio** reapplies only the scale/audio pass,
+preserving car meshes, gameplay, other sounds and their volume settings. Audio is baked offline,
+not synthesized during Play.
 
 Power-ups occupy dedicated positions **7 metres before coin rows**, rather than sitting on coins.
 Even staggered hazards remain at least **4 metres** away. Pickups sway/bob while running and freeze on pause.
@@ -286,8 +294,8 @@ and retained sources in `Assets/Audio/VehicleSources/CREDITS.md`. Six-second loo
 sections, filtering and half-second crossfades, with restrained speed-responsive pitch and steering rev.
 Loops fade in, do not restart
 on refreshed power-ups, pause/resume with gameplay, and stop on expiry, restart, game over or disable.
-`RunnerAudio` on **Game Manager** exposes separate pickup/airplane/truck volumes; its three saved child
-AudioSources are non-spatial and never autoplay. All seven clips live in `Assets/Audio` and are edited
+`RunnerAudio` on **Game Manager** exposes separate pickup/airplane/truck/supercar volumes; its four saved child
+AudioSources are non-spatial and never autoplay. All eight clips live in `Assets/Audio` and are edited
 offline, not synthesized during Play. **Tools > Cube Dash > Refine Vehicle Engine Audio** rebakes only
 the two engine loops without changing pickups, sky, volume settings or the level.
 **Tools > Cube Dash > Improve Sky and Power-Up Audio** rebakes

@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace CubeDash.Editor
 {
-    /// <summary>Original PCM pickup cues and edited CC0 vehicle recordings; no runtime synthesis.</summary>
+    /// <summary>Original PCM pickup/car cues and edited CC0 vehicle recordings; no runtime synthesis.</summary>
     internal static class RunnerSoundDesign
     {
         private const int Rate = 44100;
@@ -104,6 +104,43 @@ namespace CubeDash.Editor
             float gain = Mathf.Min((flight ? 0.13f : 0.15f) / Mathf.Max(0.001f, rms), 0.7f / Mathf.Max(0.001f, peak));
             for (int i = 0; i < count; i++) samples[i] *= gain;
             return Save(flight ? "FlightEngineLoop" : "TruckEngineLoop", samples);
+        }
+
+        public static AudioClip SupercarEngine()
+        {
+            // An original exhaust-pulse bed, baked offline. Integer cycles and overlap filtering
+            // keep the six-second join continuous, including the mechanical/noise layer.
+            const int count = Rate * 6;
+            const int overlap = Rate / 2;
+            float[] samples = new float[count], noise = new float[count + overlap];
+            var random = new System.Random(9137);
+            float air = 0;
+            for (int i = 0; i < noise.Length; i++)
+            {
+                air += 0.16f * ((float)random.NextDouble() * 2 - 1 - air);
+                noise[i] = air;
+            }
+            for (int i = 0; i < count; i++)
+            {
+                float t = i / (float)Rate;
+                float cycle = 95 * t + 0.04f * Mathf.Sin(2 * Mathf.PI * t)
+                    + 0.015f * Mathf.Sin(6 * Mathf.PI * t);
+                float phase = 2 * Mathf.PI * cycle;
+                float exhaust = 0;
+                for (int harmonic = 1; harmonic <= 12; harmonic++)
+                    exhaust += Mathf.Sin(phase * harmonic + harmonic * 0.23f)
+                        * Mathf.Exp(-harmonic * 0.17f) / Mathf.Sqrt(harmonic);
+                float firing = 0.86f + 0.14f * Mathf.Sin(phase * 0.5f);
+                float texture = noise[i];
+                if (i < overlap)
+                {
+                    float angle = i / (float)overlap * Mathf.PI * 0.5f;
+                    texture = noise[count + i] * Mathf.Cos(angle) + texture * Mathf.Sin(angle);
+                }
+                samples[i] = exhaust * 0.16f * firing + texture * 0.10f
+                    + Mathf.Sin(phase * 2.5f) * 0.018f;
+            }
+            return Save("SupercarEngineLoop", samples);
         }
 
         private static int SmoothBoundary(float[] source, int start, int frequency)

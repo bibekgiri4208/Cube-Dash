@@ -204,7 +204,7 @@ namespace CubeDash
             if (State == RunState.Running && supercarPresentation != null)
                 supercarPresentation.Tick(dt, Speed, laneVelocity);
             hud.UpdateStats();
-            if (audioPresentation != null) audioPresentation.Tick(dt, State, Flying, Trucking, Speed, laneVelocity);
+            if (audioPresentation != null) audioPresentation.Tick(dt, State, Flying, Trucking, Speed, laneVelocity, SupercarDriving);
             if (ambiencePresentation != null) ambiencePresentation.Tick(dt, State, Distance);
         }
 

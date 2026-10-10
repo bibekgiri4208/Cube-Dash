@@ -26,9 +26,11 @@ namespace CubeDash.Editor
             AudioSource pickup = Source(game.transform, "Power-Up Audio", false, null);
             AudioSource flight = Source(game.transform, "Airplane Engine Audio", true, RunnerSoundDesign.Engine(true));
             AudioSource truck = Source(game.transform, "Truck Engine Audio", true, RunnerSoundDesign.Engine(false));
+            AudioSource supercar = Source(game.transform, "Supercar Engine Audio", true, RunnerSoundDesign.SupercarEngine());
             settings.FindProperty("pickupSource").objectReferenceValue = pickup;
             settings.FindProperty("flightSource").objectReferenceValue = flight;
             settings.FindProperty("truckSource").objectReferenceValue = truck;
+            settings.FindProperty("supercarSource").objectReferenceValue = supercar;
             var clips = settings.FindProperty("pickupClips"); clips.arraySize = 5;
             for (int i = 0; i < 5; i++) clips.GetArrayElementAtIndex(i).objectReferenceValue = RunnerSoundDesign.Pickup((PowerUpType)i);
             settings.ApplyModifiedPropertiesWithoutUndo();
@@ -55,7 +57,7 @@ namespace CubeDash.Editor
             EditorUtility.SetDirty(sky);
             EditorSceneManager.MarkSceneDirty(scene);
             AssetDatabase.SaveAssets(); EditorSceneManager.SaveScene(scene);
-            Debug.Log("Sky and audio saved: layered clouds, deeper biome skies, aligned sun, five original pickup cues and two engine loops. Coins, gameplay, lighting and biome fog preserved.");
+            Debug.Log("Sky and audio saved: layered clouds, deeper biome skies, aligned sun, five original pickup cues and three engine loops. Coins, gameplay, lighting and biome fog preserved.");
         }
 
         [MenuItem("Tools/Cube Dash/Refine Vehicle Engine Audio")]
@@ -67,7 +69,7 @@ namespace CubeDash.Editor
             Debug.Log("Vehicle audio refined from CC0 recordings: six-second crossfaded F-22 airflow and heavy truck engine loops. Pickup sounds, volume settings, sky and level unchanged.");
         }
 
-        private static AudioSource Source(Transform parent, string name, bool loop, AudioClip clip)
+        internal static AudioSource Source(Transform parent, string name, bool loop, AudioClip clip)
         {
             Transform child = parent.Find(name);
             if (child == null) { child = new GameObject(name, typeof(AudioSource)).transform; child.SetParent(parent, false); }

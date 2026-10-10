@@ -14,7 +14,7 @@ namespace CubeDash.Tests
         [Test]
         public void SavedPowerUpSoundsAreDistinctNonSilentPcmAndEngineLoopsHaveSmoothSeams()
         {
-            string[] names = { "ShieldPickup", "DoublePointsPickup", "FlightPickup", "TruckPickup", "MagnetPickup", "FlightEngineLoop", "TruckEngineLoop" };
+            string[] names = { "ShieldPickup", "DoublePointsPickup", "FlightPickup", "TruckPickup", "MagnetPickup", "FlightEngineLoop", "TruckEngineLoop", "SupercarEngineLoop" };
             foreach (string name in names)
             {
                 string path = "Assets/Audio/" + name + ".wav";
@@ -67,7 +67,7 @@ namespace CubeDash.Tests
                 Assert.That(audio, Is.Not.Null);
                 Assert.That(audio, Is.SameAs(game.GetComponent<RunnerAudio>()));
                 AudioSource coinSource = game.GetComponent<AudioSource>();
-                foreach (AudioSource source in new[] { audio.PickupSource, audio.FlightSource, audio.TruckSource })
+                foreach (AudioSource source in new[] { audio.PickupSource, audio.FlightSource, audio.TruckSource, audio.SupercarSource })
                 {
                     Assert.That(source, Is.Not.Null); Assert.That(source, Is.Not.SameAs(coinSource));
                     Assert.That(source.playOnAwake, Is.False); Assert.That(source.spatialBlend, Is.Zero);
@@ -76,6 +76,8 @@ namespace CubeDash.Tests
                 Assert.That(audio.FlightSource.loop && audio.TruckSource.loop, Is.True);
                 Assert.That(audio.FlightSource.clip.name, Is.EqualTo("FlightEngineLoop"));
                 Assert.That(audio.TruckSource.clip.name, Is.EqualTo("TruckEngineLoop"));
+                Assert.That(audio.SupercarSource.loop, Is.True);
+                Assert.That(audio.SupercarSource.clip.name, Is.EqualTo("SupercarEngineLoop"));
                 var clips = new System.Collections.Generic.HashSet<AudioClip>();
                 foreach (PowerUpType type in System.Enum.GetValues(typeof(PowerUpType)))
                 {

@@ -10,6 +10,7 @@ namespace CubeDash.Editor
     public static class CubeDashSupercar
     {
         private const string Materials = "Assets/Material/Supercar";
+        private const float PlayerScale = 0.576f;
 
         [MenuItem("Tools/Cube Dash/Add Reference Supercar")]
         public static void ApplyFromMenu()
@@ -69,7 +70,7 @@ namespace CubeDash.Editor
                     instance.name = "Supercar Visual"; visual = instance.transform; visual.SetParent(player.transform, false);
                 }
                 visual.localPosition = Vector3.down * 0.575f;
-                visual.localRotation = Quaternion.identity; visual.localScale = Vector3.one * 0.72f;
+                visual.localRotation = Quaternion.identity; visual.localScale = Vector3.one * PlayerScale;
                 visual.gameObject.SetActive(false);
                 PlayerSupercar presentation = player.GetComponent<PlayerSupercar>();
                 if (presentation == null) presentation = player.AddComponent<PlayerSupercar>();
@@ -89,8 +90,48 @@ namespace CubeDash.Editor
             gameSettings.FindProperty("supercarPresentation").objectReferenceValue = game.Player.GetComponent<PlayerSupercar>();
             gameSettings.FindProperty("supercarDoublePressWindow").floatValue = 0.35f;
             gameSettings.ApplyModifiedPropertiesWithoutUndo();
+            ConnectEngine(game);
             EditorSceneManager.MarkSceneDirty(scene); EditorSceneManager.SaveScene(scene); AssetDatabase.SaveAssets();
             Debug.Log("Supercar saved: cyan/charcoal faceted body, real wheel openings, wraparound glass, X headlights, five-spoke blue rims, rear wing/fin, red LEDs, twin hollow exhausts and diffuser. Double-Enter manually toggles it; normal speed and cube collision rules are unchanged. Truck/Plane take temporary presentation priority.");
+        }
+
+        [MenuItem("Tools/Cube Dash/Refine Supercar Size and Engine Audio")]
+        public static void RefinePresentationFromMenu()
+        {
+            if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) RefinePresentationFromCommandLine();
+        }
+
+        public static void RefinePresentationFromCommandLine()
+        {
+            const string playerPath = "Assets/Prefab/CubeDash/PlayerCube.prefab";
+            GameObject player = PrefabUtility.LoadPrefabContents(playerPath);
+            try
+            {
+                Transform visual = player.transform.Find("Supercar Visual");
+                if (visual == null) throw new InvalidOperationException("The saved Supercar Visual is required.");
+                visual.localScale = Vector3.one * PlayerScale;
+                PrefabUtility.SaveAsPrefabAsset(player, playerPath);
+            }
+            finally { PrefabUtility.UnloadPrefabContents(player); }
+            var scene = EditorSceneManager.OpenScene("Assets/Scenes/Level.unity");
+            CubeDashGame game = Object.FindAnyObjectByType<CubeDashGame>();
+            if (game == null) throw new InvalidOperationException("The authored Cube Dash level is required.");
+            ConnectEngine(game);
+            EditorSceneManager.MarkSceneDirty(scene); EditorSceneManager.SaveScene(scene); AssetDatabase.SaveAssets();
+            Debug.Log("Supercar presentation saved: 20% smaller, with a separate speed-responsive engine loop. Geometry, collider, gameplay and other audio settings preserved.");
+        }
+
+        private static void ConnectEngine(CubeDashGame game)
+        {
+            RunnerAudio audio = game.GetComponent<RunnerAudio>();
+            if (audio == null) audio = game.gameObject.AddComponent<RunnerAudio>();
+            var settings = new SerializedObject(audio);
+            settings.FindProperty("supercarSource").objectReferenceValue = CubeDashSkyAndAudio.Source(
+                game.transform, "Supercar Engine Audio", true, RunnerSoundDesign.SupercarEngine());
+            settings.ApplyModifiedPropertiesWithoutUndo();
+            var manager = new SerializedObject(game);
+            manager.FindProperty("audioPresentation").objectReferenceValue = audio;
+            manager.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static string WheelName(int index) => (index % 2 == 0 ? "Left" : "Right") + (index < 2 ? " Front Wheel" : " Rear Wheel");
