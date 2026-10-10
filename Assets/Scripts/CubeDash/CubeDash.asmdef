@@ -1,6 +1,6 @@
 {
   "name": "CubeDash",
   "rootNamespace": "CubeDash",
-  "references": ["Unity.InputSystem", "UnityEngine.UI"],
+  "references": ["Unity.InputSystem", "UnityEngine.UI", "Unity.RenderPipelines.Core.Runtime", "Unity.RenderPipelines.Universal.Runtime"],
   "autoReferenced": true
 }

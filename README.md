@@ -298,6 +298,26 @@ shaded faces and contact lighting. This is an ambient/indirect-light approximati
 GI: the endless city moves and recycles, so world-space baked lightmaps would not stay aligned.
 The original fog and high-quality shadow presets are retained.
 
+### Lighting and post-processing
+
+The graphics pass adds stronger directional daylight with a restrained, shadow-free sky fill,
+biome-blended ambient colors, softer contact shading and subtle procedural surface-normal relief.
+The existing 4K/four-cascade PC shadows and lighter mobile preset remain intact. Neutral tonemapping,
+selective bloom (threshold **1.12**, intensity **0.30**), gentle contrast/vignette, high-quality SMAA
+and dithering clean up highlights, silhouettes and sky gradients without changing lane colors.
+
+**Main Camera > Runner Graphics > Motion Blur Strength** controls speed-responsive peripheral blur;
+set it to **0** to turn it off. It ramps between **14–30 m/s** in the saved level, preserves a widening central road/player
+corridor and the sky, and runs before post-processing and the overlay HUD. Pause, menus, game over,
+disable and restart clear it immediately. This is a five-sample spatial speed effect for the fixed-camera
+runner, not motion-vector blur: it has no temporal history/ghosting and needs no object motion vectors.
+The URP **Render Graph** renderer feature is saved on both renderers, with a smaller radius on Mobile;
+inactive effects enqueue no blur pass. No depth-of-field, film grain or chromatic fringing obscures pickups.
+
+**Tools > Cube Dash > Improve Lighting and Post Processing** reapplies only the graphics settings.
+The editable profile is `Assets/Settings/CubeDashVisuals.asset`; blur is configured on `PC_Renderer.asset`
+and `Mobile_Renderer.asset`. Models, gameplay, audio and separate user-created volume assets are preserved.
+
 Lane changes ease in/out with a restrained bank and yaw; the camera follows smoothly. The ready
 cube breathes gently with a synchronized glow. Coin pickups trigger a squash-then-rebound,
 an emission flash, a score pop, floating **+1**, and an
@@ -344,7 +364,7 @@ and hover/press feedback. The current environment remains visible around the men
   so the scene remains visible. **City Atmosphere** holds the bloom/color-grading profile.
 - Palette assets: **`Assets/Material/CubeDashRed.mat`**, **`CubeDashBlue.mat`**, **`CubeDashGreen.mat`**.
 - Sky: **`Assets/Material/CubeDashHorizon.mat`**. Atmospheric profile:
-  **`Assets/Settings/CubeDashVisuals.asset`**; bloom uses a 1.05 HDR threshold and restrained intensity.
+  **`Assets/Settings/CubeDashVisuals.asset`**; bloom uses a 1.12 HDR threshold and restrained intensity.
 - Audio: **`Assets/Audio/ArcadeCollect.wav`**; source, clip, volume, and lane easing are on **Game Manager**.
   Base/pickup emission and rebound duration are also configurable there; pickup wave duration is
   on **Player Trail**. Restart restores the authored visual and popup positions and resets sound pitch.
@@ -430,6 +450,8 @@ detail, shader depth/shadow passes, horizon-apron ownership during recycling, fi
 complete city windows between floor bands, isolated coastal blends, smooth transitions, pause and restart.
 `EnvironmentVarietyTests` checks all 27 new model assets, eight-layout coverage without adjacent repeats,
 valid road-clear geometry, rigid landmark reveal anchors and fixed-size paired-mesh recycling.
+`GraphicsTests` checks the saved grading/renderer settings, blur speed/lifecycle behavior, and a GPU
+pixel comparison confirming that peripheral blur executes while the central road remains sharp.
 `FighterPowerUpTests` additionally checks saved fighter geometry and bounded particles, pickup
 transformation, flight/pause/restart, timed landing protection, automatic current-lane coin attraction,
 Magnet/Double Points stacking in flight, airborne hazard/power-up suppression and

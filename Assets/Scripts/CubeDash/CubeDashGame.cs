@@ -308,6 +308,8 @@ namespace CubeDash
 
         private void OnDisable()
         {
+            if (gameCamera != null && gameCamera.TryGetComponent(out RunnerGraphics graphics))
+                graphics.Tick(0, RunState.Ready, 0);
             supercarEnter.Reset(); SupercarEnabled = false;
             if (supercarPresentation != null) supercarPresentation.ResetPresentation();
             if (playerRenderer != null) RefreshGroundPresentation();
@@ -336,6 +338,8 @@ namespace CubeDash
 
         public void StartRun()
         {
+            if (gameCamera != null && gameCamera.TryGetComponent(out RunnerGraphics graphics))
+                graphics.Tick(0, RunState.Ready, 0);
             targetLane = 1;
             Distance = 0;
             Score = 0;

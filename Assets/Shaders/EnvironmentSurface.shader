@@ -8,6 +8,7 @@ Shader "CubeDash/Environment Surface"
         _DetailScale ("Grain scale", Float) = 1
         _Smoothness ("Smoothness", Range(0, 1)) = 0.2
         _Metallic ("Metallic", Range(0, 1)) = 0
+        _MicroNormalStrength ("Subtle surface relief", Range(0, 0.3)) = 0.12
         _LandEnd ("Exit blend (enabled, end Z, width)", Vector) = (0, 42, 18, 0)
         _EndTint ("Next region ground tint", Color) = (0.5, 0.61, 0.6, 1)
         _CoastalWetness ("Tidal wet sand", Range(0, 1)) = 0
@@ -33,7 +34,7 @@ Shader "CubeDash/Environment Surface"
             half4 _BaseColor, _SecondaryColor;
             half4 _EndTint;
             float4 _LandEnd;
-            float _DetailType, _DetailScale, _Smoothness, _Metallic;
+            float _DetailType, _DetailScale, _Smoothness, _Metallic, _MicroNormalStrength;
             float _CoastalWetness, _ShoreX, _TideDistance, _TidePeriod;
             float4 _BiomeBoundary, _NeighborSurface;
             float _BoundaryGroundHeight;
@@ -169,6 +170,16 @@ Shader "CubeDash/Environment Surface"
                 InputData data = (InputData)0;
                 data.positionWS = input.world;
                 data.normalWS = normalize(input.normal);
+                // World-space surface gradients add restrained grain relief without textures,
+                // UV seams, extra meshes or disturbing the silhouette/reveal geometry.
+                float3 dx = ddx(input.world), dy = ddy(input.world);
+                float3 rx = cross(dy, data.normalWS), ry = cross(data.normalWS, dx);
+                float determinant = dot(dx, rx);
+                float3 gradient = sign(determinant) * (ddx(grain) * rx + ddy(grain) * ry);
+                float relief = _MicroNormalStrength * fade * (1 - wet * 0.7);
+                // Keep leaf silhouettes clean and avoid noisy snow highlights.
+                relief *= (_DetailType > 1.5 && _DetailType < 2.5) || (_DetailType > 4.5 && _DetailType < 5.5) ? 0.25 : 1;
+                data.normalWS = normalize(data.normalWS - gradient * relief / max(abs(determinant), 0.0001));
                 data.viewDirectionWS = normalize(_WorldSpaceCameraPos - input.world);
                 data.shadowCoord = TransformWorldToShadowCoord(input.world);
                 data.bakedGI = SampleSH(data.normalWS);
