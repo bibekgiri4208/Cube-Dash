@@ -19,6 +19,7 @@ namespace CubeDash
         [SerializeField] private AudioSource collectionAudio = null;
         [SerializeField] private AudioClip collectionSound = null;
         [SerializeField] private RunnerAudio audioPresentation = null;
+        [SerializeField] private BiomeAmbience ambiencePresentation = null;
         [SerializeField, Range(0f, 1f)] private float collectionVolume = 0.65f;
         [SerializeField, Range(0f, 0.1f)] private float collectionPitchStep = 0.045f;
         [SerializeField, Range(0.04f, 0.2f)] private float laneSmoothTime = 0.085f;
@@ -103,6 +104,7 @@ namespace CubeDash
         public Camera GameCamera => gameCamera;
         public EndlessTrack Track => track;
         public RunnerAudio AudioPresentation => audioPresentation;
+        public BiomeAmbience AmbiencePresentation => ambiencePresentation;
 
         private void Awake()
         {
@@ -115,6 +117,7 @@ namespace CubeDash
             }
             playerOrigin = player.position;
             if (audioPresentation == null) audioPresentation = GetComponent<RunnerAudio>();
+            if (ambiencePresentation == null) ambiencePresentation = GetComponent<BiomeAmbience>();
             if (flightPresentation == null) flightPresentation = player.GetComponent<PlayerFlight>();
             if (truckPresentation == null) truckPresentation = player.GetComponent<PlayerTruck>();
             if (playerVisual == null) playerVisual = player;
@@ -192,6 +195,7 @@ namespace CubeDash
                 truckPresentation.Tick(dt, Speed, laneVelocity);
             hud.UpdateStats();
             if (audioPresentation != null) audioPresentation.Tick(dt, State, Flying, Trucking, Speed, laneVelocity);
+            if (ambiencePresentation != null) ambiencePresentation.Tick(dt, State, Distance);
         }
 
         private void UpdatePlayerAnimation(float dt)
@@ -293,6 +297,7 @@ namespace CubeDash
         private void OnDisable()
         {
             if (audioPresentation != null) audioPresentation.ResetSounds();
+            if (ambiencePresentation != null) ambiencePresentation.ResetSounds();
             activeGamepad = null;
             stickInput.Reset();
             menuStickInput.Reset();
@@ -335,6 +340,7 @@ namespace CubeDash
             if (collectionAudio != null) { collectionAudio.Stop(); collectionAudio.pitch = 1f; }
             if (audioPresentation != null) audioPresentation.ResetSounds();
             playerRenderer.sharedMaterial = track.ColorMaterial(playerCubeColor);
+            if (ambiencePresentation != null) ambiencePresentation.ResetSounds();
             playerColor = playerRenderer.sharedMaterial.color;
             SetPlayerColor(playerColor, cubeEmission);
             if (wake != null) { wake.SetColor(playerColor); wake.ResetWake(); }
@@ -355,6 +361,7 @@ namespace CubeDash
                 else collectionAudio.UnPause();
             }
             if (audioPresentation != null) audioPresentation.SetPaused(State == RunState.Paused);
+            if (ambiencePresentation != null) ambiencePresentation.SetPaused(State == RunState.Paused);
             hud.Show(State);
         }
 

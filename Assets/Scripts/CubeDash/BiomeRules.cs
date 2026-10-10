@@ -16,6 +16,19 @@ namespace CubeDash
             return (EnvironmentBiome)(Mathf.FloorToInt(Mathf.Max(0, distance) / Length(segmentsPerBiome)) % Count);
         }
 
+        /// <summary>The same smooth boundary blend drives sky, lighting and environmental audio.</summary>
+        public static void BlendAtDistance(float distance, int segmentsPerBiome, float transitionDistance,
+            out EnvironmentBiome previous, out EnvironmentBiome next, out float blend)
+        {
+            float length = Length(segmentsPerBiome);
+            float width = Mathf.Clamp(transitionDistance, 1, length);
+            float shifted = Mathf.Max(0, distance) + width * 0.5f;
+            next = AtDistance(shifted, segmentsPerBiome);
+            previous = (EnvironmentBiome)(((int)next + Count - 1) % Count);
+            blend = Mathf.SmoothStep(0, 1, Mathf.Clamp01((shifted % length) / width));
+            if (shifted < length) previous = next = EnvironmentBiome.City;
+        }
+
         public static int Variation(int sectionIndex, int count)
         {
             if (count <= 0) return 0;

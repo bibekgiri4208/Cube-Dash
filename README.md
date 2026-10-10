@@ -94,6 +94,24 @@ rigidbodies or gameplay colliders, and fragments disappear after 1.15 seconds.
 
 ## Visual direction
 
+### Biome ambience
+
+The provided Jungle, Snow Mountain, Desert and Beach recordings now play as enveloping stereo
+backgrounds. Original MP3s in `Assets/Audio/Ambience` remain unchanged; edited loops preserve stereo,
+use two-second overlap joins and matched bed levels with soft peak control. Unity streams the
+loops as Vorbis, keeping their runtime memory footprint small. City remains silent because no City
+recording was supplied.
+
+Equal-power audio crossfades follow the **same distance blend as sky/lighting**, including the
+Beach → City fade-out and City → Jungle fade-in. Playback/fades freeze on pause and resume without
+restarting; game over fades out, while restart and scene cleanup reset all ambience sources.
+Coin, pickup and vehicle sounds remain separate and unchanged.
+
+Tune the game object's **Biome Ambience > Volume** for background balance. Transition width follows
+**Track > Environment Director > Transition Distance**. The saved level is already connected;
+**Tools > Cube Dash > Apply Biome Ambience Audio** regenerates/reconnects only ambience assets.
+Details are in `Assets/Audio/Ambience/README.md`.
+
 ### Changing environments
 
 The run travels through **City → Jungle → Mountains → Desert → Beach**, then loops. Each region

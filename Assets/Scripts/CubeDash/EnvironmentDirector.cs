@@ -23,6 +23,7 @@ namespace CubeDash
         private Color originalFog, originalAmbientSky, originalEquator, originalGround;
         private float animationTime;
         public int SegmentsPerBiome => segmentsPerBiome;
+        public float TransitionDistance => transitionDistance;
         public float BiomeLength => BiomeRules.Length(segmentsPerBiome);
         public EnvironmentBiome CurrentBiome { get; private set; }
 
@@ -56,14 +57,9 @@ namespace CubeDash
             if (atmospheres == null || atmospheres.Length != BiomeRules.Count) return;
 
             // Blend across a boundary, rather than suddenly replacing the whole background.
-            float width = Mathf.Clamp(transitionDistance, 1f, BiomeLength);
-            float shifted = Mathf.Max(0, distance) + width * 0.5f;
-            int next = (int)BiomeRules.AtDistance(shifted, segmentsPerBiome);
-            int previous = (next + BiomeRules.Count - 1) % BiomeRules.Count;
-            float phase = shifted % BiomeLength;
-            float blend = Mathf.SmoothStep(0, 1, Mathf.Clamp01(phase / width));
-            if (shifted < BiomeLength) { previous = 0; next = 0; }
-            Atmosphere a = atmospheres[previous], b = atmospheres[next];
+            BiomeRules.BlendAtDistance(distance, segmentsPerBiome, transitionDistance,
+                out EnvironmentBiome previous, out EnvironmentBiome next, out float blend);
+            Atmosphere a = atmospheres[(int)previous], b = atmospheres[(int)next];
             Color horizon = Color.Lerp(a.Horizon, b.Horizon, blend);
             RenderSettings.fogColor = horizon;
             RenderSettings.ambientSkyColor = Color.Lerp(a.AmbientSky, b.AmbientSky, blend);
