@@ -21,6 +21,7 @@ Shader "CubeDash/Biome Water"
         _RiverHalfWidth ("River half width", Float) = 2.5
         _FlowSpeed ("River current speed", Range(0, 3)) = 1.2
         _RiverFoam ("River bank foam", Range(0, 1)) = 0.35
+        _RiverEnds ("River ends (entrance, exit, start Z, end Z)", Vector) = (0, 0, 0, 42)
     }
     SubShader
     {
@@ -35,6 +36,7 @@ Shader "CubeDash/Biome Water"
             float _WaveSpeed, _Choppiness, _FoamStrength, _TideHeight, _TideDistance, _TidePeriod;
             float4 _CoastLimits;
             float _RiverCenter, _RiverHalfWidth, _FlowSpeed, _RiverFoam;
+            float4 _RiverEnds;
         CBUFFER_END
         float _CubeDashEnvironmentTime;
         struct Attributes { float4 positionOS : POSITION; UNITY_VERTEX_INPUT_INSTANCE_ID };
@@ -53,6 +55,12 @@ Shader "CubeDash/Biome Water"
             float entry = metres.y - (_CoastLimits.z + bank);
             float exit = (_CoastLimits.w - bank) - metres.y;
             return min(_CoastLimits.x > 0.5 ? entry : 10000, _CoastLimits.y > 0.5 ? exit : 10000);
+        }
+        float RiverWidth(float2 metres)
+        {
+            float endDistance = min(_RiverEnds.x > 0.5 ? metres.y - _RiverEnds.z : 10000,
+                _RiverEnds.y > 0.5 ? _RiverEnds.w - metres.y : 10000);
+            return _RiverHalfWidth * smoothstep(4, 20, endDistance);
         }
         void Swell(float2 p, float2 direction, float wavelength, float weight, float amplitude,
             inout float3 offset, inout float3 tangentX, inout float3 tangentZ, inout float crest)
@@ -77,7 +85,7 @@ Shader "CubeDash/Biome Water"
             {
                 // River ripples advect downstream and flatten against both banks; no ocean tides.
                 float2 p = surface.xz - float2(0, t * _FlowSpeed);
-                float bank = max(0, _RiverHalfWidth - abs(surface.x - _RiverCenter));
+                float bank = max(0, RiverWidth(metres) - abs(surface.x - _RiverCenter));
                 float edge = smoothstep(0, 0.65, bank);
                 float a = dot(p, float2(2.1, 1.35));
                 float b = dot(p, float2(-3.4, 2.6));
@@ -110,6 +118,7 @@ Shader "CubeDash/Biome Water"
             clip(BoundaryDistance(input.metres));
             if (_ShoreMode > 0.5)
                 clip(input.surface.x - BeachShoreline(input.surface.xz, _CubeDashEnvironmentTime, _ShoreX, _TideDistance, _TidePeriod));
+            else clip(RiverWidth(input.metres) - abs(input.surface.x - _RiverCenter) - 0.001);
         }
         float FoamNoise(float2 p)
         {
@@ -177,7 +186,7 @@ Shader "CubeDash/Biome Water"
                 if (_ShoreMode < 0.5)
                 {
                     float2 flow = input.surface.xz - float2(0, t * _FlowSpeed);
-                    float bank = max(0, _RiverHalfWidth - abs(input.surface.x - _RiverCenter));
+                    float bank = max(0, RiverWidth(input.metres) - abs(input.surface.x - _RiverCenter));
                     float shallow = 1 - smoothstep(0.05, 1.8, bank);
                     float current = FoamNoise(float2(flow.x * 3.5, flow.y * 0.38));
                     float eddy = FoamNoise(flow * float2(1.4, 0.75) + float2(sin(flow.y * 0.6) * 0.3, 0));

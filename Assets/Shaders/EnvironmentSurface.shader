@@ -14,6 +14,10 @@ Shader "CubeDash/Environment Surface"
         _ShoreX ("Shoreline X", Float) = 7
         _TideDistance ("Tidal shoreline travel", Range(0, 1.5)) = 0.85
         _TidePeriod ("Tide period (seconds)", Range(15, 120)) = 40
+        _BiomeBoundary ("Boundary (enabled, local Z, direction, half width)", Vector) = (0, 42, 1, 42)
+        _NeighborColor ("Neighbor ground", Color) = (0.4, 0.5, 0.4, 1)
+        _NeighborSecondary ("Neighbor grain tint", Color) = (0.3, 0.4, 0.3, 1)
+        _NeighborSurface ("Neighbor detail, scale, smoothness", Vector) = (0, 1, 0.2, 0)
     }
     SubShader
     {
@@ -28,6 +32,8 @@ Shader "CubeDash/Environment Surface"
             float4 _LandEnd;
             float _DetailType, _DetailScale, _Smoothness, _Metallic;
             float _CoastalWetness, _ShoreX, _TideDistance, _TidePeriod;
+            float4 _BiomeBoundary, _NeighborSurface;
+            half4 _NeighborColor, _NeighborSecondary;
         CBUFFER_END
         float _CubeDashEnvironmentTime;
         struct Attributes { float4 positionOS : POSITION; float3 normalOS : NORMAL; UNITY_VERTEX_INPUT_INSTANCE_ID };
@@ -45,10 +51,14 @@ Shader "CubeDash/Environment Surface"
             UNITY_SETUP_INSTANCE_ID(input);
             UNITY_TRANSFER_INSTANCE_ID(input, output);
             output.world = TransformObjectToWorld(input.positionOS.xyz);
-            output.positionCS = TransformWorldToHClip(output.world);
             output.normal = TransformObjectToWorldNormal(input.normalOS);
             // Follow the recycled section; textures never swim across the baked models.
             output.metres = mul((float3x3)GetObjectToWorldMatrix(), input.positionOS.xyz);
+            // Raise submerged beds back to the common land elevation at region ends.
+            float endDistance = abs(output.metres.z - _BiomeBoundary.y);
+            float bedBlend = _BiomeBoundary.x * (1 - smoothstep(0, 18, endDistance));
+            output.world.y = lerp(output.world.y, max(output.world.y, -9), bedBlend);
+            output.positionCS = TransformWorldToHClip(output.world);
             return output;
         }
         float Hash(float2 p) { return frac(sin(dot(p, float2(127.1, 311.7))) * 43758.5453); }
@@ -60,6 +70,16 @@ Shader "CubeDash/Environment Surface"
                 lerp(Hash(cell + float2(0, 1)), Hash(cell + 1), f.x), f.y);
         }
         half4 DepthFrag(Varyings input) : SV_Target { return 0; }
+        float GroundGrain(float3 p, float type)
+        {
+            float noise = Noise(p.xz * 1.4 + p.y * 0.27);
+            if (type > 0.5 && type < 1.5) return smoothstep(-0.5, 0.65, sin((p.x + p.z) * 14 + Noise(float2(p.y * 0.6, p.x * 3)) * 4));
+            if (type > 2.5 && type < 3.5) return sin(p.x * 4.2 + sin(p.z * 0.55) * 1.7) * 0.22 + noise * 0.25 + 0.42;
+            if (type > 3.5 && type < 4.5) return sin((p.y + p.z * 0.24) * 15 + noise * 3) * 0.2 + noise * 0.35 + 0.4;
+            if (type > 4.5 && type < 5.5) return noise * 0.25 + 0.65;
+            if (type > 5.5) return Noise(p.xz * 4) * 0.35 + noise * 0.4;
+            return noise;
+        }
         half4 NormalFrag(Varyings input) : SV_Target
         {
             UNITY_SETUP_INSTANCE_ID(input);
@@ -90,25 +110,28 @@ Shader "CubeDash/Environment Surface"
             half4 Frag(Varyings input) : SV_Target
             {
                 UNITY_SETUP_INSTANCE_ID(input);
-                float3 p = input.metres * _DetailScale;
-                float noise = Noise(p.xz * 1.4 + p.y * 0.27);
-                float grain = noise;
-                if (_DetailType > 0.5 && _DetailType < 1.5)
-                    grain = smoothstep(-0.5, 0.65, sin((p.x + p.z) * 14 + Noise(float2(p.y * 0.6, p.x * 3)) * 4));
-                else if (_DetailType > 2.5 && _DetailType < 3.5)
-                    grain = sin(p.x * 4.2 + sin(p.z * 0.55) * 1.7) * 0.22 + noise * 0.25 + 0.42;
-                else if (_DetailType > 3.5 && _DetailType < 4.5)
-                    grain = sin((p.y + p.z * 0.24) * 15 + noise * 3) * 0.2 + noise * 0.35 + 0.4;
-                else if (_DetailType > 4.5 && _DetailType < 5.5) grain = noise * 0.25 + 0.65;
-                else if (_DetailType > 5.5) grain = Noise(p.xz * 4) * 0.35 + noise * 0.4;
+                float3 samplePosition = input.metres;
+                if (_BiomeBoundary.x > 0.5)
+                {
+                    samplePosition.z -= _BiomeBoundary.y;
+                    samplePosition.y = input.world.y;
+                }
+                float grain = GroundGrain(samplePosition * _DetailScale, _DetailType);
                 float fade = 1 - smoothstep(45, 190, distance(input.world, _WorldSpaceCameraPos));
                 grain = lerp(0.5, grain, fade);
                 half3 albedo = lerp(_SecondaryColor.rgb, _BaseColor.rgb, saturate(grain * 0.62 + 0.40));
-                float edgeBlend = _LandEnd.x * smoothstep(_LandEnd.y - max(1, _LandEnd.z), _LandEnd.y, input.metres.z);
+                float width = max(1, _BiomeBoundary.w);
+                float warp = (Noise(float2(samplePosition.x * 0.065, samplePosition.z * 0.05)) - 0.5) * 9;
+                warp *= 1 - smoothstep(width * 0.7, width, abs(samplePosition.z));
+                float neighborBlend = _BiomeBoundary.x * smoothstep(-width, width, (samplePosition.z + warp) * _BiomeBoundary.z);
+                float neighborGrain = lerp(0.5, GroundGrain(samplePosition * _NeighborSurface.y, _NeighborSurface.x), fade);
+                half3 neighborAlbedo = lerp(_NeighborSecondary.rgb, _NeighborColor.rgb, saturate(neighborGrain * 0.62 + 0.40));
+                albedo = lerp(albedo, neighborAlbedo, neighborBlend);
+                float edgeBlend = (1 - _BiomeBoundary.x) * _LandEnd.x * smoothstep(_LandEnd.y - max(1, _LandEnd.z), _LandEnd.y, input.metres.z);
                 albedo = lerp(albedo, _EndTint.rgb, edgeBlend);
                 float wet = _CoastalWetness * smoothstep(-2, 0.8, input.world.x
                     - BeachShoreline(input.world.xz, _CubeDashEnvironmentTime, _ShoreX, _TideDistance, _TidePeriod));
-                wet *= 1 - edgeBlend;
+                wet *= (1 - edgeBlend) * (1 - _BiomeBoundary.x * (1 - smoothstep(0, 18, abs(samplePosition.z))));
                 albedo *= 1 - wet * 0.34;
                 InputData data = (InputData)0;
                 data.positionWS = input.world;
@@ -122,7 +145,7 @@ Shader "CubeDash/Environment Surface"
                 surface.albedo = albedo;
                 surface.metallic = _Metallic;
                 surface.specular = 0.04;
-                surface.smoothness = lerp(_Smoothness, 0.68, wet);
+                surface.smoothness = lerp(lerp(_Smoothness, _NeighborSurface.z, neighborBlend), 0.68, wet);
                 surface.normalTS = half3(0, 0, 1);
                 surface.occlusion = 1;
                 surface.alpha = 1;

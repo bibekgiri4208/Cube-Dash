@@ -9,7 +9,7 @@ using Object = UnityEngine.Object;
 namespace CubeDash.Editor
 {
     /// <summary>Bakes reusable low-poly landscapes into assets, never into the running game.</summary>
-    public static class CubeDashEnvironments
+    public static partial class CubeDashEnvironments
     {
         private const string Prefabs = "Assets/Prefab/CubeDash/Environments";
         private const string Materials = "Assets/Material/Environments";

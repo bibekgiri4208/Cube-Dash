@@ -120,6 +120,20 @@ New landscapes approach naturally along the road; existing visible sections neve
 Sky, fog, sunlight and ambient colors blend across each boundary, without environment-name text
 on the HUD. The blue road and the red/blue/green gameplay palette remain unchanged.
 
+All five physical joins now have **84-metre transition zones** (one section on either side).
+Ground tint, grain and roughness blend with the neighboring biome using a gently irregular edge,
+with matching samples across the seam. Saved transition dressing mixes broadleaf trees, pines,
+cacti, palms, rocks and city park planters near each join. City outskirts step down in building
+height and density. River ends narrow into pools, while submerged ground rises to meet the land;
+Beach keeps its curved bays. The initial City starts normally, without a fictitious Beach entrance.
+
+These are spatial transitions configured when sections recycle, so they stay fixed to the scenery
+and remain stable during pause/restart. Shared materials, gameplay obstacles and biome distances
+are preserved. The existing sky/audio crossfades continue independently. The saved TrackSegment
+prefab includes all transition references; **Tools > Cube Dash > Blend Environment Boundaries**
+rebakes/reconnects them after a full environment rebuild. **Biome Boundary Blend > Half Width**
+on the TrackSegment prefab controls the ground blend width (default 42 metres per side).
+
 - **City:** recessed glass windows, projecting sills, entrance canopies, corner trim and roof vents
   on the existing stepped towers.
 - **Jungle:** tapered trunks, visible branches and buttress roots, fuller rounded canopies,

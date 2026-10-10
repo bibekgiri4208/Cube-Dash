@@ -10,6 +10,7 @@ namespace CubeDash
         public GameObject[] Biomes => biomes;
         public EnvironmentBiome CurrentBiome { get; private set; }
         public int SectionIndex { get; private set; }
+        private BiomeBoundaryBlend boundaryBlend;
 
         public void SetHorizonEdges(bool rear, bool front)
         {
@@ -36,6 +37,8 @@ namespace CubeDash
                     coast.Configure(sectionIndex, segmentsPerBiome, tint);
                 }
             }
+            if (boundaryBlend == null) boundaryBlend = GetComponent<BiomeBoundaryBlend>();
+            if (boundaryBlend != null) boundaryBlend.Configure(sectionIndex, segmentsPerBiome, CurrentBiome);
         }
     }
 }
