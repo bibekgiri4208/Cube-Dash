@@ -29,7 +29,7 @@ Material:
     - _FoamStrength: 0.9
     - _ShallowWidth: 22
     - _ShoreMode: 1
-    - _ShoreX: 7
+    - _ShoreX: 9
     - _TideDistance: 0.85
     - _TideHeight: 0.12
     - _TidePeriod: 40

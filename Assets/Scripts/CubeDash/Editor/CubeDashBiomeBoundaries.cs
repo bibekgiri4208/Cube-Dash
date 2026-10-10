@@ -128,11 +128,11 @@ namespace CubeDash.Editor
             for (int i = 0; i < renderers.Count; i++) property.GetArrayElementAtIndex(i).objectReferenceValue = renderers[i];
         }
 
-        private static Mesh BoundaryFloor(Mesh source, string name)
+        internal static Mesh BoundaryFloor(Mesh source, string name, bool rebuild = false)
         {
             string path = Meshes + "/" + name + ".asset";
             Mesh existing = AssetDatabase.LoadAssetAtPath<Mesh>(path);
-            if (existing != null) return existing;
+            if (existing != null && !rebuild) return existing;
             Vector3[] original = source.vertices;
             var firstRow = new List<Vector3>();
             foreach (Vector3 vertex in original) if (Mathf.Abs(vertex.z + 0.5f) < 0.001f) firstRow.Add(vertex);

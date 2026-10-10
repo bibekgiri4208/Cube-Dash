@@ -63,6 +63,57 @@ namespace CubeDash.Tests
         }
 
         [Test]
+        public void OceanAndItsHorizonStayBelowDryLandEvenAtMaximumTideAndSwell()
+        {
+            GameObject beach = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/CubeDash/Environments/Beach.prefab");
+            Transform ocean = beach.transform.Find("Ocean");
+            Material water = ocean.GetComponent<Renderer>().sharedMaterial;
+            float landHeight = beach.transform.TransformPoint(Vector3.down * 9).y;
+            // Four shader swell weights sum to 1.77; the shore depression can only lower this bound.
+            float maximumRise = water.GetFloat("_WaveHeight") * 1.77f + water.GetFloat("_TideHeight");
+            Assert.That(ocean.position.y + maximumRise, Is.LessThan(landHeight),
+                "Even combined crests at high tide must not rise above the highway-side dry ground.");
+            Assert.That(ocean.position.y, Is.EqualTo(landHeight - 3.4f).Within(0.001f));
+            foreach (string edge in new[] { "Rear Horizon", "Forward Horizon" })
+                Assert.That(beach.transform.Find(edge + "/Ocean Apron").position.y,
+                    Is.EqualTo(ocean.position.y).Within(0.001f), "Horizon water must meet the visible ocean without a height step.");
+
+            Transform floor = beach.transform.Find("Landscape Ground");
+            foreach (string name in new[] { "Beach Seabed", "Beach Transition Floor" })
+                foreach (Vector3 vertex in AssetDatabase.LoadAssetAtPath<Mesh>("Assets/3D Models/Environments/" + name + ".asset").vertices)
+                {
+                    Vector3 world = floor.TransformPoint(vertex);
+                    if (world.x >= 12) Assert.That(world.y, Is.LessThan(ocean.position.y - maximumRise),
+                        "Both normal and boundary seabeds must stay below the lowered ocean's deepest trough.");
+                }
+            foreach (Mesh layout in beach.GetComponent<BiomeScenery>().Layouts)
+            {
+                Vector3[] vertices = layout.vertices;
+                var anchors = new System.Collections.Generic.List<Vector2>(); layout.GetUVs(2, anchors);
+                Assert.That(anchors.Count, Is.EqualTo(vertices.Length));
+                float postTop = float.MinValue, postBottom = float.MaxValue;
+                float deckTop = float.MinValue;
+                foreach (int index in layout.GetTriangles(9))
+                    if (vertices[index].x > 10.5f)
+                    {
+                        float height = beach.transform.TransformPoint(vertices[index]).y;
+                        postTop = Mathf.Max(postTop, height); postBottom = Mathf.Min(postBottom, height);
+                        if (Mathf.Abs(vertices[index].z - anchors[index].y) > 1)
+                            deckTop = Mathf.Max(deckTop, height);
+                    }
+                Assert.That(postTop - ocean.position.y, Is.EqualTo(3.82f).Within(0.001f));
+                Assert.That(postBottom, Is.LessThan(ocean.position.y), "Jetty support feet must remain submerged, not float above the lowered sea.");
+                Assert.That(deckTop, Is.GreaterThan(ocean.position.y), "The wooden deck must remain above water.");
+                Assert.That(deckTop, Is.LessThan(landHeight - 0.75f), "The actual deck surface should sit visibly below the highway-side beach.");
+                float rockBottom = float.MaxValue;
+                foreach (int index in layout.GetTriangles(3))
+                    if (vertices[index].x > 8) rockBottom = Mathf.Min(rockBottom, beach.transform.TransformPoint(vertices[index]).y);
+                Assert.That(rockBottom, Is.EqualTo(ocean.position.y - 1.2f).Within(0.001f),
+                    "Seaside boulders follow the lower water instead of hovering above it.");
+            }
+        }
+
+        [Test]
         public void WaterAndWetSandShareTideSettingsButTheJungleRiverHasNoOceanSurf()
         {
             Material ocean = AssetDatabase.LoadAssetAtPath<Material>("Assets/Material/Environments/Lagoon Water.mat");
@@ -70,6 +121,7 @@ namespace CubeDash.Tests
             Assert.That(ocean.GetFloat("_Choppiness"), Is.InRange(0.4f, 0.7f));
             Assert.That(ocean.GetFloat("_FoamStrength"), Is.GreaterThan(0.7f));
             Assert.That(ocean.GetFloat("_TideHeight"), Is.InRange(0.08f, 0.2f));
+            Assert.That(ocean.GetFloat("_ShoreX"), Is.EqualTo(9), "Foam and wet sand follow the lowered sea's shoreline.");
             foreach (string name in new[] { "Coastal Sand", "Wet Sand" })
             {
                 Material sand = AssetDatabase.LoadAssetAtPath<Material>("Assets/Material/Environments/" + name + ".mat");

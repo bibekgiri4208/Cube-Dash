@@ -29,7 +29,7 @@ Material:
     - _DetailScale: 1
     - _DetailType: 3
     - _Metallic: 0
-    - _ShoreX: 7
+    - _ShoreX: 9
     - _Smoothness: 0.42
     - _TideDistance: 0.85
     - _TidePeriod: 40

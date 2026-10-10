@@ -295,7 +295,7 @@ namespace CubeDash.Editor
                 if (biome == EnvironmentBiome.Beach)
                 {
                     Mesh ocean = SaveMesh(EnvironmentModelMeshes.OceanSurface(), "Ocean Surface");
-                    Part(root.transform, "Ocean", ocean, water, new Vector3(0, -8.72f, 0), Vector3.one, false);
+                    Part(root.transform, "Ocean", ocean, water, new Vector3(0, CubeDashOceanWaves.OceanLocalHeight, 0), Vector3.one, false);
                     Part(root.transform, "Shoreline", SaveMesh(EnvironmentModelMeshes.BeachSeabed(true), "Shoreline Sand"),
                         wetSand, new Vector3(5.9f, -9, 21), new Vector3(2.2f, 0.06f, 42), false);
                 }
@@ -310,6 +310,7 @@ namespace CubeDash.Editor
                 BiomeScenery scenery = root.AddComponent<BiomeScenery>();
                 Set(scenery, "details", details.GetComponent<MeshFilter>());
                 SetArray(scenery, "layouts", layouts);
+                if (biome == EnvironmentBiome.Beach) CubeDashOceanWaves.SetOceanHeight(root.transform);
                 return PrefabUtility.SaveAsPrefabAsset(root, Prefabs + "/" + biome + ".prefab");
             }
             finally { Object.DestroyImmediate(root); }
@@ -417,11 +418,12 @@ namespace CubeDash.Editor
 
         private static void Beach(Geometry g, System.Random random)
         {
+            float coastalPropOffset = CubeDashOceanWaves.OceanLocalHeight + 8.72f;
             for (int row = 0; row < 4; row++)
             {
                 float z = 4 + row * 10;
                 Palm(g, new Vector3(-Range(random, 18, 25), -9, z), Range(random, 14, 19), Range(random, 0, 180));
-                Boulder(g, stone, new Vector3(Range(random, 13, 21), -9, z), new Vector3(6, 4, 5), random);
+                Boulder(g, stone, new Vector3(Range(random, 13, 21), -9 + coastalPropOffset, z), new Vector3(6, 4, 5), random);
                 Bush(g, new Vector3(-Range(random, 12, 28), -9, z + 3), random);
             }
             // Stilt huts and a wooden jetty give the coastline a recognizable silhouette.
@@ -433,10 +435,10 @@ namespace CubeDash.Editor
                 House(g, new Vector3(hutX, groundHeight + 1, hutZ));
             }
             for (int plank = 0; plank < 15; plank++)
-                g.Add(cube, wood, new Vector3(11.5f + plank * 1.2f, -6.5f, hutZ), new Vector3(1.14f, 0.32f, 3.2f));
+                g.Add(cube, wood, new Vector3(11.5f + plank * 1.2f, -6.5f + coastalPropOffset, hutZ), new Vector3(1.14f, 0.32f, 3.2f));
             for (int post = 0; post < 4; post++)
-                g.Add(cylinder, wood, new Vector3(13 + post * 4.5f, -7.4f, hutZ), new Vector3(0.5f, 2.5f, 0.5f));
-            g.Add(cube, trim, new Vector3(20, -5.6f, hutZ + 1.5f), new Vector3(18, 0.14f, 0.14f));
+                g.Add(cylinder, wood, new Vector3(13 + post * 4.5f, -7.4f + coastalPropOffset, hutZ), new Vector3(0.5f, 2.5f, 0.5f));
+            g.Add(cube, trim, new Vector3(20, -5.6f + coastalPropOffset, hutZ + 1.5f), new Vector3(18, 0.14f, 0.14f));
             g.Add(dune, sand, new Vector3(-46, -9, 21), new Vector3(30, 4, 44));
             g.Add(dune, sand, new Vector3(-130, -9, 21), new Vector3(160, 5, 60));
             for (int clump = 0; clump < 5; clump++)
@@ -703,7 +705,7 @@ namespace CubeDash.Editor
                     {
                         Mesh surface = SaveMesh(EnvironmentModelMeshes.OceanSurface(true), "Ocean Apron Surface");
                         Part(end.transform, "Ocean Apron", surface, water,
-                            new Vector3(0, -8.72f, edge == 0 ? -LandscapeExtent : 42),
+                            new Vector3(0, CubeDashOceanWaves.OceanLocalHeight, edge == 0 ? -LandscapeExtent : 42),
                              new Vector3(1, 1, LandscapeExtent / RunnerRules.SegmentLength), false);
                     }
                     if (jungle)

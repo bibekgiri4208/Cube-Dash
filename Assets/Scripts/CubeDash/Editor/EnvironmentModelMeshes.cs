@@ -325,14 +325,15 @@ namespace CubeDash.Editor
 
         public static float BeachFloorHeight(float x)
         {
-            float depth = Mathf.SmoothStep(0, 1, Mathf.InverseLerp(5.2f, 12, x)) * 4;
+            float offshoreDepth = Mathf.Max(4, -9 - CubeDashOceanWaves.OceanLocalHeight + 2.6f);
+            float depth = Mathf.SmoothStep(0, 1, Mathf.InverseLerp(5.2f, 12, x)) * offshoreDepth;
             return -9 - depth - Mathf.Clamp((x - 12) * 0.015f, 0, 8);
         }
 
         public static Mesh BeachSeabed(bool shoreline = false)
         {
-            float[] x = shoreline ? new[] { 4.8f, 5.2f, 5.6f, 6, 6.4f, 6.8f, 7 }
-                : new[] { -1024f, -64, 0, 4.8f, 5.2f, 5.6f, 6, 6.4f, 6.8f, 7, 8, 10, 12, 20, 64, 320, 1024 };
+            float[] x = shoreline ? new[] { 4.8f, 5.2f, 5.6f, 6, 6.4f, 6.8f, 7, 7.4f, 7.8f, 8.2f, 8.6f, 9, 9.4f, 9.8f }
+                : new[] { -1024f, -64, 0, 4.8f, 5.2f, 5.6f, 6, 6.4f, 6.8f, 7, 8, 8.5f, 9, 9.5f, 10, 10.5f, 12, 20, 64, 320, 1024 };
             var vertices = new List<Vector3>(); var triangles = new List<int>();
             // Normalized to the existing saved floor/strip transforms: no scenery positions change.
             for (int row = 0; row < 2; row++)

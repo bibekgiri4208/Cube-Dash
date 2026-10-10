@@ -247,6 +247,13 @@ all five landscape roots are raised together by **8.75 metres**, placing their g
 city streets/flyover ramps, rivers, coastline props and horizon aprons move with their terrain,
 preserving their existing model proportions and grounding. The old bridge piers and thick rails
 are removed. Underwater boundary beds now blend to the raised land elevation.
+Beach sea level is **3.4 m below dry ground** (**3.65 m below the highway**), including matching horizon water; the jetty and
+seaside rocks move with the sea so their feet remain submerged. With the saved
+tide and four-swell settings, even the maximum combined crest remains below the dry beach.
+The underwater floor and boundary seabeds deepen with the sea so wave troughs never expose them.
+The wet-sand strip and foam shoreline follow the lower water, rather than making surf look level with the road.
+**Tools > Cube Dash > Lower Beach Ocean Below Ground** reapplies this sea-level/coastal-model correction;
+highway/environment/ocean rebuilds also preserve it.
 
 **Tools > Cube Dash > Apply Ground-Level Highway**
 (`CubeDash.Editor.CubeDashHighway.ApplyFromCommandLine`) reapplies only this art pass to the saved

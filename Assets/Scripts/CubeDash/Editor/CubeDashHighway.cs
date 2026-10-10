@@ -50,6 +50,7 @@ namespace CubeDash.Editor
                 try
                 {
                     SetLandscapeHeight(scenery.transform);
+                    CubeDashOceanWaves.SetOceanHeight(scenery.transform);
                     PrefabUtility.SaveAsPrefabAsset(scenery, path);
                 }
                 finally { PrefabUtility.UnloadPrefabContents(scenery); }
