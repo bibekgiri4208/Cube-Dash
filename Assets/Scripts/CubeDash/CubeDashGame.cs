@@ -50,6 +50,9 @@ namespace CubeDash
         [SerializeField, Min(0f)] private float truckShieldDuration = 3f;
         [SerializeField, Min(0.1f)] private float magnetDuration = 10f;
         [SerializeField, Min(1f)] private float magnetRange = 8f;
+        [Header("Manual Supercar (cosmetic toggle)")]
+        [SerializeField] private PlayerSupercar supercarPresentation = null;
+        [SerializeField, Range(0.15f, 0.6f)] private float supercarDoublePressWindow = 0.35f;
 
         public RunState State { get; private set; }
         public float Distance { get; private set; }
@@ -86,6 +89,10 @@ namespace CubeDash
         private float landingShieldTimer;
         private float truckTimer;
         private float magnetTimer;
+        private readonly DoublePressInput supercarEnter = new DoublePressInput();
+        public bool SupercarEnabled { get; private set; }
+        public bool SupercarDriving => SupercarEnabled && !Flying && !Trucking;
+        public PlayerSupercar SupercarPresentation => supercarPresentation;
         public bool MagnetActive => magnetTimer > 0;
         public float MagnetRemaining => magnetTimer;
         public float CollectionPulse => absorptionPulse;
@@ -120,6 +127,7 @@ namespace CubeDash
             if (ambiencePresentation == null) ambiencePresentation = GetComponent<BiomeAmbience>();
             if (flightPresentation == null) flightPresentation = player.GetComponent<PlayerFlight>();
             if (truckPresentation == null) truckPresentation = player.GetComponent<PlayerTruck>();
+            if (supercarPresentation == null) supercarPresentation = player.GetComponent<PlayerSupercar>();
             if (playerVisual == null) playerVisual = player;
             playerRotation = playerVisual.localRotation;
             playerScale = playerVisual.localScale;
@@ -193,6 +201,8 @@ namespace CubeDash
                 flightPresentation.Tick(dt, laneVelocity, !Trucking && (landingShieldTimer > 0 || shields > 0));
             if (State == RunState.Running && truckPresentation != null)
                 truckPresentation.Tick(dt, Speed, laneVelocity);
+            if (State == RunState.Running && supercarPresentation != null)
+                supercarPresentation.Tick(dt, Speed, laneVelocity);
             hud.UpdateStats();
             if (audioPresentation != null) audioPresentation.Tick(dt, State, Flying, Trucking, Speed, laneVelocity);
             if (ambiencePresentation != null) ambiencePresentation.Tick(dt, State, Distance);
@@ -255,7 +265,9 @@ namespace CubeDash
             {
                 if (keyboard.escapeKey.wasPressedThisFrame || keyboard.pKey.wasPressedThisFrame) { TogglePause(); return; }
                 if (keyboard.rKey.wasPressedThisFrame && State != RunState.Ready) { StartRun(); return; }
-                if (keyboard.spaceKey.wasPressedThisFrame || keyboard.enterKey.wasPressedThisFrame)
+                bool enter = keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame;
+                if (enter && State == RunState.Running) PressSupercarEnter(Time.unscaledTimeAsDouble);
+                if (keyboard.spaceKey.wasPressedThisFrame || (enter && State != RunState.Running))
                 {
                     if (State != RunState.Running) hud.ConfirmSelection();
                     return;
@@ -296,6 +308,9 @@ namespace CubeDash
 
         private void OnDisable()
         {
+            supercarEnter.Reset(); SupercarEnabled = false;
+            if (supercarPresentation != null) supercarPresentation.ResetPresentation();
+            if (playerRenderer != null) RefreshGroundPresentation();
             if (audioPresentation != null) audioPresentation.ResetSounds();
             if (ambiencePresentation != null) ambiencePresentation.ResetSounds();
             activeGamepad = null;
@@ -306,6 +321,17 @@ namespace CubeDash
         public void ChangeLane(int direction)
         {
             if (State == RunState.Running) targetLane = Mathf.Clamp(targetLane + direction, 0, 2);
+        }
+
+        /// <summary>Called for Enter press edges only; menu confirmations never arm the in-run toggle.</summary>
+        public bool PressSupercarEnter(double now)
+        {
+            if (State != RunState.Running || supercarPresentation == null) { supercarEnter.Reset(); return false; }
+            if (!supercarEnter.Press(now, supercarDoublePressWindow)) return false;
+            SupercarEnabled = !SupercarEnabled;
+            RefreshGroundPresentation();
+            hud.NotifySupercar(SupercarEnabled);
+            return true;
         }
 
         public void StartRun()
@@ -329,10 +355,12 @@ namespace CubeDash
             flightTimer = landingShieldTimer = 0;
             truckTimer = 0;
             magnetTimer = 0;
+            SupercarEnabled = false; supercarEnter.Reset();
             playerRenderer.enabled = true;
             playerCollider.enabled = true;
             if (flightPresentation != null) flightPresentation.ResetPresentation();
             if (truckPresentation != null) truckPresentation.ResetPresentation();
+            if (supercarPresentation != null) supercarPresentation.ResetPresentation();
             if (wake != null) wake.SetVisible(true);
             gameCamera.transform.position = cameraOrigin;
             cameraFollow = cameraOrigin;
@@ -355,6 +383,7 @@ namespace CubeDash
             else if (State == RunState.Paused) State = RunState.Running;
             else return;
             ResetGamepadStick();
+            supercarEnter.Reset();
             if (collectionAudio != null)
             {
                 if (State == RunState.Paused) collectionAudio.Pause();
@@ -371,6 +400,8 @@ namespace CubeDash
             flightTimer = landingShieldTimer = 0;
             truckTimer = 0;
             magnetTimer = 0;
+            SupercarEnabled = false; supercarEnter.Reset();
+            if (supercarPresentation != null) supercarPresentation.ResetPresentation();
             if (wasFlying) SetFlightPresentation(false);
             SetTruckPresentation(false);
             if (flightPresentation != null) flightPresentation.ResetPresentation();
@@ -433,10 +464,8 @@ namespace CubeDash
 
         private void SetFlightPresentation(bool flying)
         {
-            playerRenderer.enabled = !flying && !Trucking;
-            playerCollider.enabled = !flying;
             if (flightPresentation != null) flightPresentation.SetFlying(flying);
-            if (wake != null) wake.SetVisible(!flying && !Trucking);
+            RefreshGroundPresentation();
         }
 
         private void UpdateTruckTimers(float dt)
@@ -451,10 +480,18 @@ namespace CubeDash
 
         private void SetTruckPresentation(bool driving)
         {
-            playerRenderer.enabled = !driving && !Flying;
-            playerCollider.enabled = !Flying;
             if (truckPresentation != null) truckPresentation.SetDriving(driving);
-            if (wake != null) wake.SetVisible(!driving && !Flying);
+            RefreshGroundPresentation();
+        }
+
+        private void RefreshGroundPresentation()
+        {
+            bool carVisible = SupercarDriving && supercarPresentation != null;
+            if (supercarPresentation != null) supercarPresentation.SetDriving(carVisible);
+            playerRenderer.enabled = !Flying && !Trucking && !carVisible;
+            playerCollider.enabled = !Flying;
+            // Preserve the player's matching-color wake even though the reference car stays cyan.
+            if (wake != null) wake.SetVisible(!Flying && !Trucking);
         }
 
         private void OnApplicationFocus(bool focused)

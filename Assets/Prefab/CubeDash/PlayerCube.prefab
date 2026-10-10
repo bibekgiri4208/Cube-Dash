@@ -104,6 +104,7 @@ GameObject:
   - component: {fileID: 7317625263910761956}
   - component: {fileID: 4573273567304666169}
   - component: {fileID: 3062654231006135798}
+  - component: {fileID: 2841503893673306256}
   m_Layer: 0
   m_Name: PlayerCube
   m_TagString: Untagged
@@ -128,6 +129,7 @@ Transform:
   - {fileID: 3888412665824817480}
   - {fileID: 2284464308571376356}
   - {fileID: 7537046009882443607}
+  - {fileID: 2638609181041592645}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &4641837770116065780
@@ -258,6 +260,24 @@ MonoBehaviour:
   - {fileID: 7927388002331801906}
   - {fileID: 1069707651317739290}
   contactHalfSize: {x: 0.74, y: 1.62}
+--- !u!114 &2841503893673306256
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6054154529859888868}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f7b5cac0f79e9a438167c21e60a5d59, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: CubeDash::CubeDash.PlayerSupercar
+  car: {fileID: 2638609181041592645}
+  wheels:
+  - {fileID: 3574126991338368748}
+  - {fileID: 1882030922286845769}
+  - {fileID: 3588741206179694115}
+  - {fileID: 6692118520368728234}
 --- !u!1 &7324379760967028867
 GameObject:
   m_ObjectHideFlags: 0
@@ -593,4 +613,102 @@ ParticleSystem:
 ParticleSystem:
   m_CorrespondingSourceObject: {fileID: 1575695751030995181, guid: 20fce613bef7d914a86c19a6f43e47d1, type: 3}
   m_PrefabInstance: {fileID: 6975028795605353930}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &7522865701588400460
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 7807387851384255127}
+    m_Modifications:
+    - target: {fileID: 5546375830591303689, guid: 86fa780e30da17041991c7d256b0d072, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.72
+      objectReference: {fileID: 0}
+    - target: {fileID: 5546375830591303689, guid: 86fa780e30da17041991c7d256b0d072, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.72
+      objectReference: {fileID: 0}
+    - target: {fileID: 5546375830591303689, guid: 86fa780e30da17041991c7d256b0d072, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.72
+      objectReference: {fileID: 0}
+    - target: {fileID: 5546375830591303689, guid: 86fa780e30da17041991c7d256b0d072, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5546375830591303689, guid: 86fa780e30da17041991c7d256b0d072, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.575
+      objectReference: {fileID: 0}
+    - target: {fileID: 5546375830591303689, guid: 86fa780e30da17041991c7d256b0d072, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5546375830591303689, guid: 86fa780e30da17041991c7d256b0d072, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5546375830591303689, guid: 86fa780e30da17041991c7d256b0d072, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5546375830591303689, guid: 86fa780e30da17041991c7d256b0d072, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5546375830591303689, guid: 86fa780e30da17041991c7d256b0d072, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5546375830591303689, guid: 86fa780e30da17041991c7d256b0d072, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5546375830591303689, guid: 86fa780e30da17041991c7d256b0d072, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5546375830591303689, guid: 86fa780e30da17041991c7d256b0d072, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5848375540797208651, guid: 86fa780e30da17041991c7d256b0d072, type: 3}
+      propertyPath: m_Name
+      value: Supercar Visual
+      objectReference: {fileID: 0}
+    - target: {fileID: 5848375540797208651, guid: 86fa780e30da17041991c7d256b0d072, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 86fa780e30da17041991c7d256b0d072, type: 3}
+--- !u!4 &1882030922286845769 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8248561900163446277, guid: 86fa780e30da17041991c7d256b0d072, type: 3}
+  m_PrefabInstance: {fileID: 7522865701588400460}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &2638609181041592645 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5546375830591303689, guid: 86fa780e30da17041991c7d256b0d072, type: 3}
+  m_PrefabInstance: {fileID: 7522865701588400460}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &3574126991338368748 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6484989882945935264, guid: 86fa780e30da17041991c7d256b0d072, type: 3}
+  m_PrefabInstance: {fileID: 7522865701588400460}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &3588741206179694115 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6461349777694048111, guid: 86fa780e30da17041991c7d256b0d072, type: 3}
+  m_PrefabInstance: {fileID: 7522865701588400460}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &6692118520368728234 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3799270250877383142, guid: 86fa780e30da17041991c7d256b0d072, type: 3}
+  m_PrefabInstance: {fileID: 7522865701588400460}
   m_PrefabAsset: {fileID: 0}

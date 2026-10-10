@@ -15335,6 +15335,17 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1782416640}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1569815881 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2841503893673306256, guid: fc50f17de2fba884397fcfe115a1c052, type: 3}
+  m_PrefabInstance: {fileID: 2129001437}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f7b5cac0f79e9a438167c21e60a5d59, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: CubeDash::CubeDash.PlayerSupercar
 --- !u!1 &1573317557
 GameObject:
   m_ObjectHideFlags: 0
@@ -18011,6 +18022,8 @@ MonoBehaviour:
   truckShieldDuration: 3
   magnetDuration: 10
   magnetRange: 8
+  supercarPresentation: {fileID: 1569815881}
+  supercarDoublePressWindow: 0.35
 --- !u!4 &1782416640
 Transform:
   m_ObjectHideFlags: 0

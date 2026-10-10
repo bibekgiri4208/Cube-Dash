@@ -135,6 +135,12 @@ namespace CubeDash
             powerUpMessageTimer = 1f;
         }
 
+        public void NotifySupercar(bool enabled)
+        {
+            powerUpMessage = enabled ? "SUPERCAR  \xB7  SAME COLOR RULES" : "CUBE MODE";
+            powerUpMessageTimer = 1.5f;
+        }
+
         public void PrimaryAction()
         {
             if (game.State == CubeDashGame.RunState.Paused) game.TogglePause();
@@ -201,7 +207,7 @@ namespace CubeDash
             {
                 if (game.State == CubeDashGame.RunState.Ready)
                     menuHint.text = UsingGamepad ? "LEFT STICK / D-PAD move   \xB7   A / CROSS start" :
-                        "A / D or ARROWS move   \xB7   ENTER / SPACE start";
+                        "A/D or ARROWS move  \xB7  ENTER/SPACE start  \xB7  ENTER x2 car";
                 else
                     menuHint.text = UsingGamepad ? "A / Cross confirm   \xB7   D-pad navigate   \xB7   Menu pause" :
                         "Enter / Space confirm   \xB7   Tab / arrows select   \xB7   Esc pause";
@@ -316,6 +322,7 @@ namespace CubeDash
                 status = "";
                 if (game.Flying) status = "FLIGHT " + Mathf.CeilToInt(game.FlightRemaining) + "s";
                 if (game.Trucking) status = "TRUCK " + Mathf.CeilToInt(game.TruckRemaining) + "s";
+                if (game.SupercarDriving) status = "SUPERCAR  \xB7  ENTER x2: CUBE";
                 if (game.LandingShieldRemaining > 0)
                     status = AppendStatus(status, "TIMED SHIELD " + Mathf.CeilToInt(game.LandingShieldRemaining) + "s");
                 if (game.Shields > 0) status = AppendStatus(status, "SHIELD");

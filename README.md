@@ -7,6 +7,8 @@ trail, lighting, and original **Main Camera** are real saved scene/prefab object
 
 - Desktop-first: press **Play**, then **Space/Enter**, gamepad **A / Cross**, or click **START RUN**.
 - Move with **A/D**, **Left/Right**, gamepad **left stick**, or **D-pad left/right**.
+- While running, **double-press Enter** (or numpad Enter) to toggle **Supercar ↔ Cube**.
+  Two distinct presses within **0.35 seconds** count; holding the key does not toggle repeatedly.
 - **Collect gold 3D coins:** each coin disappears and awards **1 point**.
 - **Avoid obstacle cubes:** touching an obstacle ends the run.
 - **P/Escape** or gamepad **Menu/Start** pauses/resumes; **B / Circle** also resumes a paused run.
@@ -63,6 +65,26 @@ is saved separately from the old distance record.
    and become collectible again after it expires.
 
 The five bonus types share the existing pooled pickup slots and unchanged spawn frequency.
+**Supercar** is a separate, manually toggled cosmetic mode: no pickup, duration, cooldown, extra
+speed or obstacle immunity. Normal cube collision/color rules, scoring and the player's collider
+remain unchanged. The reference car stays cyan/charcoal; the HUD's existing color objective and
+matching-color wake still identify the player's gameplay color. Magnet, Shield and Double Points
+continue to work. Truck and Fighter Plane temporarily take visual priority, then restore a selected
+Supercar when they expire. You can toggle the selection during those power-ups. Pause freezes the
+car's wheels/steering; restart or game over clears the selection and pending Enter presses. Menu
+confirmation presses never arm the in-run double-press.
+
+The hand-built, reference-derived car includes a low faceted body with real wheel openings,
+cyan shoulder/bonnet panels, a tapered charcoal hood, smoked curved glazing, white X LEDs,
+five-spoke electric-blue rims, sculpted rear wing/endplates, a cyan-trimmed central fin, red LED
+taillights, twin hollow exhausts and diffuser fins. It is reconstructed from the four supplied views,
+not an exact export of the original model. The saved model is `Assets/Prefab/CubeDash/Supercar.prefab`,
+with body/wheel meshes under `Assets/3D Models` and materials under `Assets/Material/Supercar`.
+`PlayerCube.prefab` contains the inactive `Supercar Visual` and `PlayerSupercar` wheel/body animation.
+**Tools > Cube Dash > Add Reference Supercar** (`CubeDash.Editor.CubeDashSupercar.ApplyFromCommandLine`)
+rebakes/reconnects only the car, player prefab and game reference. The saved level is ready to play;
+**Game Manager > Supercar Double Press Window** adjusts the input interval.
+
 Power-ups occupy dedicated positions **7 metres before coin rows**, rather than sitting on coins.
 Even staggered hazards remain at least **4 metres** away. Pickups sway/bob while running and freeze on pause.
 Their Shield, 2× and Magnet meshes are saved under `Assets/3D Models`, with editable prefabs
