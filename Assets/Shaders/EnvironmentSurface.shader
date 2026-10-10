@@ -4,7 +4,7 @@ Shader "CubeDash/Environment Surface"
     {
         _BaseColor ("Base tint", Color) = (0.4, 0.5, 0.4, 1)
         _SecondaryColor ("Weathered tint", Color) = (0.3, 0.4, 0.3, 1)
-        _DetailType ("0 Stone / 1 Bark / 2 Leaf / 3 Sand / 4 Wood / 5 Snow / 6 Grass", Float) = 0
+        _DetailType ("0 Stone / 1 Bark / 2 Leaf / 3 Sand / 4 Wood / 5 Snow / 6 Grass / 7 Asphalt", Float) = 0
         _DetailScale ("Grain scale", Float) = 1
         _Smoothness ("Smoothness", Range(0, 1)) = 0.2
         _Metallic ("Metallic", Range(0, 1)) = 0
@@ -18,6 +18,7 @@ Shader "CubeDash/Environment Surface"
         _NeighborColor ("Neighbor ground", Color) = (0.4, 0.5, 0.4, 1)
         _NeighborSecondary ("Neighbor grain tint", Color) = (0.3, 0.4, 0.3, 1)
         _NeighborSurface ("Neighbor detail, scale, smoothness", Vector) = (0, 1, 0.2, 0)
+        _BoundaryGroundHeight ("Boundary land elevation", Float) = -9
         _SceneryRise ("Scenery rise (enabled, start time, drop, duration)", Vector) = (0, 0, 80, 1.25)
         _SceneryStagger ("Scenery stagger", Float) = 0.55
     }
@@ -35,6 +36,7 @@ Shader "CubeDash/Environment Surface"
             float _DetailType, _DetailScale, _Smoothness, _Metallic;
             float _CoastalWetness, _ShoreX, _TideDistance, _TidePeriod;
             float4 _BiomeBoundary, _NeighborSurface;
+            float _BoundaryGroundHeight;
             half4 _NeighborColor, _NeighborSecondary;
             float4 _SceneryRise;
             float _SceneryStagger;
@@ -61,7 +63,7 @@ Shader "CubeDash/Environment Surface"
             // Raise submerged beds back to the common land elevation at region ends.
             float endDistance = abs(output.metres.z - _BiomeBoundary.y);
             float bedBlend = _BiomeBoundary.x * (1 - smoothstep(0, 18, endDistance));
-            output.world.y = lerp(output.world.y, max(output.world.y, -9), bedBlend);
+            output.world.y = lerp(output.world.y, max(output.world.y, _BoundaryGroundHeight), bedBlend);
             float delay = (saturate(input.riseAnchor.y / 42) * 0.75
                 + frac(abs(input.riseAnchor.x) * 0.137) * 0.25) * _SceneryStagger;
             float reveal = smoothstep(0, 1, saturate((_CubeDashEnvironmentTime - _SceneryRise.y - delay) / max(0.1, _SceneryRise.w)));
@@ -77,10 +79,33 @@ Shader "CubeDash/Environment Surface"
             return lerp(lerp(Hash(cell), Hash(cell + float2(1, 0)), f.x),
                 lerp(Hash(cell + float2(0, 1)), Hash(cell + 1), f.x), f.y);
         }
+        float AsphaltNoise(float2 p, float frequency)
+        {
+            // Tile the lattice, not the sample, so the recycled road has no texture seam.
+            p *= frequency;
+            float period = 42 * max(0.01, _DetailScale) * frequency;
+            float2 cell = floor(p), f = frac(p);
+            f = f * f * (3 - 2 * f);
+            cell.y -= floor(cell.y / period) * period;
+            float nextY = cell.y + 1;
+            nextY -= floor(nextY / period) * period;
+            return lerp(lerp(Hash(cell), Hash(cell + float2(1, 0)), f.x),
+                lerp(Hash(float2(cell.x, nextY)), Hash(float2(cell.x + 1, nextY)), f.x), f.y);
+        }
         half4 DepthFrag(Varyings input) : SV_Target { return 0; }
         float GroundGrain(float3 p, float type)
         {
             float noise = Noise(p.xz * 1.4 + p.y * 0.27);
+            if (type > 6.5)
+            {
+                // Filter the aggregate at distance so it reads as asphalt, not sparkling pixels.
+                float2 fine = p.xz * 32;
+                float filterWidth = max(length(ddx(fine)), length(ddy(fine)));
+                float aggregate = lerp(AsphaltNoise(p.xz, 32), 0.5, smoothstep(0.5, 2, filterWidth));
+                float laneX = abs(p.x - 2.6 * round(p.x / 2.6));
+                float tires = exp(-pow((laneX - 0.65) * 5, 2));
+                return saturate(0.38 + aggregate * 0.32 + AsphaltNoise(p.xz, 5) * 0.20 - tires * 0.10);
+            }
             if (type > 0.5 && type < 1.5) return smoothstep(-0.5, 0.65, sin((p.x + p.z) * 14 + Noise(float2(p.y * 0.6, p.x * 3)) * 4));
             if (type > 2.5 && type < 3.5) return sin(p.x * 4.2 + sin(p.z * 0.55) * 1.7) * 0.22 + noise * 0.25 + 0.42;
             if (type > 3.5 && type < 4.5) return sin((p.y + p.z * 0.24) * 15 + noise * 3) * 0.2 + noise * 0.35 + 0.4;

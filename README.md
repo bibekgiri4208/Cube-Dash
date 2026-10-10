@@ -140,7 +140,7 @@ The run travels through **City → Jungle → Mountains → Desert → Beach**, 
 lasts **336 metres** (eight track sections), so scenery changes with distance, not frame rate or score.
 New landscapes approach naturally along the road; existing visible sections never suddenly swap.
 Sky, fog, sunlight and ambient colors blend across each boundary, without environment-name text
-on the HUD. The blue road and the red/blue/green gameplay palette remain unchanged.
+on the HUD. One continuous asphalt highway runs through every biome; the red/blue/green gameplay palette remains unchanged.
 
 All five physical joins now have **84-metre transition zones** (one section on either side).
 Ground tint, grain and roughness blend with the neighboring biome using a gently irregular edge,
@@ -237,7 +237,25 @@ saved landscapes and reconnects the scene without rebuilding the road, cubes or 
 preserving scene settings, difficulty and HUD. The richer meshes are still shared and pooled;
 no trees, terrain or colliders are generated during a run.
 
-The scene keeps the colorful blue track, beveled cubes, and an opening mint/stone city,
+### Ground-level highway
+
+The road now has charcoal asphalt with distance-filtered aggregate grain and subtle tire wear,
+two dashed white lane dividers, solid white edge lines, graded shoulders and low steel guardrails.
+The original starting Plane uses the same asphalt. The road surface remains at gameplay height;
+all five landscape roots are raised together by **8.75 metres**, placing their ground just
+**25 cm below the carriageway** instead of nine metres below it. Trees, rocks, buildings,
+city streets/flyover ramps, rivers, coastline props and horizon aprons move with their terrain,
+preserving their existing model proportions and grounding. The old bridge piers and thick rails
+are removed. Underwater boundary beds now blend to the raised land elevation.
+
+**Tools > Cube Dash > Apply Ground-Level Highway**
+(`CubeDash.Editor.CubeDashHighway.ApplyFromCommandLine`) reapplies only this art pass to the saved
+prefabs and Level. Stop Play mode and save scene changes first. The pass is repeatable and
+preserves lanes, player/obstacle heights, coins, difficulty, audio and scenery-rise timing.
+Highway dressing uses three shared saved meshes with no new gameplay colliders or runtime objects.
+Road and shoulder grain use detail type **7 / Asphalt** in `CubeDash/Environment Surface`.
+
+The scene keeps the beveled colorful cubes and an opening mint/stone city,
 with selective HDR bloom on the cubes and trail instead of washing out the landscapes.
 Warm soft sunlight, cool shadow-free sky fill, and three-color ambient illumination improve
 shaded faces and contact lighting. This is an ambient/indirect-light approximation, not baked
@@ -389,3 +407,5 @@ cross-lane coin attraction for every player color, range limits, Double Points s
 pickup animation reset, airborne Magnet collection and chronological long-frame collection.
 `SkyAndAudioTests` checks saved sky/sun settings, independent pickup/engine sources, non-silent PCM
 clips and loop seams, engine mode/speed/pause/expiry/refresh/restart behavior, and coin-pitch isolation.
+`HighwayTests` checks asphalt/shader validity, saved lane markings, road/terrain heights,
+graded shoulders and guardrail seams, raised boundary beds, fixed scenery pools and unchanged gameplay alignment.

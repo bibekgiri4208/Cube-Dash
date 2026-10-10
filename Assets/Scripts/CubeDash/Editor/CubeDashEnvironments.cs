@@ -286,6 +286,7 @@ namespace CubeDash.Editor
             GameObject root = new GameObject(biome + " Surroundings");
             try
             {
+                CubeDashHighway.SetLandscapeHeight(root.transform);
                 Material floor = biome == EnvironmentBiome.Jungle ? grass : biome == EnvironmentBiome.Mountains ? stone
                     : biome == EnvironmentBiome.Beach ? CubeDashOceanWaves.CoastalSand() : sand;
                 Mesh floorMesh = biome == EnvironmentBiome.Beach ? SaveMesh(EnvironmentModelMeshes.BeachSeabed(), "Beach Seabed")

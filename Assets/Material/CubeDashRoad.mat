@@ -8,19 +8,16 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: CubeDashRoad
-  m_Shader: {fileID: 4800000, guid: 933532a4fcc9baf4fa0491de14d08ed7, type: 3}
+  m_Shader: {fileID: 4800000, guid: 2934da08ce7b4d6cab5f20b3ec9b48a1, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords:
-  - _ENVIRONMENTREFLECTIONS_OFF
-  - _SPECULARHIGHLIGHTS_OFF
+  m_ValidKeywords: []
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 1
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
-  stringTagMap:
-    RenderType: Opaque
+  stringTagMap: {}
   disabledShaderPasses:
   - MOTIONVECTORS
   m_LockedProperties: 
@@ -90,13 +87,17 @@ Material:
     - _AlphaToMask: 0
     - _Blend: 0
     - _BlendModePreserveSpecular: 1
+    - _BoundaryGroundHeight: -9
     - _BumpScale: 1
     - _ClearCoatMask: 0
     - _ClearCoatSmoothness: 0
+    - _CoastalWetness: 0
     - _Cull: 2
     - _Cutoff: 0.5
     - _DetailAlbedoMapScale: 1
     - _DetailNormalMapScale: 1
+    - _DetailScale: 1
+    - _DetailType: 7
     - _DstBlend: 0
     - _DstBlendAlpha: 0
     - _EnvironmentReflections: 0
@@ -108,19 +109,31 @@ Material:
     - _Parallax: 0.005
     - _QueueOffset: 0
     - _ReceiveShadows: 1
-    - _Smoothness: 0.18
+    - _SceneryStagger: 0.55
+    - _ShoreX: 7
+    - _Smoothness: 0.1
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 0
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1
     - _Surface: 0
+    - _TideDistance: 0.85
+    - _TidePeriod: 40
     - _WorkflowMode: 1
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0.34, g: 0.61, b: 0.77, a: 1}
+    - _BaseColor: {r: 0.17, g: 0.18, b: 0.19, a: 1}
+    - _BiomeBoundary: {r: 0, g: 42, b: 1, a: 42}
     - _Color: {r: 0.33999997, g: 0.61, b: 0.77, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _EndTint: {r: 0.5, g: 0.61, b: 0.6, a: 1}
+    - _LandEnd: {r: 0, g: 42, b: 18, a: 0}
+    - _NeighborColor: {r: 0.39999998, g: 0.5, b: 0.39999998, a: 1}
+    - _NeighborSecondary: {r: 0.29999998, g: 0.39999998, b: 0.29999998, a: 1}
+    - _NeighborSurface: {r: 0, g: 1, b: 0.2, a: 0}
+    - _SceneryRise: {r: 0, g: 0, b: 80, a: 1.25}
+    - _SecondaryColor: {r: 0.09, g: 0.1, b: 0.11, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

@@ -44,6 +44,7 @@ namespace CubeDash
                 building.gameObject.SetActive(!outskirts || distance > 6);
             }
             if (block == null) block = new MaterialPropertyBlock();
+            SegmentEnvironment environment = GetComponent<SegmentEnvironment>();
             for (int i = 0; i < regions.Length; i++)
             {
                 Region region = regions[i];
@@ -67,6 +68,9 @@ namespace CubeDash
                     ground.GetPropertyBlock(block);
                     block.SetVector("_BiomeBoundary", new Vector4(blending ? 1 : 0,
                         (entering ? 0 : RunnerRules.SegmentLength) - offset, entering ? -1 : 1, halfWidth));
+                    // The landscape root can be raised independently of gameplay and the road.
+                    if (environment != null && environment.Biomes[i] != null)
+                        block.SetFloat("_BoundaryGroundHeight", environment.Biomes[i].transform.TransformPoint(Vector3.down * 9).y);
                     if (other != null)
                     {
                         block.SetColor("_NeighborColor", other.GetColor("_BaseColor"));

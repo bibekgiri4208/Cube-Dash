@@ -44,15 +44,15 @@ namespace CubeDash.Tests
         }
 
         [Test]
-        public void BeachFloorSlopesBelowWaveTroughsWithoutChangingTheDryBeachOrScenery()
+        public void BeachFloorPreservesDryLandAndSeabedDepthRelativeToTheRaisedLandscape()
         {
             GameObject beach = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/CubeDash/Environments/Beach.prefab");
             Transform floor = beach.transform.Find("Landscape Ground");
             foreach (Vector3 vertex in floor.GetComponent<MeshFilter>().sharedMesh.vertices)
             {
-                Vector3 world = floor.TransformPoint(vertex);
-                if (world.x <= 5.2f) Assert.That(world.y, Is.EqualTo(-9).Within(0.001f), "Dry beach stays at its original height.");
-                if (world.x >= 12) Assert.That(world.y, Is.LessThanOrEqualTo(-12.99f), "The seabed cannot poke through the bigger swells.");
+                Vector3 landscape = beach.transform.InverseTransformPoint(floor.TransformPoint(vertex));
+                if (landscape.x <= 5.2f) Assert.That(landscape.y, Is.EqualTo(-9).Within(0.001f), "Dry beach stays level relative to its landscape root.");
+                if (landscape.x >= 12) Assert.That(landscape.y, Is.LessThanOrEqualTo(-12.99f), "The seabed cannot poke through the bigger swells.");
             }
             Assert.That(floor.localScale.x, Is.EqualTo(2048));
             Assert.That(beach.transform.Find("Landscape Details").GetComponent<MeshFilter>().sharedMesh, Is.Not.Null);

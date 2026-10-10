@@ -49,11 +49,12 @@ namespace CubeDash.Tests
             Mesh bed = floor.GetComponent<MeshFilter>().sharedMesh;
             foreach (Vector3 vertex in bed.vertices)
             {
-                Vector3 world = floor.TransformPoint(vertex);
-                float distance = Mathf.Abs(world.x + 29);
-                if (distance >= 3) Assert.That(world.y, Is.EqualTo(-9).Within(0.001f));
-                if (Mathf.Abs(distance - 2.5f) < 0.001f) Assert.That(world.y, Is.EqualTo(-9.12f).Within(0.001f));
-                if (distance <= 1.4f) Assert.That(world.y, Is.LessThan(-10.3f));
+                // Bed/bank depths are authored relative to the landscape, which now sits beside the highway.
+                Vector3 landscape = jungle.transform.InverseTransformPoint(floor.TransformPoint(vertex));
+                float distance = Mathf.Abs(landscape.x + 29);
+                if (distance >= 3) Assert.That(landscape.y, Is.EqualTo(-9).Within(0.001f));
+                if (Mathf.Abs(distance - 2.5f) < 0.001f) Assert.That(landscape.y, Is.EqualTo(-9.12f).Within(0.001f));
+                if (distance <= 1.4f) Assert.That(landscape.y, Is.LessThan(-10.3f));
             }
             foreach (string edge in new[] { "Rear Horizon", "Forward Horizon" })
             {
