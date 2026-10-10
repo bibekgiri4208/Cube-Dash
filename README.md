@@ -144,6 +144,27 @@ Details are in `Assets/Audio/Ambience/README.md`.
 
 ### Changing environments
 
+Every biome now has **eight paired landscape/landmark layouts**, rather than three repeated
+arrangements. A deterministic eight-section sequence visits every layout without adjacent repeats;
+later visits vary the order without consuming obstacle randomness. New reusable models include:
+
+- **City:** tiered park fountains, glass pavilions, striped market stalls, water towers and vine pergolas.
+- **Jungle:** bamboo groves, broad-leaf banana plants, pleated fan palms, mossy fallen logs and ruined gateways,
+  plus narrow/spreading broadleaf crowns and recessed groves that break up the roadside canopy wall.
+- **Mountains:** snow-laden firs, timber alpine cabins, trail cairns/signposts, bare branching pines and rock spires.
+- **Desert:** ribbed barrel cacti, prickly pears, agave rosettes, open sandstone arches, crumbled ruins and oasis palms.
+- **Beach:** coral/ivory parasols, open-hull fishing boats with sails, raised lifeguard huts, striped lighthouses,
+  driftwood and paired loungers. Boats sit at the existing lower sea level; desert props follow their dune surface.
+
+The **27 new model prefabs** live under `Assets/Prefab/CubeDash/Environments/Variety Models`, with
+saved meshes under `Assets/3D Models/Environments`. `Landscape Variety` is an editable child of
+each biome, paired with its existing `Landscape Details`; both swap shared meshes only when sections
+recycle. Whole landmarks share reveal anchors, so roofs, leaves and boat sails rise together. Pause
+freezes the same reveal clock; pooling remains fixed, with no decorative colliders or runtime spawning.
+**Tools > Cube Dash > Add Environment Model Variety** regenerates just the decoration/layouts and
+reconnects reveal references, preserving the highway, terrain/water, transitions, palettes, audio and gameplay.
+The saved Level inherits the assets automatically; no setup command is needed.
+
 The run travels through **City → Jungle → Mountains → Desert → Beach**, then loops. Each region
 lasts **336 metres** (eight track sections), so scenery changes with distance, not frame rate or score.
 New landscapes approach naturally along the road; existing visible sections never suddenly swap.
@@ -175,7 +196,7 @@ Tune **Scenery Rise > Duration / Stagger / Drop** on the TrackSegment prefab. Af
 scenery meshes, use **Tools > Cube Dash > Apply Staggered Scenery Rise** to bake rigid-object
 animation anchors and reconnect the saved prefab. Mesh bounds include the downward displacement.
 
-- **City:** three saved neighborhood layouts replace the wall of repeated skyscrapers with detached
+- **City:** eight saved neighborhood layouts replace the wall of repeated skyscrapers with detached
   houses, brick townhouses, signed market/bakery/café shopfronts with striped awnings, balcony
   apartments, terraced offices and a clock hall. Side streets have curbs, lane markings, lamps,
   benches and bus shelters; an elevated roadside flyover has piers, barriers and entrance/exit ramps
@@ -188,7 +209,7 @@ animation anchors and reconnect the saved prefab. Mesh bounds include the downwa
   settings are untouched. `CityFlyover` selects the saved end ramps when city sections recycle.
 - **Jungle:** tapered trunks, visible branches and buttress roots, fuller rounded canopies,
   bark grain, fern undergrowth, mossy rocks, a river and layered distant hills.
-  All three layouts now use one cohesive broadleaf tree family with connected crowns, restrained
+  All eight layouts retain a cohesive broadleaf tree family with connected crowns, restrained
   highlights and dedicated `Jungle Bark`, `Jungle Foliage` and `Jungle Canopy Highlights` materials.
   Trunk bases and individual root feet conform to the actual hill triangles; ferns are grounded
   and moss sits on rocks instead of floating above the forest floor. Other biomes retain their palette.
@@ -234,7 +255,7 @@ a restrained sun disc/halo aligned with the sunlight, and seamless direction-spa
 Clouds fade into the existing biome horizon/fog, avoiding stretched bands or abrupt sky changes.
 Coverage, scale, opacity and drift are editable on `Assets/Material/CubeDashHorizon.mat`.
 
-Each non-city region has three deterministic mesh layouts. Saved scenery roots are pooled with
+Each region has eight deterministic mesh layouts. Saved scenery roots are pooled with
 the eight track sections; recycling toggles roots and swaps shared meshes without instantiating
 objects or adding gameplay colliders. Environment selection uses no obstacle random numbers.
 Tune **Segments Per Biome** and **Transition Distance** on **Track > Environment Director**.
@@ -407,6 +428,8 @@ menu navigation, single-confirm resume/retry, controller disconnect/reconnect, a
 mesh budgets, road clearance, wide coastal coverage, matching wave-surface seams, saved facade
 detail, shader depth/shadow passes, horizon-apron ownership during recycling, fixed-size pools,
 complete city windows between floor bands, isolated coastal blends, smooth transitions, pause and restart.
+`EnvironmentVarietyTests` checks all 27 new model assets, eight-layout coverage without adjacent repeats,
+valid road-clear geometry, rigid landmark reveal anchors and fixed-size paired-mesh recycling.
 `FighterPowerUpTests` additionally checks saved fighter geometry and bounded particles, pickup
 transformation, flight/pause/restart, timed landing protection, automatic current-lane coin attraction,
 Magnet/Double Points stacking in flight, airborne hazard/power-up suppression and

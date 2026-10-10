@@ -35,7 +35,11 @@ namespace CubeDash.Tests
             {
                 var meshes = new System.Collections.Generic.HashSet<Mesh>();
                 BiomeScenery scenery = biome.GetComponent<BiomeScenery>();
-                if (scenery != null) foreach (Mesh mesh in scenery.Layouts) meshes.Add(mesh);
+                if (scenery != null)
+                {
+                    foreach (Mesh mesh in scenery.Layouts) meshes.Add(mesh);
+                    foreach (Mesh mesh in scenery.VarietyLayouts) meshes.Add(mesh);
+                }
                 foreach (MeshFilter filter in biome.GetComponentsInChildren<MeshFilter>(true))
                     if (filter.name.StartsWith("Boundary ") || filter.name == "Coastal Headland") meshes.Add(filter.sharedMesh);
                 foreach (Mesh mesh in meshes)

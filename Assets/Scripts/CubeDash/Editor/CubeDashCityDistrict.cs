@@ -37,7 +37,7 @@ namespace CubeDash.Editor
                     Mesh mesh = SaveMesh(BuildCityModel(name), "City " + name); models[name] = mesh;
                     SaveCityModelPrefab(name, mesh);
                 }
-                Mesh[] layouts = new Mesh[3];
+                Mesh[] layouts = new Mesh[BiomeRules.SceneryLayoutCount];
                 for (int layout = 0; layout < layouts.Length; layout++) layouts[layout] = SaveMesh(BuildCityLayout(layout, models), "City District Layout " + (layout + 1));
                 Mesh[] flyovers = new Mesh[3];
                 for (int profile = 0; profile < 3; profile++) flyovers[profile] = SaveMesh(BuildCityFlyover(profile), "City Flyover " + new[] { "Level", "Entrance", "Exit" }[profile]);
@@ -62,6 +62,7 @@ namespace CubeDash.Editor
                     details.GetComponent<MeshFilter>().sharedMesh = layouts[0]; details.GetComponent<Renderer>().sharedMaterials = cityPalette;
                     BiomeScenery scenery = city.GetComponent<BiomeScenery>(); if (scenery == null) scenery = city.gameObject.AddComponent<BiomeScenery>();
                     Set(scenery, "details", details.GetComponent<MeshFilter>()); SetArray(scenery, "layouts", layouts);
+                    AddVarietyLayouts(city, EnvironmentBiome.City, cityPalette);
                     Transform deck = city.Find("City Flyover");
                     if (deck == null) deck = Part(city, "City Flyover", flyovers[0], cityPalette, Vector3.zero, Vector3.one).transform;
                     deck.GetComponent<MeshFilter>().sharedMesh = flyovers[0]; deck.GetComponent<Renderer>().sharedMaterials = cityPalette;
@@ -82,7 +83,7 @@ namespace CubeDash.Editor
                 finally { PrefabUtility.UnloadPrefabContents(root); }
                 AssetDatabase.SaveAssets();
                 CubeDashSceneryRise.ApplyFromCommandLine();
-                Debug.Log("City-only neighborhoods saved: eleven reusable models, three varied streetscapes, sparse distant skyline and connected side flyover with end ramps. Other biomes, gameplay, ambience and far spawn distance preserved.");
+                Debug.Log("City-only neighborhoods saved: eight varied streetscapes, reusable buildings and park landmarks, sparse distant skyline and connected side flyover with end ramps. Other biomes, gameplay, ambience and far spawn distance preserved.");
             }
             finally { ReleaseModels(); cityPalette = null; }
         }
@@ -304,11 +305,15 @@ namespace CubeDash.Editor
                 float yaw = side == 1 ? 90 : -90;
                 for (int slot = 0; slot < 3; slot++)
                 {
-                    AddCityModel(g, models[streetRows[layout][slot + (side == 1 ? 3 : 0)]], new Vector3(side * 18, -9, 7 + slot * 14), yaw);
+                    int arrangement = (layout + (layout / 3) * slot) % streetRows.Length;
+                    // Reserve two front-row lots for parks/pavilions/markets instead of hiding
+                    // every new landmark behind the same wall of houses and midrises.
+                    if (!(side < 0 && slot == 1) && !(side > 0 && slot == 0))
+                        AddCityModel(g, models[streetRows[arrangement][slot + (side == 1 ? 3 : 0)]], new Vector3(side * (18 + layout % 2), -9, 7 + slot * 14), yaw);
                     AddCityModel(g, models["Street Furniture"], new Vector3(side * 11.5f, -9, 4 + slot * 14), yaw);
                 }
-                AddCityModel(g, models[layout == 2 && side < 0 ? "Clock Hall" : "Balcony Apartments"], new Vector3(side * 46, -9, 10), yaw);
-                AddCityModel(g, models[layout == 1 && side > 0 ? "Clock Hall" : "Terraced Office"], new Vector3(side * 47, -9, 31), yaw);
+                AddCityModel(g, models[layout % 3 == 2 && side < 0 ? "Clock Hall" : "Balcony Apartments"], new Vector3(side * (46 + layout % 3), -9, 10), yaw);
+                AddCityModel(g, models[layout % 3 == 1 && side > 0 ? "Clock Hall" : "Terraced Office"], new Vector3(side * (47 + layout % 2), -9, 31), yaw);
                 AddCityModel(g, models["Bus Shelter"], new Vector3(side * 11.6f, -9, 24), yaw);
             }
             return g.Bake();

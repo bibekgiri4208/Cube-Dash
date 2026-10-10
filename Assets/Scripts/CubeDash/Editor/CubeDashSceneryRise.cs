@@ -20,7 +20,7 @@ namespace CubeDash.Editor
                 foreach (GameObject biome in environment.Biomes)
                 {
                     foreach (Renderer renderer in biome.GetComponentsInChildren<Renderer>(true))
-                        if (renderer.name == "Landscape Details" || renderer.name.StartsWith("Boundary ", StringComparison.Ordinal)
+                        if (renderer.name == "Landscape Details" || renderer.name == "Landscape Variety" || renderer.name.StartsWith("Boundary ", StringComparison.Ordinal)
                             || renderer.name == "Coastal Headland" || renderer.name == "City Flyover")
                         {
                             renderers.Add(renderer);
@@ -28,7 +28,11 @@ namespace CubeDash.Editor
                             if (mesh != null) meshes.Add(mesh);
                         }
                     BiomeScenery scenery = biome.GetComponent<BiomeScenery>();
-                    if (scenery != null) foreach (Mesh mesh in scenery.Layouts) meshes.Add(mesh);
+                    if (scenery != null)
+                    {
+                        foreach (Mesh mesh in scenery.Layouts) meshes.Add(mesh);
+                        foreach (Mesh mesh in scenery.VarietyLayouts) meshes.Add(mesh);
+                    }
                     CityFlyover flyover = biome.GetComponent<CityFlyover>();
                     if (flyover != null) foreach (Mesh mesh in flyover.Profiles) meshes.Add(mesh);
                 }
@@ -60,7 +64,8 @@ namespace CubeDash.Editor
             // City models already carry one shared anchor for every part of each building/prop.
             // Reconstructing connected components would separate signs, balconies and roof pieces.
             if (mesh.name.StartsWith("City District Layout ", StringComparison.Ordinal)
-                || mesh.name.StartsWith("City Flyover ", StringComparison.Ordinal))
+                || mesh.name.StartsWith("City Flyover ", StringComparison.Ordinal)
+                || mesh.name.Contains(" Variety Layout "))
             {
                 var existing = new List<Vector2>(); mesh.GetUVs(2, existing);
                 if (existing.Count != mesh.vertexCount) throw new InvalidOperationException("Missing city reveal anchors: " + mesh.name);

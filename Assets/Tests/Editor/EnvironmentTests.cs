@@ -228,7 +228,7 @@ namespace CubeDash.Tests
         }
 
         [Test]
-        public void LevelHasFiveSavedBiomesAndThreeLayoutsWithoutSceneryColliders()
+        public void LevelHasFiveSavedBiomesAndEightLayoutsWithoutSceneryColliders()
         {
             var scene = EditorSceneManager.OpenPreviewScene("Assets/Scenes/Level.unity");
             try
@@ -256,7 +256,7 @@ namespace CubeDash.Tests
                         Assert.That(biome.GetComponentsInChildren<Renderer>(true).Length, Is.GreaterThan(0));
                         Assert.That(biome.GetComponentsInChildren<Collider>(true), Is.Empty);
                         if (!biome.TryGetComponent(out BiomeScenery scenery)) continue;
-                        Assert.That(scenery.Layouts.Length, Is.EqualTo(3));
+                        Assert.That(scenery.Layouts.Length, Is.EqualTo(BiomeRules.SceneryLayoutCount));
                         foreach (Mesh mesh in scenery.Layouts)
                         {
                             Assert.That(mesh, Is.Not.Null);

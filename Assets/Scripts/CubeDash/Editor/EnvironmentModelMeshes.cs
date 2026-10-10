@@ -118,6 +118,106 @@ namespace CubeDash.Editor
         private static Vector3 FrondSpine(float t)
             => new Vector3(t, Mathf.Sin(t * Mathf.PI) * 0.17f - t * t * 0.32f, Mathf.Sin(t * Mathf.PI * 2) * 0.025f);
 
+        public static Mesh BroadLeaf()
+        {
+            var vertices = new List<Vector3>(); var triangles = new List<int>();
+            for (int i = 0; i < 8; i++)
+            {
+                float a = i / 8f, b = (i + 1) / 8f;
+                Vector3 start = FrondSpine(a), end = FrondSpine(b);
+                float aw = 0.012f + Mathf.Sin(a * Mathf.PI) * 0.22f;
+                float bw = 0.012f + Mathf.Sin(b * Mathf.PI) * 0.22f;
+                DoubleQuad(vertices, triangles, start + Vector3.forward * aw, end + Vector3.forward * bw,
+                    end - Vector3.forward * bw, start - Vector3.forward * aw);
+            }
+            return Finish("Broad arching leaf blade", vertices, new[] { triangles }, false);
+        }
+
+        public static Mesh FanLeaf()
+        {
+            var vertices = new List<Vector3>(); var triangles = new List<int>();
+            for (int i = 0; i < 12; i++)
+            {
+                float a = (-65 + i * 130f / 12) * Mathf.Deg2Rad, b = (-65 + (i + 1) * 130f / 12) * Mathf.Deg2Rad;
+                Vector3 start = new Vector3(Mathf.Cos(a), i % 2 * 0.045f, Mathf.Sin(a));
+                Vector3 end = new Vector3(Mathf.Cos(b), (i + 1) % 2 * 0.045f, Mathf.Sin(b));
+                int first = vertices.Count;
+                vertices.Add(Vector3.zero); vertices.Add(start); vertices.Add(end);
+                vertices.Add(Vector3.zero); vertices.Add(end); vertices.Add(start);
+                Triangle(triangles, first, first + 1, first + 2); Triangle(triangles, first + 3, first + 4, first + 5);
+            }
+            return Finish("Pleated tropical fan leaf", vertices, new[] { triangles }, false);
+        }
+
+        public static Mesh RockArch()
+        {
+            const int steps = 12;
+            var vertices = new List<Vector3>(); var triangles = new List<int>();
+            // A thick horseshoe with a genuine opening; cross sections remain nonzero at both feet.
+            for (int i = 0; i <= steps; i++)
+            {
+                float a = i * Mathf.PI / steps, irregular = 1 + 0.045f * Mathf.Sin(i * 2.7f);
+                float inner = 0.30f, outer = 0.5f * irregular;
+                foreach (float depth in new[] { -0.5f, 0.5f })
+                {
+                    vertices.Add(new Vector3(Mathf.Cos(a) * inner, Mathf.Sin(a) * inner * 1.85f, depth));
+                    vertices.Add(new Vector3(Mathf.Cos(a) * outer, Mathf.Sin(a) * outer * 1.85f, depth));
+                }
+            }
+            for (int i = 0; i < steps; i++)
+            {
+                int a = i * 4, b = a + 4;
+                Triangle(triangles, a, a + 1, b); Triangle(triangles, a + 1, b + 1, b);
+                Triangle(triangles, a + 2, b + 2, a + 3); Triangle(triangles, a + 3, b + 2, b + 3);
+                Triangle(triangles, a, b, a + 2); Triangle(triangles, a + 2, b, b + 2);
+                Triangle(triangles, a + 1, a + 3, b + 1); Triangle(triangles, a + 3, b + 3, b + 1);
+            }
+            Triangle(triangles, 0, 2, 1); Triangle(triangles, 1, 2, 3);
+            int last = steps * 4;
+            Triangle(triangles, last, last + 1, last + 2); Triangle(triangles, last + 1, last + 3, last + 2);
+            return Finish("Eroded sandstone arch", vertices, new[] { triangles }, false);
+        }
+
+        public static Mesh UmbrellaCanopy()
+        {
+            var vertices = new List<Vector3>(); var stripes = new[] { new List<int>(), new List<int>() };
+            for (int i = 0; i < 12; i++)
+            {
+                float a = i * Mathf.PI / 6, b = (i + 1) * Mathf.PI / 6;
+                Vector3 start = new Vector3(Mathf.Cos(a) * 0.5f, 0, Mathf.Sin(a) * 0.5f);
+                Vector3 end = new Vector3(Mathf.Cos(b) * 0.5f, 0, Mathf.Sin(b) * 0.5f);
+                int first = vertices.Count;
+                vertices.Add(Vector3.up * 0.32f); vertices.Add(start); vertices.Add(end);
+                vertices.Add(Vector3.up * 0.32f); vertices.Add(end); vertices.Add(start);
+                Triangle(stripes[i % 2], first, first + 2, first + 1);
+                Triangle(stripes[i % 2], first + 3, first + 5, first + 4);
+            }
+            return Finish("Striped twelve-panel parasol", vertices, stripes, false);
+        }
+
+        public static Mesh BoatHull()
+        {
+            var vertices = new List<Vector3>(); var triangles = new List<int>();
+            float[] widths = { 0.06f, 0.7f, 0.9f, 0.7f, 0.06f };
+            Vector3 Point(int section, int corner)
+            {
+                float width = widths[section] * 0.5f, z = section * 0.25f - 0.5f;
+                return corner == 0 ? new Vector3(-width, 0.4f, z) : corner == 1 ? new Vector3(-width * 0.7f, 0.12f, z)
+                    : corner == 2 ? new Vector3(0, 0, z) : corner == 3 ? new Vector3(width * 0.7f, 0.12f, z) : new Vector3(width, 0.4f, z);
+            }
+            for (int section = 0; section < 4; section++)
+                for (int edge = 0; edge < 4; edge++)
+                    DoubleQuad(vertices, triangles, Point(section, edge), Point(section + 1, edge), Point(section + 1, edge + 1), Point(section, edge + 1));
+            return Finish("Open pointed fishing hull", vertices, new[] { triangles }, false);
+        }
+
+        public static Mesh TriangleSail()
+        {
+            var vertices = new List<Vector3> { Vector3.zero, Vector3.up, new Vector3(1, 0.05f, 0),
+                Vector3.zero, new Vector3(1, 0.05f, 0), Vector3.up };
+            return Finish("Reefed triangular sail", vertices, new[] { new List<int> { 0, 1, 2, 3, 4, 5 } }, false);
+        }
+
         public static Mesh Hill(int seed, bool dune)
         {
             const int sides = 32, rings = 12;

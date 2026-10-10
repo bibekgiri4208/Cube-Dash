@@ -8,6 +8,7 @@ namespace CubeDash
     public static class BiomeRules
     {
         public const int Count = 5;
+        public const int SceneryLayoutCount = 8;
 
         public static float Length(int segmentsPerBiome) => RunnerRules.SegmentLength * Mathf.Max(2, segmentsPerBiome);
 
@@ -32,6 +33,17 @@ namespace CubeDash
         public static int Variation(int sectionIndex, int count)
         {
             if (count <= 0) return 0;
+            if (count == SceneryLayoutCount)
+            {
+                // Visit all eight authored compositions before reusing one. Half-cycle offsets
+                // vary later visits while the coprime stride prevents adjacent repeats, even at joins.
+                int within = ((sectionIndex % count) + count) % count;
+                int block = Mathf.FloorToInt(sectionIndex / (float)count);
+                uint seed = unchecked((uint)block * 747796405u + 2891336453u);
+                seed = ((seed >> (int)((seed >> 28) + 4)) ^ seed) * 277803737u;
+                int offset = (int)(((seed >> 22) ^ seed) & 1) * 4;
+                return (within * 5 + offset) % count;
+            }
             // Stable, varied scenery without consuming any gameplay randomness.
             uint hash = unchecked((uint)sectionIndex * 747796405u + 2891336453u);
             hash = ((hash >> (int)((hash >> 28) + 4)) ^ hash) * 277803737u;

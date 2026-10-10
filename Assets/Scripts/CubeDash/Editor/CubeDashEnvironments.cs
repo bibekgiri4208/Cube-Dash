@@ -58,7 +58,7 @@ namespace CubeDash.Editor
                 EditorSceneManager.MarkSceneDirty(scene);
                 AssetDatabase.SaveAssets();
                 EditorSceneManager.SaveScene(scene);
-                Debug.Log("Dynamic environments saved: city, jungle, mountains, desert and beach; three landscape layouts each, pooled scenery and distance-blended atmosphere.");
+                Debug.Log("Dynamic environments saved: city, jungle, mountains, desert and beach; eight landscape layouts each, pooled scenery and distance-blended atmosphere.");
             }
             finally { ReleaseModels(); }
         }
@@ -113,6 +113,7 @@ namespace CubeDash.Editor
                     details.GetComponent<MeshFilter>().sharedMesh = layouts[0];
                     details.GetComponent<Renderer>().sharedMaterials = palette;
                     SetArray(root.GetComponent<BiomeScenery>(), "layouts", layouts);
+                    AddVarietyLayouts(root.transform, EnvironmentBiome.Jungle, palette);
                     Transform water = root.transform.Find("River");
                     water.GetComponent<MeshFilter>().sharedMesh = river;
                     water.GetComponent<Renderer>().sharedMaterial = riverWater;
@@ -310,6 +311,7 @@ namespace CubeDash.Editor
                 BiomeScenery scenery = root.AddComponent<BiomeScenery>();
                 Set(scenery, "details", details.GetComponent<MeshFilter>());
                 SetArray(scenery, "layouts", layouts);
+                AddVarietyLayouts(root.transform, biome, palette);
                 if (biome == EnvironmentBiome.Beach) CubeDashOceanWaves.SetOceanHeight(root.transform);
                 return PrefabUtility.SaveAsPrefabAsset(root, Prefabs + "/" + biome + ".prefab");
             }
@@ -318,14 +320,14 @@ namespace CubeDash.Editor
 
         private static Mesh[] BakeLayouts(EnvironmentBiome biome, Material[] palette)
         {
-            Mesh[] layouts = new Mesh[3];
+            Mesh[] layouts = new Mesh[BiomeRules.SceneryLayoutCount];
             for (int layout = 0; layout < layouts.Length; layout++)
             {
                 Geometry geometry = new Geometry(palette);
                 System.Random random = new System.Random(1979 + (int)biome * 101 + layout * 37);
                 switch (biome)
                 {
-                    case EnvironmentBiome.Jungle: Jungle(geometry, random); break;
+                    case EnvironmentBiome.Jungle: Jungle(geometry, random, layout); break;
                     case EnvironmentBiome.Mountains: Mountains(geometry, random); break;
                     case EnvironmentBiome.Desert: Desert(geometry, random); break;
                     case EnvironmentBiome.Beach: Beach(geometry, random); break;
@@ -336,14 +338,17 @@ namespace CubeDash.Editor
             return layouts;
         }
 
-        private static void Jungle(Geometry g, System.Random random)
+        private static void Jungle(Geometry g, System.Random random, int layout)
         {
             for (int side = -1; side <= 1; side += 2)
             {
                 for (int row = 0; row < 5; row++)
                 {
                     float z = 4 + row * 8 + Range(random, -2, 2);
-                    JungleTree(g, new Vector3(side * Range(random, 16, 23), -9, z), Range(random, 16, 19), random);
+                    // Break up the uniform roadside canopy wall with occasional recessed groves.
+                    bool recessed = (row + layout) % 4 == 0;
+                    JungleTree(g, new Vector3(side * Range(random, recessed ? 36 : 16, recessed ? 43 : 23), -9, z),
+                        Range(random, layout % 3 == 0 ? 14 : 16, layout % 3 == 0 ? 18 : 21), random);
                     float forestX = side * Range(random, 36, 49);
                     float forestFloor = JungleGroundHeight(forestX, z);
                     JungleTree(g, new Vector3(forestX, forestFloor, z), Range(random, 19, 22), random);
@@ -449,21 +454,22 @@ namespace CubeDash.Editor
         {
             p.y = JungleGroundHeight(p.x, p.z) - 0.12f;
             float yaw = Range(random, 0, 360), diameter = height * 0.085f;
+            float spread = yaw < 120 ? 0.78f : yaw < 240 ? 1 : 1.18f;
             GroundedStem(g, trunk, jungleBark, p, new Vector3(diameter, height * 0.8f, diameter), Quaternion.Euler(0, yaw, 0), 10);
             // A connected central crown and overlapping shoulder lobes, not separate bright balls.
             g.Add(crowns[0], jungleLeaf, p + Vector3.up * height * 0.79f,
-                new Vector3(height * 0.5f, height * 0.34f, height * 0.46f), yaw);
+                new Vector3(height * 0.5f * spread, height * 0.34f, height * 0.46f * spread), yaw);
             for (int limb = 0; limb < 5; limb++)
             {
                 float angle = (yaw + limb * 72) * Mathf.Deg2Rad;
                 Vector3 direction = new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle));
-                Vector3 end = p + direction * height * 0.15f + Vector3.up * height * Range(random, 0.72f, 0.76f);
+                Vector3 end = p + direction * height * 0.15f * spread + Vector3.up * height * Range(random, 0.72f, 0.76f);
                 Limb(g, p + Vector3.up * height * (0.48f + limb * 0.025f), end, diameter * 0.4f, jungleBark);
                 g.Add(crowns[limb % crowns.Length], jungleLeaf, end,
-                    new Vector3(height * 0.36f, height * 0.28f, height * 0.34f), yaw + limb * 33);
+                    new Vector3(height * 0.36f * spread, height * 0.28f, height * 0.34f * spread), yaw + limb * 33);
             }
             g.Add(crowns[1], jungleHighlight, p + Vector3.up * height * 0.87f,
-                new Vector3(height * 0.39f, height * 0.24f, height * 0.37f), yaw + 15);
+                new Vector3(height * 0.39f * spread, height * 0.24f, height * 0.37f * spread), yaw + 15);
             for (int root = 0; root < 4; root++)
             {
                 float angle = (yaw + root * 90) * Mathf.Deg2Rad;

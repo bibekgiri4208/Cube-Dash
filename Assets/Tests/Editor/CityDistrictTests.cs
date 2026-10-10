@@ -37,7 +37,7 @@ namespace CubeDash.Tests
                 SegmentEnvironment environment = root.GetComponent<SegmentEnvironment>();
                 Transform city = environment.Biomes[0].transform;
                 BiomeScenery scenery = city.GetComponent<BiomeScenery>(); Assert.That(scenery, Is.Not.Null);
-                Assert.That(scenery.Layouts.Length, Is.EqualTo(3));
+                Assert.That(scenery.Layouts.Length, Is.EqualTo(BiomeRules.SceneryLayoutCount));
                 Assert.That(scenery.Layouts[0], Is.Not.SameAs(scenery.Layouts[1]));
                 int towers = 0;
                 foreach (Transform child in city)
@@ -51,7 +51,7 @@ namespace CubeDash.Tests
                 {
                     environment.Configure(section, 8);
                     Assert.That(city.Find("Landscape Details").GetComponent<MeshFilter>().sharedMesh,
-                        Is.SameAs(scenery.Layouts[BiomeRules.Variation(section, 3)]));
+                        Is.SameAs(scenery.Layouts[BiomeRules.Variation(section, scenery.Layouts.Length)]));
                 }
                 Assert.That(root.GetComponentsInChildren<Transform>(true).Length, Is.EqualTo(count));
                 foreach (Mesh mesh in scenery.Layouts)
