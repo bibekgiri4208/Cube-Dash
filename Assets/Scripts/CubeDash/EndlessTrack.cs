@@ -67,6 +67,9 @@ namespace CubeDash
                 segments[i].transform.localPosition = new Vector3(0, 0, (i - 1) * RunnerRules.SegmentLength);
                 Populate(segments[i], i == 0 ? 3 : i == 1 ? 1 : 0);
                 ConfigureEnvironment(segments[i], i - 1);
+                SceneryRise rise = segments[i].GetComponent<SceneryRise>();
+                // Only the original farthest spawn slot rises; closer starting scenery is already present.
+                if (rise != null) rise.Begin(i == segments.Length - 1, 0);
             }
             UpdateHorizonEdges();
         }
@@ -231,9 +234,17 @@ namespace CubeDash
                 oldest.transform.position = new Vector3(transform.position.x, transform.position.y, furthest);
                 Populate(oldest, 0, difficulty);
                 ConfigureEnvironment(oldest, nextSectionIndex++);
+                SceneryRise rise = oldest.GetComponent<SceneryRise>();
+                if (rise != null) rise.Begin(true, Shader.GetGlobalFloat("_CubeDashEnvironmentTime"));
                 recycled = true;
             }
             if (recycled) UpdateHorizonEdges();
+            float sceneryTime = Shader.GetGlobalFloat("_CubeDashEnvironmentTime");
+            foreach (TrackSegment segment in segments)
+            {
+                SceneryRise rise = segment.GetComponent<SceneryRise>();
+                if (rise != null) rise.Tick(sceneryTime);
+            }
             return hitWrongColor;
         }
 

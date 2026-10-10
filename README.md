@@ -134,6 +134,17 @@ prefab includes all transition references; **Tools > Cube Dash > Blend Environme
 rebakes/reconnects them after a full environment rebuild. **Biome Boundary Blend > Half Width**
 on the TrackSegment prefab controls the ground blend width (default 42 metres per side).
 
+Newly recycled scenery **rises from below in a staggered sequence** instead of popping into place.
+Trees, rocks, hills/mountains, beach props and city buildings ease upward over 1.25 seconds,
+with up to 0.55 seconds of near-to-far/side variation. Only the farthest starting section animates
+(252 metres ahead in the saved level); all closer sections are already settled. Recycled sections
+still appear at their original far-ahead spawn position—the pool and viewing distance are unchanged.
+Ground, water, road, hazards and collectibles never move. The shared environment clock freezes
+the reveal during pause; restart restores the authored positions without adding pooled objects.
+Tune **Scenery Rise > Duration / Stagger / Drop** on the TrackSegment prefab. After rebuilding
+scenery meshes, use **Tools > Cube Dash > Apply Staggered Scenery Rise** to bake rigid-object
+animation anchors and reconnect the saved prefab. Mesh bounds include the downward displacement.
+
 - **City:** recessed glass windows, projecting sills, entrance canopies, corner trim and roof vents
   on the existing stepped towers.
 - **Jungle:** tapered trunks, visible branches and buttress roots, fuller rounded canopies,

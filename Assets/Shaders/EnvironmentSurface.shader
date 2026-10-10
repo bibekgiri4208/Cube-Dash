@@ -18,6 +18,8 @@ Shader "CubeDash/Environment Surface"
         _NeighborColor ("Neighbor ground", Color) = (0.4, 0.5, 0.4, 1)
         _NeighborSecondary ("Neighbor grain tint", Color) = (0.3, 0.4, 0.3, 1)
         _NeighborSurface ("Neighbor detail, scale, smoothness", Vector) = (0, 1, 0.2, 0)
+        _SceneryRise ("Scenery rise (enabled, start time, drop, duration)", Vector) = (0, 0, 80, 1.25)
+        _SceneryStagger ("Scenery stagger", Float) = 0.55
     }
     SubShader
     {
@@ -34,9 +36,11 @@ Shader "CubeDash/Environment Surface"
             float _CoastalWetness, _ShoreX, _TideDistance, _TidePeriod;
             float4 _BiomeBoundary, _NeighborSurface;
             half4 _NeighborColor, _NeighborSecondary;
+            float4 _SceneryRise;
+            float _SceneryStagger;
         CBUFFER_END
         float _CubeDashEnvironmentTime;
-        struct Attributes { float4 positionOS : POSITION; float3 normalOS : NORMAL; UNITY_VERTEX_INPUT_INSTANCE_ID };
+        struct Attributes { float4 positionOS : POSITION; float3 normalOS : NORMAL; float2 riseAnchor : TEXCOORD2; UNITY_VERTEX_INPUT_INSTANCE_ID };
         struct Varyings
         {
             float4 positionCS : SV_POSITION;
@@ -58,6 +62,10 @@ Shader "CubeDash/Environment Surface"
             float endDistance = abs(output.metres.z - _BiomeBoundary.y);
             float bedBlend = _BiomeBoundary.x * (1 - smoothstep(0, 18, endDistance));
             output.world.y = lerp(output.world.y, max(output.world.y, -9), bedBlend);
+            float delay = (saturate(input.riseAnchor.y / 42) * 0.75
+                + frac(abs(input.riseAnchor.x) * 0.137) * 0.25) * _SceneryStagger;
+            float reveal = smoothstep(0, 1, saturate((_CubeDashEnvironmentTime - _SceneryRise.y - delay) / max(0.1, _SceneryRise.w)));
+            output.world.y -= _SceneryRise.x * _SceneryRise.z * (1 - reveal);
             output.positionCS = TransformWorldToHClip(output.world);
             return output;
         }
