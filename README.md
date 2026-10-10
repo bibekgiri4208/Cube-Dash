@@ -145,8 +145,17 @@ Tune **Scenery Rise > Duration / Stagger / Drop** on the TrackSegment prefab. Af
 scenery meshes, use **Tools > Cube Dash > Apply Staggered Scenery Rise** to bake rigid-object
 animation anchors and reconnect the saved prefab. Mesh bounds include the downward displacement.
 
-- **City:** recessed glass windows, projecting sills, entrance canopies, corner trim and roof vents
-  on the existing stepped towers.
+- **City:** three saved neighborhood layouts replace the wall of repeated skyscrapers with detached
+  houses, brick townhouses, signed market/bakery/café shopfronts with striped awnings, balcony
+  apartments, terraced offices and a clock hall. Side streets have curbs, lane markings, lamps,
+  benches and bus shelters; an elevated roadside flyover has piers, barriers and entrance/exit ramps
+  that meet the level deck at section seams. Only four towers per section remain, set back at
+  65–79 metres as skyline accents. All scenery stays clear of the running and flight lanes.
+  Eleven reusable model prefabs are saved under `Assets/Prefab/CubeDash/Environments/City Models`;
+  layouts are baked shared meshes, with whole-building anchors preserving the distant staggered rise.
+  **Tools > Cube Dash > Improve City Neighborhoods** (`CubeDash.Editor.CubeDashEnvironments.ImproveCityFromCommandLine`)
+  rebuilds just the city and reconnects its boundary/rise references; other biomes and the saved scene
+  settings are untouched. `CityFlyover` selects the saved end ramps when city sections recycle.
 - **Jungle:** tapered trunks, visible branches and buttress roots, fuller rounded canopies,
   bark grain, fern undergrowth, mossy rocks, a river and layered distant hills.
   All three layouts now use one cohesive broadleaf tree family with connected crowns, restrained

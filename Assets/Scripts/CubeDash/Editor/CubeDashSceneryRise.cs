@@ -21,7 +21,7 @@ namespace CubeDash.Editor
                 {
                     foreach (Renderer renderer in biome.GetComponentsInChildren<Renderer>(true))
                         if (renderer.name == "Landscape Details" || renderer.name.StartsWith("Boundary ", StringComparison.Ordinal)
-                            || renderer.name == "Coastal Headland")
+                            || renderer.name == "Coastal Headland" || renderer.name == "City Flyover")
                         {
                             renderers.Add(renderer);
                             Mesh mesh = renderer.GetComponent<MeshFilter>()?.sharedMesh;
@@ -29,6 +29,8 @@ namespace CubeDash.Editor
                         }
                     BiomeScenery scenery = biome.GetComponent<BiomeScenery>();
                     if (scenery != null) foreach (Mesh mesh in scenery.Layouts) meshes.Add(mesh);
+                    CityFlyover flyover = biome.GetComponent<CityFlyover>();
+                    if (flyover != null) foreach (Mesh mesh in flyover.Profiles) meshes.Add(mesh);
                 }
                 foreach (Mesh mesh in meshes) BakeAnchors(mesh);
                 AssetDatabase.SaveAssets();
@@ -55,6 +57,15 @@ namespace CubeDash.Editor
 
         private static void BakeAnchors(Mesh mesh)
         {
+            // City models already carry one shared anchor for every part of each building/prop.
+            // Reconstructing connected components would separate signs, balconies and roof pieces.
+            if (mesh.name.StartsWith("City District Layout ", StringComparison.Ordinal)
+                || mesh.name.StartsWith("City Flyover ", StringComparison.Ordinal))
+            {
+                var existing = new List<Vector2>(); mesh.GetUVs(2, existing);
+                if (existing.Count != mesh.vertexCount) throw new InvalidOperationException("Missing city reveal anchors: " + mesh.name);
+                ExpandRiseBounds(mesh); return;
+            }
             Vector3[] vertices = mesh.vertices; int[] parent = new int[vertices.Length];
             for (int i = 0; i < parent.Length; i++) parent[i] = i;
             int Root(int i) { while (parent[i] != i) { parent[i] = parent[parent[i]]; i = parent[i]; } return i; }
@@ -110,6 +121,11 @@ namespace CubeDash.Editor
             var uv = new List<Vector2>(vertices.Length);
             for (int i = 0; i < vertices.Length; i++) uv.Add(anchors[Root(i)]);
             mesh.SetUVs(2, uv);
+            ExpandRiseBounds(mesh);
+        }
+
+        private static void ExpandRiseBounds(Mesh mesh)
+        {
             mesh.RecalculateBounds(); Bounds expanded = mesh.bounds;
             expanded.Encapsulate(new Vector3(expanded.center.x, expanded.min.y - 80, expanded.center.z)); mesh.bounds = expanded;
             EditorUtility.SetDirty(mesh);
