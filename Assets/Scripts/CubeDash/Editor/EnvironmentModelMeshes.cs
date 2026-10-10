@@ -262,6 +262,68 @@ namespace CubeDash.Editor
             return mesh;
         }
 
+        public static Mesh OceanSurface(bool apron = false)
+        {
+            var x = new List<float>();
+            for (float p = 5.2f; p < 64; p += 0.75f) x.Add(p);
+            for (float p = 64; p < 160; p += 4) x.Add(p);
+            for (float p = 160; p < 320; p += 16) x.Add(p);
+            for (float p = 320; p < 1024; p += 128) x.Add(p);
+            x.Add(1024);
+            var z = new List<float>();
+            float stretch = apron ? 1024 / RunnerRules.SegmentLength : 1;
+            if (apron)
+            {
+                // Both ends have dense geometry: the same mesh works behind and ahead of the pool.
+                for (float p = 0; p < 96; p += 1.5f) z.Add(p / stretch);
+                for (float p = 96; p < 928; p += 24) z.Add(p / stretch);
+                for (float p = 928; p < 1024; p += 1.5f) z.Add(p / stretch);
+                z.Add(RunnerRules.SegmentLength);
+            }
+            else for (int row = 0; row <= 84; row++) z.Add(row * 0.5f);
+            var vertices = new List<Vector3>(); var triangles = new List<int>();
+            foreach (float depth in z) foreach (float across in x) vertices.Add(new Vector3(across, 0, depth));
+            for (int row = 0; row < z.Count - 1; row++)
+                for (int column = 0; column < x.Count - 1; column++)
+                {
+                    int a = row * x.Count + column;
+                    Triangle(triangles, a, a + x.Count, a + 1);
+                    Triangle(triangles, a + 1, a + x.Count, a + x.Count + 1);
+                }
+            Mesh mesh = Finish(apron ? "Ocean horizon waves" : "Dense coastal waves", vertices, new[] { triangles }, true);
+            Bounds bounds = mesh.bounds;
+            bounds.Expand(new Vector3(4.5f, 6, 4.5f / stretch)); mesh.bounds = bounds;
+            return mesh;
+        }
+
+        public static float BeachFloorHeight(float x)
+        {
+            float depth = Mathf.SmoothStep(0, 1, Mathf.InverseLerp(5.2f, 12, x)) * 4;
+            return -9 - depth - Mathf.Clamp((x - 12) * 0.015f, 0, 8);
+        }
+
+        public static Mesh BeachSeabed(bool shoreline = false)
+        {
+            float[] x = shoreline ? new[] { 4.8f, 5.2f, 5.6f, 6, 6.4f, 6.8f, 7 }
+                : new[] { -1024f, -64, 0, 4.8f, 5.2f, 5.6f, 6, 6.4f, 6.8f, 7, 8, 10, 12, 20, 64, 320, 1024 };
+            var vertices = new List<Vector3>(); var triangles = new List<int>();
+            // Normalized to the existing saved floor/strip transforms: no scenery positions change.
+            for (int row = 0; row < 2; row++)
+                foreach (float across in x)
+                {
+                    float normalizedX = shoreline ? (across - 5.9f) / 2.2f : across / 2048;
+                    float height = BeachFloorHeight(across) + (shoreline ? 0.035f : 0);
+                    float normalizedY = shoreline ? (height + 9) / 0.06f : (height + 9.3f) / 0.6f;
+                    vertices.Add(new Vector3(normalizedX, normalizedY, row - 0.5f));
+                }
+            for (int column = 0; column < x.Length - 1; column++)
+            {
+                Triangle(triangles, column, column + x.Length, column + 1);
+                Triangle(triangles, column + 1, column + x.Length, column + x.Length + 1);
+            }
+            return Finish(shoreline ? "Sloping wet shore" : "Beach and submerged seabed", vertices, new[] { triangles }, true);
+        }
+
         public static Mesh HipRoof()
         {
             var vertices = new List<Vector3>

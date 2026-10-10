@@ -159,10 +159,11 @@ namespace CubeDash.Editor
             glass.SetFloat("_Smoothness", 0.78f); glass.SetFloat("_Metallic", 0.18f);
             wetSand.SetFloat("_Smoothness", 0.42f);
             water.SetColor("_ShallowColor", new Color(0.12f, 0.64f, 0.63f));
-            water.SetFloat("_WaveHeight", 0.14f);
-            water.SetFloat("_ShoreMode", 1); water.SetFloat("_ShoreX", 7); water.SetFloat("_ShallowWidth", 22);
+            CubeDashOceanWaves.ConfigureWater(water);
+            CubeDashOceanWaves.ConfigureSand(wetSand);
             riverWater.SetColor("_ShallowColor", new Color(0.13f, 0.45f, 0.39f));
             riverWater.SetFloat("_WaveHeight", 0.035f); riverWater.SetFloat("_ShoreMode", 0);
+            AssetDatabase.SaveAssets();
         }
 
         private static void Surface(Material material, float type, float scale)
@@ -213,14 +214,16 @@ namespace CubeDash.Editor
             GameObject root = new GameObject(biome + " Surroundings");
             try
             {
-                Material floor = biome == EnvironmentBiome.Jungle ? grass : biome == EnvironmentBiome.Mountains ? stone : sand;
-                Part(root.transform, "Landscape Ground", cube, floor, new Vector3(0, -9.3f, 21), new Vector3(LandscapeExtent * 2, 0.6f, 42));
+                Material floor = biome == EnvironmentBiome.Jungle ? grass : biome == EnvironmentBiome.Mountains ? stone
+                    : biome == EnvironmentBiome.Beach ? CubeDashOceanWaves.CoastalSand() : sand;
+                Mesh floorMesh = biome == EnvironmentBiome.Beach ? SaveMesh(EnvironmentModelMeshes.BeachSeabed(), "Beach Seabed") : cube;
+                Part(root.transform, "Landscape Ground", floorMesh, floor, new Vector3(0, -9.3f, 21), new Vector3(LandscapeExtent * 2, 0.6f, 42));
                 if (biome == EnvironmentBiome.Beach)
                 {
-                    Mesh ocean = SaveMesh(EnvironmentModelMeshes.WaterSurface(new[]
-                    { 7f, 8, 9, 10, 12, 14, 17, 20, 24, 30, 40, 55, 80, 120, 200, 320, 640, LandscapeExtent }), "Ocean Surface");
+                    Mesh ocean = SaveMesh(EnvironmentModelMeshes.OceanSurface(), "Ocean Surface");
                     Part(root.transform, "Ocean", ocean, water, new Vector3(0, -8.72f, 0), Vector3.one, false);
-                    Part(root.transform, "Shoreline", cube, wetSand, new Vector3(5.9f, -9, 21), new Vector3(2.2f, 0.06f, 42), false);
+                    Part(root.transform, "Shoreline", SaveMesh(EnvironmentModelMeshes.BeachSeabed(true), "Shoreline Sand"),
+                        wetSand, new Vector3(5.9f, -9, 21), new Vector3(2.2f, 0.06f, 42), false);
                 }
                 if (biome == EnvironmentBiome.Jungle)
                 {
@@ -550,12 +553,12 @@ namespace CubeDash.Editor
                 if (existing == null)
                 {
                     float center = edge == 0 ? -LandscapeExtent * 0.5f : 42 + LandscapeExtent * 0.5f;
-                    Part(end.transform, "Ground Apron", cube, floor, new Vector3(0, -9.3f, center),
+                    Mesh floorMesh = ocean ? SaveMesh(EnvironmentModelMeshes.BeachSeabed(), "Beach Seabed") : cube;
+                    Part(end.transform, "Ground Apron", floorMesh, floor, new Vector3(0, -9.3f, center),
                         new Vector3(LandscapeExtent * 2, 0.6f, LandscapeExtent), false);
                     if (ocean)
                     {
-                        Mesh surface = SaveMesh(EnvironmentModelMeshes.WaterSurface(new[]
-                        { 7f, 8, 9, 10, 12, 14, 17, 20, 24, 30, 40, 55, 80, 120, 200, 320, 640, LandscapeExtent }), "Ocean Surface");
+                        Mesh surface = SaveMesh(EnvironmentModelMeshes.OceanSurface(true), "Ocean Apron Surface");
                         Part(end.transform, "Ocean Apron", surface, water,
                             new Vector3(0, -8.72f, edge == 0 ? -LandscapeExtent : 42),
                             new Vector3(1, 1, LandscapeExtent / RunnerRules.SegmentLength), false);

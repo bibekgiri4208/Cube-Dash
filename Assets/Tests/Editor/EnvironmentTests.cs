@@ -94,12 +94,12 @@ namespace CubeDash.Tests
             Assert.That(ground.localScale.x, Is.GreaterThanOrEqualTo(2048));
             Transform ocean = beach.transform.Find("Ocean");
             Mesh mesh = ocean.GetComponent<MeshFilter>().sharedMesh;
-            Assert.That(mesh.vertexCount, Is.InRange(300, 2000), "Waves need a subdivided surface, not a thin cube.");
-            Assert.That(mesh.bounds.min.x, Is.EqualTo(7).Within(0.01f));
+            Assert.That(mesh.vertexCount, Is.InRange(8000, 16000), "Visible Gerstner swells need dense coastal geometry.");
+            Assert.That(mesh.bounds.min.x, Is.LessThan(5.2f), "Culling bounds include horizontal crest displacement.");
             Assert.That(mesh.bounds.max.x, Is.GreaterThanOrEqualTo(1024));
-            Assert.That(mesh.bounds.min.z, Is.EqualTo(0).Within(0.01f));
-            Assert.That(mesh.bounds.max.z, Is.EqualTo(RunnerRules.SegmentLength).Within(0.01f));
-            Assert.That(mesh.bounds.size.y, Is.GreaterThan(0.5f), "Animated waves must stay inside the culling bounds.");
+            Assert.That(mesh.bounds.min.z, Is.LessThan(0));
+            Assert.That(mesh.bounds.max.z, Is.GreaterThan(RunnerRules.SegmentLength));
+            Assert.That(mesh.bounds.size.y, Is.GreaterThanOrEqualTo(6), "Swells and tides must stay inside the culling bounds.");
             Vector3[] vertices = mesh.vertices;
             foreach (Vector3 vertex in vertices)
                 if (Mathf.Abs(vertex.z) < 0.01f)
@@ -111,7 +111,7 @@ namespace CubeDash.Tests
             Assert.That(water.FindPass("DepthOnly"), Is.GreaterThanOrEqualTo(0));
             Assert.That(water.FindPass("DepthNormals"), Is.GreaterThanOrEqualTo(0));
             Assert.That(water.GetFloat("_ShoreMode"), Is.EqualTo(1));
-            Assert.That(water.GetFloat("_WaveHeight"), Is.InRange(0.08f, 0.3f));
+            Assert.That(water.GetFloat("_WaveHeight"), Is.InRange(0.5f, 0.9f));
             GameObject jungle = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/CubeDash/Environments/Jungle.prefab");
             Material river = jungle.transform.Find("River").GetComponent<Renderer>().sharedMaterial;
             Assert.That(river, Is.Not.SameAs(water));

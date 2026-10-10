@@ -25,12 +25,18 @@ Material:
     m_TexEnvs: []
     m_Ints: []
     m_Floats:
+    - _CoastalWetness: 1
     - _DetailScale: 1
     - _DetailType: 3
     - _Metallic: 0
+    - _ShoreX: 7
     - _Smoothness: 0.42
+    - _TideDistance: 0.85
+    - _TidePeriod: 40
     m_Colors:
     - _BaseColor: {r: 0.54, g: 0.45, b: 0.3, a: 1}
+    - _EndTint: {r: 0.5, g: 0.61, b: 0.6, a: 1}
+    - _LandEnd: {r: 0, g: 42, b: 18, a: 0}
     - _SecondaryColor: {r: 0.45119998, g: 0.39, b: 0.26639998, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

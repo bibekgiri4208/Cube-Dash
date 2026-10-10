@@ -25,12 +25,19 @@ Material:
     m_TexEnvs: []
     m_Ints: []
     m_Floats:
+    - _Choppiness: 0.55
+    - _FoamStrength: 0.9
     - _ShallowWidth: 22
     - _ShoreMode: 1
     - _ShoreX: 7
-    - _WaveHeight: 0.14
+    - _TideDistance: 0.85
+    - _TideHeight: 0.12
+    - _TidePeriod: 40
+    - _WaveHeight: 0.65
+    - _WaveSpeed: 1
     m_Colors:
     - _BaseColor: {r: 0.025, g: 0.24, b: 0.34, a: 1}
+    - _CoastLimits: {r: 0, g: 0, b: 0, a: 42}
     - _FoamColor: {r: 0.86, g: 0.96, b: 0.93, a: 1}
     - _ReflectionColor: {r: 0.56, g: 0.78999996, b: 0.88, a: 1}
     - _ShallowColor: {r: 0.12, g: 0.64, b: 0.63, a: 1}

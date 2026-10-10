@@ -10,6 +10,10 @@ Shader "CubeDash/Environment Surface"
         _Metallic ("Metallic", Range(0, 1)) = 0
         _LandEnd ("Exit blend (enabled, end Z, width)", Vector) = (0, 42, 18, 0)
         _EndTint ("Next region ground tint", Color) = (0.5, 0.61, 0.6, 1)
+        _CoastalWetness ("Tidal wet sand", Range(0, 1)) = 0
+        _ShoreX ("Shoreline X", Float) = 7
+        _TideDistance ("Tidal shoreline travel", Range(0, 1.5)) = 0.85
+        _TidePeriod ("Tide period (seconds)", Range(15, 120)) = 40
     }
     SubShader
     {
@@ -17,12 +21,15 @@ Shader "CubeDash/Environment Surface"
         HLSLINCLUDE
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+        #include "BeachTides.hlsl"
         CBUFFER_START(UnityPerMaterial)
             half4 _BaseColor, _SecondaryColor;
             half4 _EndTint;
             float4 _LandEnd;
             float _DetailType, _DetailScale, _Smoothness, _Metallic;
+            float _CoastalWetness, _ShoreX, _TideDistance, _TidePeriod;
         CBUFFER_END
+        float _CubeDashEnvironmentTime;
         struct Attributes { float4 positionOS : POSITION; float3 normalOS : NORMAL; UNITY_VERTEX_INPUT_INSTANCE_ID };
         struct Varyings
         {
@@ -99,6 +106,10 @@ Shader "CubeDash/Environment Surface"
                 half3 albedo = lerp(_SecondaryColor.rgb, _BaseColor.rgb, saturate(grain * 0.62 + 0.40));
                 float edgeBlend = _LandEnd.x * smoothstep(_LandEnd.y - max(1, _LandEnd.z), _LandEnd.y, input.metres.z);
                 albedo = lerp(albedo, _EndTint.rgb, edgeBlend);
+                float wet = _CoastalWetness * smoothstep(-2, 0.8, input.world.x
+                    - BeachShoreline(input.world.xz, _CubeDashEnvironmentTime, _ShoreX, _TideDistance, _TidePeriod));
+                wet *= 1 - edgeBlend;
+                albedo *= 1 - wet * 0.34;
                 InputData data = (InputData)0;
                 data.positionWS = input.world;
                 data.normalWS = normalize(input.normal);
@@ -111,7 +122,7 @@ Shader "CubeDash/Environment Surface"
                 surface.albedo = albedo;
                 surface.metallic = _Metallic;
                 surface.specular = 0.04;
-                surface.smoothness = _Smoothness;
+                surface.smoothness = lerp(_Smoothness, 0.68, wet);
                 surface.normalTS = half3(0, 0, 1);
                 surface.occlusion = 1;
                 surface.alpha = 1;

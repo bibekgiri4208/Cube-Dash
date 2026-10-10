@@ -119,13 +119,23 @@ on the HUD. The blue road and the red/blue/green gameplay palette remain unchang
 - Saved ground/ocean aprons extend the two outer pool edges by **1,024 m** as well, covering
   extreme side-angle views. Only the first/last section activates them; biome boundaries inside
   the pool retain their normal footprints, avoiding overlapping water or sand in other regions.
-- Water has gently displaced waves, layered ripple normals, a shallow-to-deep gradient,
-  stylized sky/Fresnel reflection, sun glints and animated broken surf foam. River water uses
+- The Beach ocean has four directional **Gerstner swells** with raised/choppy crests, denser
+  nearshore geometry and separate horizon wave meshes. Rolling breakers, broken shoreline foam,
+  crest whitecaps, ripple normals, a shallow-to-deep gradient, Fresnel reflection and sun glints
+  give the surface more depth. A sloping seabed stays below the larger wave troughs.
+- An accelerated **40-second visual tide** raises/lowers the ocean and advances/retreats its
+  shoreline, with smaller swash motion and synchronized dark, glossy wet sand. Tide height/travel,
+  period, swell amplitude/speed, choppiness and foam are editable on
+  `Assets/Material/Environments/Lagoon Water.mat`. If changing shoreline travel or period,
+  match those settings on `Coastal Sand.mat` and `Wet Sand.mat` in the same folder.
+  **Tools > Cube Dash > Improve Beach Ocean Waves** rebakes just these ocean/beach assets,
+  preserving the scene, scenery layouts and gameplay; the saved level needs no setup command.
+  River water uses
   a separate, calmer material. This is opaque stylized water, not screen-space reflection/refraction.
 - Beach boundaries form curved bays rather than rectangular water edges. Shore foam and a rocky
   headland close the exit; sand blends into the next city plaza. Per-section property blocks keep
   boundary clipping/blending local, including horizon aprons, and reset when sections recycle.
-- Slowly drifting clouds, waves and surf freeze on pause and reset on restart.
+- Slowly drifting clouds, waves, surf, tides and wet-sand animation freeze on pause and reset on restart.
 
 The skybox now uses deeper biome-specific blues, two cloud layers with soft shaded billows,
 a restrained sun disc/halo aligned with the sunlight, and seamless direction-space cloud noise.

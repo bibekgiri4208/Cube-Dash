@@ -6,7 +6,13 @@ Shader "CubeDash/Biome Water"
         _ShallowColor ("Lagoon shallows", Color) = (0.12, 0.64, 0.63, 1)
         _FoamColor ("Foam", Color) = (0.86, 0.96, 0.93, 1)
         _ReflectionColor ("Sky reflection", Color) = (0.56, 0.79, 0.88, 1)
-        _WaveHeight ("Wave height", Range(0, 0.5)) = 0.18
+        _WaveHeight ("Swell amplitude", Range(0, 1.2)) = 0.65
+        _WaveSpeed ("Wave speed", Range(0.3, 2)) = 1
+        _Choppiness ("Crest choppiness", Range(0, 0.9)) = 0.55
+        _FoamStrength ("Surf and whitecaps", Range(0, 1.5)) = 0.9
+        _TideHeight ("Tide height", Range(0, 0.25)) = 0.12
+        _TideDistance ("Tidal shoreline travel", Range(0, 1.5)) = 0.85
+        _TidePeriod ("Tide period (seconds)", Range(15, 120)) = 40
         _ShoreMode ("Coastal surf", Range(0, 1)) = 1
         _ShoreX ("Shoreline X", Float) = 7
         _ShallowWidth ("Shallows width", Float) = 22
@@ -18,9 +24,11 @@ Shader "CubeDash/Biome Water"
         HLSLINCLUDE
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+        #include "BeachTides.hlsl"
         CBUFFER_START(UnityPerMaterial)
             half4 _BaseColor, _ShallowColor, _FoamColor, _ReflectionColor;
             float _WaveHeight, _ShoreMode, _ShoreX, _ShallowWidth;
+            float _WaveSpeed, _Choppiness, _FoamStrength, _TideHeight, _TideDistance, _TidePeriod;
             float4 _CoastLimits;
         CBUFFER_END
         float _CubeDashEnvironmentTime;
@@ -30,6 +38,7 @@ Shader "CubeDash/Biome Water"
             float4 positionCS : SV_POSITION;
             float3 world : TEXCOORD0;
             float2 metres : TEXCOORD1;
+            float3 surface : TEXCOORD2;
             UNITY_VERTEX_INPUT_INSTANCE_ID
         };
         float BoundaryDistance(float2 metres)
@@ -40,16 +49,66 @@ Shader "CubeDash/Biome Water"
             float exit = (_CoastLimits.w - bank) - metres.y;
             return min(_CoastLimits.x > 0.5 ? entry : 10000, _CoastLimits.y > 0.5 ? exit : 10000);
         }
-        float Wave(float2 p, out float2 slope)
+        void Swell(float2 p, float2 direction, float wavelength, float weight, float amplitude,
+            inout float3 offset, inout float3 tangentX, inout float3 tangentZ, inout float crest)
+        {
+            direction = normalize(direction);
+            float k = 6.2831853 / wavelength;
+            float phase = dot(p, direction) * k - _CubeDashEnvironmentTime * sqrt(9.81 * k) * _WaveSpeed;
+            float s, c; sincos(phase, s, c);
+            float a = amplitude * weight, chop = _Choppiness * a;
+            offset += float3(direction.x * chop * c, a * s, direction.y * chop * c);
+            tangentX += float3(-chop * k * direction.x * direction.x * s, a * k * direction.x * c,
+                -chop * k * direction.x * direction.y * s);
+            tangentZ += float3(-chop * k * direction.x * direction.y * s, a * k * direction.y * c,
+                -chop * k * direction.y * direction.y * s);
+            crest += (s * 0.5 + 0.5) * weight;
+        }
+        float3 WaterMotion(float3 surface, float2 metres, out float3 normal, out float crest)
         {
             float t = _CubeDashEnvironmentTime;
-            float a = dot(p, float2(0.94, 0.34)) * 0.48 - t * 1.05;
-            float b = dot(p, float2(-0.46, 0.89)) * 0.83 - t * 1.6;
-            float c = dot(p, float2(0.22, -0.98)) * 1.31 + t * 0.78;
-            slope = (float2(0.94, 0.34) * cos(a) * 0.48
-                + float2(-0.46, 0.89) * cos(b) * 0.83 * 0.42
-                + float2(0.22, -0.98) * cos(c) * 1.31 * 0.18) * _WaveHeight;
-            return (sin(a) + sin(b) * 0.42 + sin(c) * 0.18) * _WaveHeight;
+            float boundary = smoothstep(0, 3, BoundaryDistance(metres));
+            if (_ShoreMode < 0.5)
+            {
+                // Keep the Jungle river's original gentle motion; ocean tides never affect it.
+                float2 p = surface.xz;
+                float a = dot(p, float2(0.94, 0.34)) * 0.48 - t * 1.05;
+                float b = dot(p, float2(-0.46, 0.89)) * 0.83 - t * 1.6;
+                float c = dot(p, float2(0.22, -0.98)) * 1.31 + t * 0.78;
+                float2 slope = (float2(0.94, 0.34) * cos(a) * 0.48
+                    + float2(-0.46, 0.89) * cos(b) * 0.83 * 0.42
+                    + float2(0.22, -0.98) * cos(c) * 1.31 * 0.18) * _WaveHeight * boundary;
+                normal = normalize(float3(-slope.x, 1, -slope.y)); crest = 0;
+                return float3(0, (sin(a) + sin(b) * 0.42 + sin(c) * 0.18) * _WaveHeight * boundary, 0);
+            }
+            float coast = surface.x - BeachShoreline(surface.xz, t, _ShoreX, _TideDistance, _TidePeriod);
+            float attenuation = smoothstep(0, 8, max(0, coast)) * boundary;
+            float3 offset = 0, tangentX = float3(1, 0, 0), tangentZ = float3(0, 0, 1);
+            crest = 0;
+            Swell(surface.xz, float2(-0.96, 0.28), 20, 1, _WaveHeight * attenuation, offset, tangentX, tangentZ, crest);
+            Swell(surface.xz, float2(-0.81, -0.59), 11, 0.45, _WaveHeight * attenuation, offset, tangentX, tangentZ, crest);
+            Swell(surface.xz, float2(-0.52, 0.85), 6, 0.22, _WaveHeight * attenuation, offset, tangentX, tangentZ, crest);
+            Swell(surface.xz, float2(0.65, 0.76), 3.2, 0.1, _WaveHeight * attenuation, offset, tangentX, tangentZ, crest);
+            crest /= 1.77;
+            normal = normalize(cross(tangentZ, tangentX));
+            offset.y += BeachTide(t, _TidePeriod) * _TideHeight * boundary
+                - (1 - smoothstep(0, 3, max(0, coast))) * 0.24;
+            return offset;
+        }
+        void WaterClip(Varyings input)
+        {
+            clip(BoundaryDistance(input.metres));
+            if (_ShoreMode > 0.5)
+                clip(input.surface.x - BeachShoreline(input.surface.xz, _CubeDashEnvironmentTime, _ShoreX, _TideDistance, _TidePeriod));
+        }
+        float FoamNoise(float2 p)
+        {
+            float2 cell = floor(p), f = frac(p); f = f * f * (3 - 2 * f);
+            float a = frac(sin(dot(cell, float2(127.1, 311.7))) * 43758.5453);
+            float b = frac(sin(dot(cell + float2(1, 0), float2(127.1, 311.7))) * 43758.5453);
+            float c = frac(sin(dot(cell + float2(0, 1), float2(127.1, 311.7))) * 43758.5453);
+            float d = frac(sin(dot(cell + 1, float2(127.1, 311.7))) * 43758.5453);
+            return lerp(lerp(a, b, f.x), lerp(c, d, f.x), f.y);
         }
         Varyings Vert(Attributes input)
         {
@@ -58,18 +117,18 @@ Shader "CubeDash/Biome Water"
             UNITY_TRANSFER_INSTANCE_ID(input, output);
             output.world = TransformObjectToWorld(input.positionOS.xyz);
             output.metres = mul((float3x3)GetObjectToWorldMatrix(), input.positionOS.xyz).xz;
-            float2 slope;
-            output.world.y += Wave(output.world.xz, slope) * smoothstep(0, 3, BoundaryDistance(output.metres));
+            output.surface = output.world;
+            float3 normal; float crest;
+            output.world += WaterMotion(output.surface, output.metres, normal, crest);
             output.positionCS = TransformWorldToHClip(output.world);
             return output;
         }
         half4 NormalFrag(Varyings input) : SV_Target
         {
             UNITY_SETUP_INSTANCE_ID(input);
-            clip(BoundaryDistance(input.metres));
-            float2 slope;
-            Wave(input.world.xz, slope);
-            float3 normal = normalize(float3(-slope.x, 1, -slope.y));
+            WaterClip(input);
+            float3 normal; float crest;
+            WaterMotion(input.surface, input.metres, normal, crest);
             #if defined(_GBUFFER_NORMALS_OCT)
                 return half4(PackFloat2To888(saturate(PackNormalOctQuadEncode(normal) * 0.5 + 0.5)), 0);
             #else
@@ -79,7 +138,7 @@ Shader "CubeDash/Biome Water"
         half4 DepthFrag(Varyings input) : SV_Target
         {
             UNITY_SETUP_INSTANCE_ID(input);
-            clip(BoundaryDistance(input.metres));
+            WaterClip(input);
             return 0;
         }
         ENDHLSL
@@ -99,17 +158,17 @@ Shader "CubeDash/Biome Water"
             {
                 UNITY_SETUP_INSTANCE_ID(input);
                 float bayDistance = BoundaryDistance(input.metres);
-                clip(bayDistance);
+                WaterClip(input);
                 float t = _CubeDashEnvironmentTime;
-                float2 slope;
-                float swell = Wave(input.world.xz, slope);
+                float3 normal; float crest;
+                float3 motion = WaterMotion(input.surface, input.metres, normal, crest);
                 float distanceToCamera = distance(_WorldSpaceCameraPos, input.world);
                 float detailFade = 1 - smoothstep(25, 110, distanceToCamera);
-                slope += float2(sin(input.world.z * 3.7 + input.world.x * 1.1 + t * 2.1),
-                    cos(input.world.x * 4.3 - input.world.z * 0.9 - t * 1.7)) * 0.028 * detailFade;
-                float3 normal = normalize(float3(-slope.x, 1, -slope.y));
+                normal.xz += float2(sin(input.surface.z * 3.7 + input.surface.x * 1.1 + t * 2.1),
+                    cos(input.surface.x * 4.3 - input.surface.z * 0.9 - t * 1.7)) * 0.045 * detailFade;
+                normal = normalize(normal);
                 float3 view = normalize(_WorldSpaceCameraPos - input.world);
-                float coast = max(0, input.world.x - _ShoreX);
+                float coast = max(0, input.surface.x - BeachShoreline(input.surface.xz, t, _ShoreX, _TideDistance, _TidePeriod));
                 float shallow = _ShoreMode * (1 - smoothstep(0, _ShallowWidth, coast));
                 shallow = max(shallow, _ShoreMode * (1 - smoothstep(0, 12, bayDistance)));
                 half3 color = lerp(_BaseColor.rgb, _ShallowColor.rgb, shallow * 0.86 + 0.09);
@@ -120,20 +179,19 @@ Shader "CubeDash/Biome Water"
                 half3 reflection = lerp(unity_FogColor.rgb, _ReflectionColor.rgb, saturate(reflect(-view, normal).y) * 0.7);
                 color = lerp(color, reflection, fresnel);
                 Light sun = GetMainLight(TransformWorldToShadowCoord(input.world));
-                color *= 0.82 + saturate(dot(normal, sun.direction)) * 0.20 * sun.shadowAttenuation;
-                float glint = pow(saturate(dot(normal, normalize(view + sun.direction))), 220);
-                color += sun.color * glint * 0.38 * sun.shadowAttenuation;
-                float shoreLine = 0.55 + sin(input.world.z * 0.18 + t * 0.6) * 0.30 + sin(t * 0.85) * 0.48;
-                float shoreFoam = 1 - smoothstep(0.16, 0.62, abs(coast - shoreLine));
-                float breaker = pow(saturate(sin(coast * 0.72 - t * 1.3 + sin(input.world.z * 0.21) * 0.65)), 14);
-                float foamNoise = saturate(sin(input.world.z * 2.5 + input.world.x * 3.2) * 0.35 + 0.68);
-                float foam = (shoreFoam * 0.72 + breaker * (1 - smoothstep(2, 13, coast)) * 0.28)
+                color *= 0.62 + saturate(dot(normal, sun.direction)) * 0.48 * sun.shadowAttenuation;
+                color += _ShallowColor.rgb * saturate(motion.y / max(0.01, _WaveHeight)) * shallow * 0.14;
+                float glint = pow(saturate(dot(normal, normalize(view + sun.direction))), lerp(90, 180, detailFade));
+                color += sun.color * glint * 0.52 * sun.shadowAttenuation;
+                float shoreFoam = 1 - smoothstep(0.18, 1.1, coast);
+                float breaker = pow(saturate(sin(coast * 0.62 + t * 1.45 + sin(input.surface.z * 0.18) * 0.35)), 7);
+                float foamNoise = FoamNoise(input.surface.xz * 1.7 + float2(-t * 0.4, t * 0.35)) * 0.65 + 0.35;
+                float foam = (shoreFoam * 0.92 + breaker * (1 - smoothstep(4, 18, coast)) * 0.55)
                     * foamNoise * _ShoreMode;
                 float baySurf = 1 - smoothstep(0.25, 1.5, bayDistance);
                 foam = max(foam, baySurf * foamNoise * _ShoreMode * (0.65 + 0.15 * sin(t + input.metres.x * 0.2)));
-                float whitecap = smoothstep(_WaveHeight * 1.32, _WaveHeight * 1.59 + 0.001, swell)
-                    * detailFade * 0.18;
-                color = lerp(color, _FoamColor.rgb, saturate(foam + whitecap));
+                float whitecap = smoothstep(0.67, 0.88, crest) * foamNoise * detailFade * 0.4 * _ShoreMode;
+                color = lerp(color, _FoamColor.rgb, saturate((foam + whitecap) * _FoamStrength));
                 // Distance fog hides lateral edges too, unlike depth-only fog at a wide FOV.
                 half fog = ComputeFogFactorZ0ToFar(max(0, distanceToCamera - _ProjectionParams.y));
                 return half4(MixFog(color, fog), 1);
