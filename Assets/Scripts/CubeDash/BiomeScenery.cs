@@ -7,15 +7,28 @@ namespace CubeDash
     {
         [SerializeField] private MeshFilter details = null;
         [SerializeField] private Mesh[] layouts = new Mesh[0];
+        [SerializeField] private Mesh[] entranceLayouts = new Mesh[0];
+        [SerializeField] private Mesh[] exitLayouts = new Mesh[0];
         [SerializeField] private MeshFilter variety = null;
         [SerializeField] private Mesh[] varietyLayouts = new Mesh[0];
         public Mesh[] Layouts => layouts;
+        public Mesh[] EntranceLayouts => entranceLayouts;
+        public Mesh[] ExitLayouts => exitLayouts;
         public Mesh[] VarietyLayouts => varietyLayouts;
 
-        public void SelectLayout(int sectionIndex)
+        public Mesh DetailLayout(int sectionIndex, int segmentsPerBiome = 8)
+        {
+            int count = Mathf.Max(2, segmentsPerBiome);
+            int within = ((sectionIndex % count) + count) % count;
+            Mesh[] source = within == 0 && entranceLayouts.Length > 0 ? entranceLayouts
+                : within == count - 1 && exitLayouts.Length > 0 ? exitLayouts : layouts;
+            return source.Length > 0 ? source[BiomeRules.Variation(sectionIndex, source.Length)] : null;
+        }
+
+        public void SelectLayout(int sectionIndex, int segmentsPerBiome = 8)
         {
             if (details != null && layouts.Length > 0)
-                details.sharedMesh = layouts[BiomeRules.Variation(sectionIndex, layouts.Length)];
+                details.sharedMesh = DetailLayout(sectionIndex, segmentsPerBiome);
             if (variety != null && varietyLayouts.Length > 0)
                 variety.sharedMesh = varietyLayouts[BiomeRules.Variation(sectionIndex, varietyLayouts.Length)];
         }

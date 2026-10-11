@@ -210,6 +210,15 @@ namespace CubeDash.Editor
             for (int section = 0; section < 4; section++)
                 for (int edge = 0; edge < 4; edge++)
                     DoubleQuad(vertices, triangles, Point(section, edge), Point(section + 1, edge), Point(section + 1, edge + 1), Point(section, edge + 1));
+            // Close the bow/stern walls, but retain the genuine open deck above the gunwales.
+            foreach (int section in new[] { 0, 4 })
+                for (int edge = 1; edge < 4; edge++)
+                {
+                    int first = vertices.Count;
+                    vertices.Add(Point(section, 0)); vertices.Add(Point(section, edge)); vertices.Add(Point(section, edge + 1));
+                    Triangle(triangles, first, first + 1, first + 2);
+                    Triangle(triangles, first + 2, first + 1, first);
+                }
             return Finish("Open pointed fishing hull", vertices, new[] { triangles }, false);
         }
 

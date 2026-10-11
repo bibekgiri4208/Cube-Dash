@@ -58,7 +58,9 @@ namespace CubeDash.Editor
             // Move only the authored seaside props, not land-bound huts or palms.
             BiomeScenery scenery = beach.GetComponent<BiomeScenery>();
             if (scenery == null) return;
-            foreach (Mesh layout in scenery.Layouts)
+            var layouts = new List<Mesh>(scenery.Layouts);
+            layouts.AddRange(scenery.EntranceLayouts); layouts.AddRange(scenery.ExitLayouts);
+            foreach (Mesh layout in layouts)
             {
                 if (layout == null || layout.subMeshCount < 13) continue;
                 Vector3[] vertices = layout.vertices;
@@ -72,19 +74,11 @@ namespace CubeDash.Editor
                 float delta = OceanLocalHeight + 3.82f - top; // Preserve the posts' original sea-relative height.
                 bool changed = Mathf.Abs(delta) >= 0.0001f;
                 if (changed) foreach (int index in jetty) vertices[index].y += delta;
-                var seaRocks = new HashSet<int>();
-                float rockBottom = float.MaxValue;
-                foreach (int index in layout.GetTriangles(3))
-                    if (vertices[index].x > 8) { seaRocks.Add(index); rockBottom = Mathf.Min(rockBottom, vertices[index].y); }
-                if (rockBottom != float.MaxValue)
-                {
-                    float rockDelta = OceanLocalHeight - 1.2f - rockBottom;
-                    if (Mathf.Abs(rockDelta) >= 0.0001f)
-                    {
-                        foreach (int index in seaRocks) vertices[index].y += rockDelta;
-                        changed = true;
-                    }
-                }
+                // The bay exposes sloping seabed: sea-relative height alone leaves these
+                // ordinary layout rocks floating even when the separate headland is grounded.
+                changed |= CubeDashEnvironments.GroundBeachLayoutRocks(layout, vertices,
+                    System.Array.IndexOf(scenery.EntranceLayouts, layout) >= 0,
+                    System.Array.IndexOf(scenery.ExitLayouts, layout) >= 0);
                 if (!changed) continue;
                 layout.vertices = vertices;
                 layout.RecalculateBounds();
@@ -141,6 +135,9 @@ namespace CubeDash.Editor
             water.SetFloat("_Choppiness", 0.55f); water.SetFloat("_FoamStrength", 0.9f);
             water.SetFloat("_TideHeight", 0.12f); water.SetFloat("_TideDistance", 0.85f); water.SetFloat("_TidePeriod", 40);
             water.SetFloat("_ShoreMode", 1); water.SetFloat("_ShoreX", ShorelineX); water.SetFloat("_ShallowWidth", 22);
+            water.SetFloat("_BeachLandOffset", -9 - OceanLocalHeight);
+            water.SetFloat("_BeachBedDepth", Mathf.Max(4, -9 - OceanLocalHeight + 2.6f));
+            water.SetFloat("_ShoreContactWidth", 3);
             EditorUtility.SetDirty(water);
         }
 

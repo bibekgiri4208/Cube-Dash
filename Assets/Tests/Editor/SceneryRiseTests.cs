@@ -38,6 +38,8 @@ namespace CubeDash.Tests
                 if (scenery != null)
                 {
                     foreach (Mesh mesh in scenery.Layouts) meshes.Add(mesh);
+                    foreach (Mesh mesh in scenery.EntranceLayouts) meshes.Add(mesh);
+                    foreach (Mesh mesh in scenery.ExitLayouts) meshes.Add(mesh);
                     foreach (Mesh mesh in scenery.VarietyLayouts) meshes.Add(mesh);
                 }
                 foreach (MeshFilter filter in biome.GetComponentsInChildren<MeshFilter>(true))

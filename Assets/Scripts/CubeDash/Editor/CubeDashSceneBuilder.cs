@@ -91,6 +91,7 @@ namespace CubeDash.Editor
 
             CubeDashGame game = new GameObject("Game Manager").AddComponent<CubeDashGame>();
             RunnerHud hud = CreateHud(game);
+            CubeDashCheats.ConfigureHud(hud);
             Set(game, "player", player.transform);
             Set(game, "playerCollider", player.GetComponent<BoxCollider>());
             Set(game, "gameCamera", camera);

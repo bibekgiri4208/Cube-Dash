@@ -91,6 +91,8 @@ namespace CubeDash
         private float magnetTimer;
         private readonly DoublePressInput supercarEnter = new DoublePressInput();
         public bool SupercarEnabled { get; private set; }
+        public bool InvincibilityEnabled { get; private set; }
+        private bool cheatedRun;
         public bool SupercarDriving => SupercarEnabled && !Flying && !Trucking;
         public PlayerSupercar SupercarPresentation => supercarPresentation;
         public bool MagnetActive => magnetTimer > 0;
@@ -175,7 +177,7 @@ namespace CubeDash
                     : new Vector2(bounds.extents.x, bounds.extents.z);
                 bool wrongColor = track.Advance(travel, oldX, x, Difficulty,
                     halfSize, playerCollider.enabled ? bounds.center.z : player.position.z,
-                    shields > 0, Flying || altitude > playerOrigin.y + 0.2f, landingProtection, Trucking,
+                    shields > 0, Flying || altitude > playerOrigin.y + 0.2f, landingProtection || InvincibilityEnabled, Trucking,
                     MagnetActive, magnetRange, player.position, dt,
                     out int collected, out bool shieldUsed);
                 if (shieldUsed) shields--;
@@ -264,6 +266,7 @@ namespace CubeDash
                 (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)) hud.SetInputMode(false);
             if (keyboard != null)
             {
+                if (keyboard.iKey.wasPressedThisFrame) ToggleInvincibility();
                 if (keyboard.escapeKey.wasPressedThisFrame || keyboard.pKey.wasPressedThisFrame) { TogglePause(); return; }
                 if (keyboard.rKey.wasPressedThisFrame && State != RunState.Ready) { StartRun(); return; }
                 bool enter = keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame;
@@ -309,6 +312,8 @@ namespace CubeDash
 
         private void OnDisable()
         {
+            InvincibilityEnabled = false;
+            if (hud != null) hud.RefreshCheatStatus();
             if (gameCamera != null && gameCamera.TryGetComponent(out RunnerGraphics graphics))
                 graphics.Tick(0, RunState.Ready, 0);
             supercarEnter.Reset(); SupercarEnabled = false;
@@ -324,6 +329,14 @@ namespace CubeDash
         public void ChangeLane(int direction)
         {
             if (State == RunState.Running) targetLane = Mathf.Clamp(targetLane + direction, 0, 2);
+        }
+
+        /// <summary>Session-only testing toggle. Survives retries; never grants points or spends shields.</summary>
+        public void ToggleInvincibility()
+        {
+            InvincibilityEnabled = !InvincibilityEnabled;
+            if (State == RunState.Running || State == RunState.Paused) cheatedRun |= InvincibilityEnabled;
+            if (hud != null) hud.RefreshCheatStatus();
         }
 
         /// <summary>Called for Enter press edges only; menu confirmations never arm the in-run toggle.</summary>
@@ -344,6 +357,7 @@ namespace CubeDash
             targetLane = 1;
             Distance = 0;
             Score = 0;
+            cheatedRun = InvincibilityEnabled;
             Speed = startSpeed;
             shake = 0;
             ResetGamepadStick();
@@ -401,6 +415,7 @@ namespace CubeDash
 
         private void Crash()
         {
+            if (InvincibilityEnabled) return;
             bool wasFlying = Flying;
             flightTimer = landingShieldTimer = 0;
             truckTimer = 0;
@@ -415,7 +430,7 @@ namespace CubeDash
             shake = 0.25f;
             SetPlayerColor(playerColor * 0.7f, 0.1f);
             int score = Score;
-            if (score > Best)
+            if (!cheatedRun && score > Best)
             {
                 Best = score;
                 PlayerPrefs.SetInt(BestKey, Best);

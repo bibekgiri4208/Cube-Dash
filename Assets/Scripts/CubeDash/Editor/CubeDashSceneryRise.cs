@@ -31,6 +31,8 @@ namespace CubeDash.Editor
                     if (scenery != null)
                     {
                         foreach (Mesh mesh in scenery.Layouts) meshes.Add(mesh);
+                        foreach (Mesh mesh in scenery.EntranceLayouts) meshes.Add(mesh);
+                        foreach (Mesh mesh in scenery.ExitLayouts) meshes.Add(mesh);
                         foreach (Mesh mesh in scenery.VarietyLayouts) meshes.Add(mesh);
                     }
                     CityFlyover flyover = biome.GetComponent<CityFlyover>();
@@ -65,6 +67,8 @@ namespace CubeDash.Editor
             // Reconstructing connected components would separate signs, balconies and roof pieces.
             if (mesh.name.StartsWith("City District Layout ", StringComparison.Ordinal)
                 || mesh.name.StartsWith("City Flyover ", StringComparison.Ordinal)
+                || mesh.name.StartsWith("Beach Layout ", StringComparison.Ordinal)
+                || mesh.name == "City Entrance Blend" || mesh.name == "Beach Exit Blend" || mesh.name == "Coastal Headland"
                 || mesh.name.Contains(" Variety Layout "))
             {
                 var existing = new List<Vector2>(); mesh.GetUVs(2, existing);

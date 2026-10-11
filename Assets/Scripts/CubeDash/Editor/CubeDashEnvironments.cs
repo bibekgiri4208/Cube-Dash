@@ -312,7 +312,11 @@ namespace CubeDash.Editor
                 Set(scenery, "details", details.GetComponent<MeshFilter>());
                 SetArray(scenery, "layouts", layouts);
                 AddVarietyLayouts(root.transform, biome, palette);
-                if (biome == EnvironmentBiome.Beach) CubeDashOceanWaves.SetOceanHeight(root.transform);
+                if (biome == EnvironmentBiome.Beach)
+                {
+                    CubeDashOceanWaves.SetOceanHeight(root.transform);
+                    BakeBeachBayLayouts(scenery, layouts);
+                }
                 return PrefabUtility.SaveAsPrefabAsset(root, Prefabs + "/" + biome + ".prefab");
             }
             finally { Object.DestroyImmediate(root); }
@@ -323,7 +327,7 @@ namespace CubeDash.Editor
             Mesh[] layouts = new Mesh[BiomeRules.SceneryLayoutCount];
             for (int layout = 0; layout < layouts.Length; layout++)
             {
-                Geometry geometry = new Geometry(palette);
+                Geometry geometry = new Geometry(palette, rigidAnchors: biome == EnvironmentBiome.Beach);
                 System.Random random = new System.Random(1979 + (int)biome * 101 + layout * 37);
                 switch (biome)
                 {
@@ -439,11 +443,15 @@ namespace CubeDash.Editor
                 float groundHeight = -9 + EnvironmentModelMeshes.HillHeight((hutX + 46) / 15, (hutZ - 21) / 22, 29, true) * 4;
                 House(g, new Vector3(hutX, groundHeight + 1, hutZ));
             }
+            // Whole-dock anchors also let the saved entrance/exit profiles place it inside the bay.
+            float jettyZ = hutZ;
+            g.RevealAnchor = new Vector2(20, jettyZ);
             for (int plank = 0; plank < 15; plank++)
-                g.Add(cube, wood, new Vector3(11.5f + plank * 1.2f, -6.5f + coastalPropOffset, hutZ), new Vector3(1.14f, 0.32f, 3.2f));
+                g.Add(cube, wood, new Vector3(11.5f + plank * 1.2f, -6.5f + coastalPropOffset, jettyZ), new Vector3(1.14f, 0.32f, 3.2f));
             for (int post = 0; post < 4; post++)
-                g.Add(cylinder, wood, new Vector3(13 + post * 4.5f, -7.4f + coastalPropOffset, hutZ), new Vector3(0.5f, 2.5f, 0.5f));
-            g.Add(cube, trim, new Vector3(20, -5.6f + coastalPropOffset, hutZ + 1.5f), new Vector3(18, 0.14f, 0.14f));
+                g.Add(cylinder, wood, new Vector3(13 + post * 4.5f, -7.4f + coastalPropOffset, jettyZ), new Vector3(0.5f, 2.5f, 0.5f));
+            g.Add(cube, trim, new Vector3(20, -5.6f + coastalPropOffset, jettyZ + 1.5f), new Vector3(18, 0.14f, 0.14f));
+            g.RevealAnchor = null;
             g.Add(dune, sand, new Vector3(-46, -9, 21), new Vector3(30, 4, 44));
             g.Add(dune, sand, new Vector3(-130, -9, 21), new Vector3(160, 5, 60));
             for (int clump = 0; clump < 5; clump++)
@@ -510,9 +518,11 @@ namespace CubeDash.Editor
         }
 
         private static float SampleHillMesh(float x, float z)
+            => SampleMeshHeight(hillVertices, hillTriangles, x, z);
+
+        private static float SampleMeshHeight(Vector3[] vertices, int[] indices, float x, float z)
         {
             // Sample the actual saved triangle surface, not its smoother analytic profile.
-            Vector3[] vertices = hillVertices; int[] indices = hillTriangles;
             for (int i = 0; i < indices.Length; i += 3)
             {
                 Vector3 a = vertices[indices[i]], b = vertices[indices[i + 1]], c = vertices[indices[i + 2]];
@@ -548,6 +558,8 @@ namespace CubeDash.Editor
 
         private static void House(Geometry g, Vector3 p)
         {
+            Vector2? previousAnchor = g.RevealAnchor;
+            g.RevealAnchor = new Vector2(p.x, p.z);
             g.Add(cube, wood, p + Vector3.up * 2.5f, new Vector3(7, 5, 6));
             g.Add(roof, thatch, p + Vector3.up * 5, new Vector3(9.4f, 3.2f, 8));
             g.Add(cube, trim, p + Vector3.up * 5, new Vector3(7.7f, 0.22f, 6.8f));
@@ -578,6 +590,7 @@ namespace CubeDash.Editor
             g.Add(cube, wood, p + new Vector3(4.1f, 0.05f, 0), new Vector3(2.6f, 0.25f, 6.8f));
             for (int step = 0; step < 3; step++)
                 g.Add(cube, wood, p + new Vector3(5.6f + step * 0.38f, -0.18f - step * 0.26f, 0), new Vector3(0.45f, 0.22f, 1.6f));
+            g.RevealAnchor = previousAnchor;
         }
 
         private static void PolishCityBuildings()
@@ -646,17 +659,7 @@ namespace CubeDash.Editor
 
         private static void AddCoastalTransition(Transform root)
         {
-            Geometry g = new Geometry(new[] { stone, sand });
-            var random = new System.Random(8819);
-            foreach (float x in new[] { 11f, 18, 28, 42, 60, 82, 110 })
-            {
-                float nearRoad = 1 - Mathf.SmoothStep(0, 1, Mathf.InverseLerp(7, 120, x));
-                float bank = 8 + nearRoad * 22 + Mathf.Sin(x * 0.055f) * 2.8f + Mathf.Sin(x * 0.17f) * 1.2f;
-                float z = RunnerRules.SegmentLength - bank;
-                Boulder(g, stone, new Vector3(x, -9, z + 0.7f), new Vector3(4.5f, 3, 4.5f), random);
-                g.Add(hill, sand, new Vector3(x, -9, z + 3), new Vector3(7, 0.65f, 8));
-            }
-            Mesh mesh = SaveMesh(g.Bake(), "Coastal Headland");
+            Mesh mesh = BakeCoastalHeadland();
             GameObject headland = Part(root, "Coastal Headland", mesh, new[] { stone, sand }, Vector3.zero, Vector3.one);
             headland.SetActive(false);
             CoastalTransition transition = root.gameObject.AddComponent<CoastalTransition>();
@@ -672,6 +675,142 @@ namespace CubeDash.Editor
                 root.Find("Landscape Ground").GetComponent<Renderer>(), root.Find("Shoreline").GetComponent<Renderer>(),
                 root.Find("Rear Horizon/Ground Apron").GetComponent<Renderer>(), root.Find("Forward Horizon/Ground Apron").GetComponent<Renderer>()
             });
+        }
+
+        private static Mesh BakeCoastalHeadland()
+        {
+            Geometry g = new Geometry(new[] { stone, sand }, rigidAnchors: true);
+            var random = new System.Random(8819);
+            var sampleGround = BeachGroundSampler(false, true);
+            foreach (float x in new[] { 11f, 18, 28, 42, 60, 82, 110 })
+            {
+                // Dress the true sea/terrain intersection, not the obsolete arbitrary bay cut.
+                float sea = 0, land = RunnerRules.SegmentLength;
+                for (int step = 0; step < 20; step++)
+                {
+                    float middle = (sea + land) * 0.5f;
+                    if (sampleGround(x, middle) < CubeDashOceanWaves.OceanLocalHeight - 0.2f) sea = middle;
+                    else land = middle;
+                }
+                float z = (sea + land) * 0.5f;
+                g.RevealAnchor = new Vector2(x, z);
+                Boulder(g, stone, new Vector3(x, -9, z + 0.7f), new Vector3(4.5f, 3, 4.5f), random);
+                g.Add(hill, sand, new Vector3(x, -9, z + 3), new Vector3(7, 0.65f, 8));
+            }
+            Mesh mesh = g.Bake();
+            // The curved water clipping edge is not a flat -9m beach. Fit both the
+            // rocks and their sand skirts to the rendered, raised transition bed.
+            Vector3[] vertices = mesh.vertices;
+            for (int i = 0; i < vertices.Length; i++)
+                vertices[i].y += sampleGround(vertices[i].x, vertices[i].z) + 9 - 0.12f;
+            mesh.vertices = vertices; mesh.RecalculateNormals(); mesh.RecalculateBounds();
+            return SaveMesh(mesh, "Coastal Headland");
+        }
+
+        private static Func<float, float, float> BeachGroundSampler(bool entrance, bool exit)
+        {
+            Mesh floor = AssetDatabase.LoadAssetAtPath<Mesh>(Meshes + (entrance || exit ? "/Beach Transition Floor.asset" : "/Beach Seabed.asset"));
+            bool temporary = floor == null;
+            if (temporary)
+            {
+                floor = EnvironmentModelMeshes.BeachSeabed();
+                if (entrance || exit)
+                {
+                    Mesh dense = BuildBoundaryFloor(floor);
+                    Object.DestroyImmediate(floor); floor = dense;
+                }
+            }
+            Vector3[] ground = floor.vertices;
+            int[] triangles = floor.triangles;
+            if (temporary) Object.DestroyImmediate(floor);
+            Matrix4x4 floorTransform = Matrix4x4.TRS(new Vector3(0, -9.3f, 21), Quaternion.identity, new Vector3(2048, 0.6f, 42));
+            for (int i = 0; i < ground.Length; i++)
+            {
+                ground[i] = floorTransform.MultiplyPoint3x4(ground[i]);
+                float blend = entrance || exit
+                    ? 1 - Mathf.SmoothStep(0, 1, Mathf.Clamp01(Mathf.Abs(ground[i].z - (entrance ? 0 : 42)) / 18)) : 0;
+                ground[i].y = Mathf.Lerp(ground[i].y, Mathf.Max(ground[i].y, -9), blend);
+            }
+            return (x, z) => SampleMeshHeight(ground, triangles, x, z);
+        }
+
+        internal static bool GroundBeachLayoutRocks(Mesh mesh, Vector3[] vertices, bool entrance, bool exit)
+        {
+            var anchors = new List<Vector2>(); mesh.GetUVs(2, anchors);
+            if (anchors.Count != vertices.Length) throw new InvalidOperationException("Missing beach rock anchors: " + mesh.name);
+            var rocks = new Dictionary<Vector2, HashSet<int>>();
+            foreach (int index in mesh.GetTriangles(3))
+            {
+                if (vertices[index].x <= 8) continue;
+                Vector2 anchor = anchors[index];
+                if (!rocks.TryGetValue(anchor, out HashSet<int> indices)) rocks[anchor] = indices = new HashSet<int>();
+                indices.Add(index);
+            }
+            var ground = BeachGroundSampler(entrance, exit);
+            bool changed = false;
+            foreach (HashSet<int> indices in rocks.Values)
+            {
+                float clearance = float.MaxValue;
+                foreach (int index in indices)
+                    clearance = Mathf.Min(clearance, vertices[index].y - ground(vertices[index].x, vertices[index].z));
+                // A substantial buried foot, not a point barely touching the sand.
+                // Place each whole boulder first, preserving its reveal anchor.
+                float delta = clearance + 0.65f;
+                if (Mathf.Abs(delta) >= 0.0001f)
+                {
+                    foreach (int index in indices) vertices[index].y -= delta;
+                    changed = true;
+                }
+                float bottom = float.MaxValue, top = float.MinValue;
+                foreach (int index in indices)
+                {
+                    bottom = Mathf.Min(bottom, vertices[index].y);
+                    top = Mathf.Max(top, vertices[index].y);
+                }
+                // On a steep bay slope, a touching tip can still leave the seaward
+                // underside visibly suspended. Extend the lower facets into the bed.
+                float footHeight = Mathf.Lerp(bottom, top, 0.4f);
+                foreach (int index in indices)
+                {
+                    Vector3 v = vertices[index];
+                    float buried = ground(v.x, v.z) - 0.15f;
+                    if (v.y > footHeight || v.y <= buried + 0.0001f) continue;
+                    vertices[index].y = buried; changed = true;
+                }
+            }
+            if (changed)
+            {
+                Vector3[] normals = mesh.normals;
+                int[] triangles = mesh.GetTriangles(3);
+                for (int i = 0; i < triangles.Length; i += 3)
+                {
+                    int a = triangles[i], b = triangles[i + 1], c = triangles[i + 2];
+                    if (vertices[a].x <= 8) continue;
+                    Vector3 normal = Vector3.Cross(vertices[b] - vertices[a], vertices[c] - vertices[a]).normalized;
+                    normals[a] = normals[b] = normals[c] = normal;
+                }
+                mesh.normals = normals;
+            }
+            return changed;
+        }
+
+        [MenuItem("Tools/Cube Dash/Ground Beach City Shore Rocks")]
+        public static void GroundCoastalRocksFromCommandLine()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+                throw new InvalidOperationException("Stop Play mode before grounding shore rocks.");
+            InitializeModels();
+            try
+            {
+                stone = AssetDatabase.LoadAssetAtPath<Material>(Materials + "/Mountain Slate.mat");
+                sand = AssetDatabase.LoadAssetAtPath<Material>(Materials + "/Golden Sand.mat");
+                GameObject beach = AssetDatabase.LoadAssetAtPath<GameObject>(Prefabs + "/Beach.prefab");
+                CubeDashOceanWaves.SetOceanHeight(beach.transform);
+                CubeDashSceneryRise.BakeAnchors(BakeCoastalHeadland());
+                AssetDatabase.SaveAssets();
+                Debug.Log("All beach boulders grounded independently in all normal, entrance and exit layouts; shoreline clusters preserved and grounded. Other assets preserved.");
+            }
+            finally { ReleaseModels(); }
         }
 
         private static void ExtendCityGround()
@@ -748,10 +887,13 @@ namespace CubeDash.Editor
 
         private static void Bush(Geometry g, Vector3 p, System.Random random, bool jungle = false)
         {
+            Vector2? previousAnchor = g.RevealAnchor;
+            g.RevealAnchor = new Vector2(p.x, p.z);
             for (int cluster = 0; cluster < 3; cluster++)
                 g.Add(crowns[cluster], jungle ? jungleLeaf : cluster == 1 ? lightLeaf : leaf,
                     p + new Vector3((cluster - 1) * 1.15f, 1.4f + cluster * 0.18f, 0),
                     new Vector3(3.4f, 3, 3.1f), Range(random, 0, 180));
+            g.RevealAnchor = previousAnchor;
         }
 
         private static void Fern(Geometry g, Vector3 p, System.Random random)
@@ -774,6 +916,8 @@ namespace CubeDash.Editor
 
         private static void Palm(Geometry g, Vector3 p, float height, float yaw)
         {
+            Vector2? previousAnchor = g.RevealAnchor;
+            g.RevealAnchor = new Vector2(p.x, p.z);
             float diameter = height * 0.07f;
             Quaternion orientation = Quaternion.Euler(0, yaw, 0);
             g.Add(palmTrunk, bark, p, new Vector3(diameter, height, diameter), orientation);
@@ -787,6 +931,7 @@ namespace CubeDash.Editor
             }
             for (int fruit = 0; fruit < 3; fruit++)
                 g.Add(rock, wood, crown + new Vector3((fruit - 1) * 0.28f, -0.4f, 0), Vector3.one * 0.7f);
+            g.RevealAnchor = previousAnchor;
         }
 
         private static void UpdateTrackPrefab(GameObject[] scenery)
@@ -870,8 +1015,11 @@ namespace CubeDash.Editor
         {
             private readonly Material[] palette;
             private readonly List<CombineInstance>[] groups;
-            public Geometry(Material[] materials)
+            private readonly bool rigidAnchors;
+            public Vector2? RevealAnchor { get; set; }
+            public Geometry(Material[] materials, bool rigidAnchors = false)
             {
+                this.rigidAnchors = rigidAnchors;
                 palette = materials;
                 groups = new List<CombineInstance>[palette.Length];
                 for (int i = 0; i < groups.Length; i++) groups[i] = new List<CombineInstance>();
@@ -880,13 +1028,22 @@ namespace CubeDash.Editor
                 => Add(mesh, material, position, scale, Quaternion.Euler(0, yaw, 0));
             public void Add(Mesh mesh, Material material, Vector3 position, Vector3 scale, Quaternion rotation)
             {
+                mesh = WithAnchor(mesh, position);
                 groups[Array.IndexOf(palette, material)].Add(new CombineInstance
                 { mesh = mesh, transform = Matrix4x4.TRS(position, rotation, scale) });
             }
             public void AddSurface(Mesh mesh, int surface, Material material, Vector3 position, Vector3 scale, float yaw)
             {
+                mesh = WithAnchor(mesh, position);
                 groups[Array.IndexOf(palette, material)].Add(new CombineInstance
                 { mesh = mesh, subMeshIndex = surface, transform = Matrix4x4.TRS(position, Quaternion.Euler(0, yaw, 0), scale) });
+            }
+            private Mesh WithAnchor(Mesh mesh, Vector3 position)
+            {
+                if (!rigidAnchors) return mesh;
+                Mesh anchored = Own(Object.Instantiate(mesh));
+                SetCityAnchor(anchored, RevealAnchor ?? new Vector2(position.x, position.z));
+                return anchored;
             }
             public Mesh Bake()
             {

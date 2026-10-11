@@ -9,6 +9,125 @@ namespace CubeDash.Tests
     public sealed class EnvironmentVarietyTests
     {
         [Test]
+        public void BeachBoatsHaveClosedEndWallsAndFurnitureHasGroundReachingSupports()
+        {
+            Mesh boat = AssetDatabase.LoadAssetAtPath<Mesh>("Assets/3D Models/Environments/Beach Fishing Boat.asset");
+            Vector3[] vertices = boat.vertices; int[] indices = boat.GetTriangles(9);
+            foreach (float end in new[] { -4f, 4f })
+            {
+                int faces = 0;
+                for (int i = 0; i < indices.Length; i += 3)
+                    if (Mathf.Abs(vertices[indices[i]].z - end) < 0.001f
+                        && Mathf.Abs(vertices[indices[i + 1]].z - end) < 0.001f
+                        && Mathf.Abs(vertices[indices[i + 2]].z - end) < 0.001f) faces++;
+                Assert.That(faces, Is.GreaterThanOrEqualTo(6), "Close both sides of each end wall without closing the open deck.");
+            }
+            Mesh chairs = AssetDatabase.LoadAssetAtPath<Mesh>("Assets/3D Models/Environments/Beach Beach Chairs.asset");
+            vertices = chairs.vertices; indices = chairs.GetTriangles(9);
+            bool tableLeg = false;
+            for (int i = 0; i < indices.Length; i += 3)
+            {
+                Vector3 center = (vertices[indices[i]] + vertices[indices[i + 1]] + vertices[indices[i + 2]]) / 3;
+                if (Mathf.Abs(center.x) < 0.1f && Mathf.Abs(center.z + 0.5f) < 0.1f && center.y > 0.1f && center.y < 0.5f) tableLeg = true;
+            }
+            Assert.That(tableLeg, Is.True, "The table needs a leg, not a floating tabletop.");
+            Mesh hut = AssetDatabase.LoadAssetAtPath<Mesh>("Assets/3D Models/Environments/Beach Lifeguard Hut.asset");
+            Assert.That(System.Array.Exists(hut.vertices, v => v.z < -6.4f && v.y <= 0.02f), Is.True,
+                "The bottom stair/stringers must meet the sand.");
+            Mesh umbrella = AssetDatabase.LoadAssetAtPath<Mesh>("Assets/3D Models/Environments/Beach Striped Umbrella.asset");
+            float poleTop = float.MinValue;
+            foreach (int index in umbrella.GetTriangles(9)) poleTop = Mathf.Max(poleTop, umbrella.vertices[index].y);
+            Assert.That(poleTop, Is.GreaterThanOrEqualTo(4.14f), "The pole must reach the canopy hub, not stop below it.");
+        }
+
+        [Test]
+        public void BeachHousesPalmsAndDocksRiseWhole()
+        {
+            GameObject beach = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/CubeDash/Environments/Beach.prefab");
+            foreach (Mesh mesh in beach.GetComponent<BiomeScenery>().Layouts)
+            {
+                Vector3[] vertices = mesh.vertices;
+                var anchors = new List<Vector2>(); mesh.GetUVs(2, anchors);
+                var huts = new HashSet<Vector2>(); var docks = new HashSet<Vector2>();
+                var trunks = new HashSet<Vector2>(); var leaves = new HashSet<Vector2>(); var coconuts = new HashSet<Vector2>();
+                foreach (int index in mesh.GetTriangles(0))
+                    if (vertices[index].x > -30) trunks.Add(anchors[index]);
+                foreach (int surface in new[] { 1, 2 })
+                    foreach (int index in mesh.GetTriangles(surface))
+                        if (vertices[index].y > 0) leaves.Add(anchors[index]);
+                foreach (int surface in new[] { 9, 10, 11, 12 })
+                    foreach (int index in mesh.GetTriangles(surface))
+                    {
+                        Vector3 v = vertices[index];
+                        if (v.x < -30) huts.Add(anchors[index]);
+                        if (v.x > 10.5f) docks.Add(anchors[index]);
+                        if (surface == 9 && v.y > 0 && v.x > -28 && v.x < 0) coconuts.Add(anchors[index]);
+                    }
+                Assert.That(huts.Count, Is.EqualTo(2), "Two whole huts, not independently rising siding, roofs and stairs.");
+                Assert.That(docks.Count, Is.EqualTo(1));
+                Assert.That(trunks.Count, Is.EqualTo(4));
+                Assert.That(leaves, Is.EquivalentTo(trunks)); Assert.That(coconuts, Is.EquivalentTo(trunks));
+            }
+        }
+
+        [TestCase(2)]
+        [TestCase(4)]
+        [TestCase(8)]
+        [TestCase(12)]
+        public void BeachEntranceAndExitSelectSavedBaySafeDocksWithoutChangingThePool(int segmentsPerBiome)
+        {
+            GameObject root = Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/CubeDash/TrackSegment.prefab"));
+            try
+            {
+                SegmentEnvironment environment = root.GetComponent<SegmentEnvironment>();
+                BiomeScenery beach = environment.Biomes[4].GetComponent<BiomeScenery>();
+                Assert.That(beach.EntranceLayouts.Length, Is.EqualTo(8)); Assert.That(beach.ExitLayouts.Length, Is.EqualTo(8));
+                int count = root.GetComponentsInChildren<Transform>(true).Length;
+                int start = 4 * segmentsPerBiome, nextCycle = 9 * segmentsPerBiome;
+                foreach (int section in new[] { start, start + 1, start + segmentsPerBiome - 2,
+                    start + segmentsPerBiome - 1, nextCycle, nextCycle + segmentsPerBiome - 1, start })
+                {
+                    environment.Configure(section, segmentsPerBiome);
+                    int within = section % segmentsPerBiome;
+                    int layout = BiomeRules.Variation(section, 8);
+                    Mesh expected = within == 0 ? beach.EntranceLayouts[layout]
+                        : within == segmentsPerBiome - 1 ? beach.ExitLayouts[layout] : beach.Layouts[layout];
+                    Assert.That(beach.transform.Find("Landscape Details").GetComponent<MeshFilter>().sharedMesh, Is.SameAs(expected));
+                    if (within != 0 && within != segmentsPerBiome - 1) continue;
+                    Vector3[] vertices = expected.vertices;
+                    foreach (int surface in new[] { 9, 12 })
+                        foreach (int index in expected.GetTriangles(surface))
+                        {
+                            Vector3 v = vertices[index]; if (v.x <= 10.5f) continue;
+                            float bank = 8 + (1 - Mathf.SmoothStep(0, 1, Mathf.InverseLerp(7, 120, v.x))) * 22
+                                + Mathf.Sin(v.x * 0.055f) * 2.8f + Mathf.Sin(v.x * 0.17f) * 1.2f;
+                            Assert.That(within == 0 ? v.z - bank : 42 - bank - v.z, Is.GreaterThan(0.5f),
+                                "Every dock part stays inside the conservative bay envelope, clear of the true bed/sea intersection.");
+                        }
+                }
+                Assert.That(root.GetComponentsInChildren<Transform>(true).Length, Is.EqualTo(count));
+            }
+            finally { Object.DestroyImmediate(root); }
+        }
+
+        [TestCase("City Entrance Blend", 0, 1, 2, 9)]
+        [TestCase("Beach Exit Blend", 15, 16, 16, 16)]
+        public void CoastalCityJoinTreesHaveSharedTrunkCrownAndDetailAnchors(string name, int bark, int leaf, int highlight, int detail)
+        {
+            Mesh mesh = AssetDatabase.LoadAssetAtPath<Mesh>("Assets/3D Models/Environments/" + name + ".asset");
+            var anchors = new List<Vector2>(); mesh.GetUVs(2, anchors);
+            var trunks = new HashSet<Vector2>();
+            foreach (int index in mesh.GetTriangles(bark)) trunks.Add(anchors[index]);
+            Assert.That(trunks, Is.Not.Empty);
+            foreach (int surface in new[] { leaf, highlight, detail })
+            {
+                var parts = new HashSet<Vector2>();
+                foreach (int index in mesh.GetTriangles(surface)) parts.Add(anchors[index]);
+                Assert.That(parts, Is.EquivalentTo(trunks), "Trees must not separate at the Beach/City join while rising.");
+            }
+        }
+
+        [Test]
         public void DesertArchHasOutwardFacesOnBothSidesAndPositiveSolidVolume()
         {
             Mesh mesh = AssetDatabase.LoadAssetAtPath<Mesh>("Assets/3D Models/Environments/Desert Sandstone Arch.asset");
@@ -213,7 +332,7 @@ namespace CubeDash.Tests
                     GameObject biome = environment.Biomes[(int)environment.CurrentBiome];
                     BiomeScenery scenery = biome.GetComponent<BiomeScenery>();
                     int layout = BiomeRules.Variation(section, BiomeRules.SceneryLayoutCount);
-                    Assert.That(biome.transform.Find("Landscape Details").GetComponent<MeshFilter>().sharedMesh, Is.SameAs(scenery.Layouts[layout]));
+                    Assert.That(biome.transform.Find("Landscape Details").GetComponent<MeshFilter>().sharedMesh, Is.SameAs(scenery.DetailLayout(section, 8)));
                     Transform variety = biome.transform.Find("Landscape Variety");
                     Assert.That(variety.GetComponent<MeshFilter>().sharedMesh, Is.SameAs(scenery.VarietyLayouts[layout]));
                     SceneryRise rise = root.GetComponent<SceneryRise>();

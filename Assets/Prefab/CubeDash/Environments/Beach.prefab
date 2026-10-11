@@ -541,6 +541,24 @@ MonoBehaviour:
   - {fileID: 4300000, guid: a876f441de512974e9a706a5c89ae945, type: 2}
   - {fileID: 4300000, guid: 746c5f908e1b92a4dbeb6ce731674090, type: 2}
   - {fileID: 4300000, guid: 73e7557731b7e0f4a86a9ae9f6d73645, type: 2}
+  entranceLayouts:
+  - {fileID: 4300000, guid: 0912a48709b0f014b9fe6da02edd70b0, type: 2}
+  - {fileID: 4300000, guid: d1a1a5a3ca13b2e468f0c402a0167306, type: 2}
+  - {fileID: 4300000, guid: 41e955ab30edc6347b67825fe3c161a5, type: 2}
+  - {fileID: 4300000, guid: 160eaa80d9a72c948a77060b52643fcf, type: 2}
+  - {fileID: 4300000, guid: 88ac98a1888a5204c878010d5f34bb43, type: 2}
+  - {fileID: 4300000, guid: 382f00aa51619eb4f9798e74434f03ac, type: 2}
+  - {fileID: 4300000, guid: 0f2d73934116f8c48a4acf888855f5de, type: 2}
+  - {fileID: 4300000, guid: c15127ea8ef20b141bb767ac8aa76119, type: 2}
+  exitLayouts:
+  - {fileID: 4300000, guid: 2297375bede0d7249bde9082204e380b, type: 2}
+  - {fileID: 4300000, guid: b306e20d1071aa449bbd146c6c04c067, type: 2}
+  - {fileID: 4300000, guid: 5aad8f53874efcf4ca42daaea38d6238, type: 2}
+  - {fileID: 4300000, guid: ed93dda0723d4854ea2d567dd369d9ca, type: 2}
+  - {fileID: 4300000, guid: 22c854c117021f440bcdfa58ce45fb9a, type: 2}
+  - {fileID: 4300000, guid: f1456f1e07676134aacea7a54d95e303, type: 2}
+  - {fileID: 4300000, guid: 7a00bf5d619e54f498eb9dbc7c2dc589, type: 2}
+  - {fileID: 4300000, guid: 1edecbd999d37e74489726db17479cfe, type: 2}
   variety: {fileID: 6185252432758544274}
   varietyLayouts:
   - {fileID: 4300000, guid: c095c18a964e5d64b9e78c990ec2cebe, type: 2}

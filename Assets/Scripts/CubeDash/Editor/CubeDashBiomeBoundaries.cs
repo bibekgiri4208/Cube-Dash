@@ -133,6 +133,11 @@ namespace CubeDash.Editor
             string path = Meshes + "/" + name + ".asset";
             Mesh existing = AssetDatabase.LoadAssetAtPath<Mesh>(path);
             if (existing != null && !rebuild) return existing;
+            return SaveMesh(BuildBoundaryFloor(source), name);
+        }
+
+        private static Mesh BuildBoundaryFloor(Mesh source)
+        {
             Vector3[] original = source.vertices;
             var firstRow = new List<Vector3>();
             foreach (Vector3 vertex in original) if (Mathf.Abs(vertex.z + 0.5f) < 0.001f) firstRow.Add(vertex);
@@ -146,14 +151,16 @@ namespace CubeDash.Editor
                     int a = row * firstRow.Count + col, b = a + firstRow.Count;
                     triangles.AddRange(new[] { a, b, a + 1, a + 1, b, b + 1 });
                 }
-            Mesh result = new Mesh { name = name, indexFormat = IndexFormat.UInt32 };
+            Mesh result = new Mesh { name = "Transition floor", indexFormat = IndexFormat.UInt32 };
             result.SetVertices(vertices); result.SetTriangles(triangles, 0); result.RecalculateNormals(); result.RecalculateBounds();
-            return SaveMesh(result, name);
+            return result;
         }
 
         private static Mesh BoundaryDressing(EnvironmentBiome biome, EnvironmentBiome other, bool entrance, Material[] palette)
         {
-            var geometry = new Geometry(palette);
+            bool coastalCityJoin = (biome == EnvironmentBiome.City && other == EnvironmentBiome.Beach)
+                || (biome == EnvironmentBiome.Beach && other == EnvironmentBiome.City);
+            var geometry = new Geometry(palette, rigidAnchors: coastalCityJoin);
             int from = entrance ? (int)other : (int)biome;
             var random = new System.Random(5929 + from * 149 + (entrance ? 1 : 0));
             // Foreign species appear progressively toward the join, on both halves of the boundary.
@@ -190,10 +197,13 @@ namespace CubeDash.Editor
 
         private static void BoundaryBroadleaf(Geometry geometry, Vector3 position, float height, System.Random random)
         {
+            Vector2? previousAnchor = geometry.RevealAnchor;
+            geometry.RevealAnchor = new Vector2(position.x, position.z);
             float yaw = Range(random, 0, 360);
             geometry.Add(trunk, jungleBark, position, new Vector3(height * 0.08f, height * 0.78f, height * 0.08f), yaw);
             geometry.Add(crowns[0], jungleLeaf, position + Vector3.up * height * 0.75f,
                 new Vector3(height * 0.6f, height * 0.5f, height * 0.55f), yaw);
+            geometry.RevealAnchor = previousAnchor;
         }
     }
 }

@@ -46,7 +46,11 @@ namespace CubeDash.Editor
                         details.GetComponent<MeshFilter>().sharedMesh = layouts[0];
                         SetArray(root.GetComponent<BiomeScenery>(), "layouts", layouts);
                         AddVarietyLayouts(root.transform, biome, palette);
-                        if (biome == EnvironmentBiome.Beach) CubeDashOceanWaves.SetOceanHeight(root.transform);
+                        if (biome == EnvironmentBiome.Beach)
+                        {
+                            CubeDashOceanWaves.SetOceanHeight(root.transform);
+                            BakeBeachBayLayouts(root.GetComponent<BiomeScenery>(), layouts);
+                        }
                         PrefabUtility.SaveAsPrefabAsset(root, path);
                     }
                     finally { PrefabUtility.UnloadPrefabContents(root); }
@@ -121,6 +125,77 @@ namespace CubeDash.Editor
             finally { ReleaseModels(); }
         }
 
+        [MenuItem("Tools/Cube Dash/Repair Beach Models and City Join")]
+        public static void RepairBeachFromCommandLine()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+                throw new InvalidOperationException("Stop Play mode before repairing beach models.");
+            InitializeModels();
+            try
+            {
+                const string path = Prefabs + "/Beach.prefab";
+                GameObject root = PrefabUtility.LoadPrefabContents(path);
+                try
+                {
+                    Transform details = root.transform.Find("Landscape Details");
+                    Material[] palette = details.GetComponent<Renderer>().sharedMaterials;
+                    UseNaturalPalette(palette, EnvironmentBiome.Beach);
+                    Mesh[] layouts = BakeLayouts(EnvironmentBiome.Beach, palette);
+                    details.GetComponent<MeshFilter>().sharedMesh = layouts[0];
+                    SetArray(root.GetComponent<BiomeScenery>(), "layouts", layouts);
+                    AddVarietyLayouts(root.transform, EnvironmentBiome.Beach, palette, repairOnly: true);
+                    CubeDashOceanWaves.SetOceanHeight(root.transform);
+                    BakeBeachBayLayouts(root.GetComponent<BiomeScenery>(), layouts);
+                    foreach (Mesh mesh in layouts) CubeDashSceneryRise.BakeAnchors(mesh);
+                    foreach (Mesh mesh in root.GetComponent<BiomeScenery>().VarietyLayouts) CubeDashSceneryRise.BakeAnchors(mesh);
+                    CubeDashSceneryRise.BakeAnchors(BakeCoastalHeadland());
+                    PrefabUtility.SaveAsPrefabAsset(root, path);
+                }
+                finally { PrefabUtility.UnloadPrefabContents(root); }
+                // Keep the saved boundary palette, ground/water blending and track references.
+                GameObject track = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/CubeDash/TrackSegment.prefab");
+                Material[] boundaryPalette = track.GetComponent<SegmentEnvironment>().Biomes[0].transform
+                    .Find("Boundary Entrance Scenery").GetComponent<Renderer>().sharedMaterials;
+                UseNaturalPalette(boundaryPalette, EnvironmentBiome.City);
+                jungleBark = boundaryPalette[15]; jungleLeaf = boundaryPalette[16]; jungleHighlight = boundaryPalette[17];
+                CubeDashSceneryRise.BakeAnchors(SaveMesh(BoundaryDressing(EnvironmentBiome.City, EnvironmentBiome.Beach, true,
+                    boundaryPalette), "City Entrance Blend"));
+                CubeDashSceneryRise.BakeAnchors(SaveMesh(BoundaryDressing(EnvironmentBiome.Beach, EnvironmentBiome.City, false,
+                    boundaryPalette), "Beach Exit Blend"));
+                AssetDatabase.SaveAssets();
+                Debug.Log("Beach models and City join repaired: closed boat ends, supported beach furniture/stairs, bay-safe docks and rigid house/palm/dock/landmark reveals. Ocean settings, road, other biomes, scene and audio preserved.");
+            }
+            finally { ReleaseModels(); }
+        }
+
+        private static void BakeBeachBayLayouts(BiomeScenery scenery, Mesh[] layouts)
+        {
+            Mesh[] entrance = new Mesh[layouts.Length], exit = new Mesh[layouts.Length];
+            for (int i = 0; i < layouts.Length; i++)
+                for (int edge = 0; edge < 2; edge++)
+                {
+                    Mesh mesh = Object.Instantiate(layouts[i]);
+                    Vector3[] vertices = mesh.vertices;
+                    var anchors = new List<Vector2>(); mesh.GetUVs(2, anchors);
+                    var dock = new HashSet<int>();
+                    foreach (int surface in new[] { 9, 12 })
+                        foreach (int index in mesh.GetTriangles(surface)) if (vertices[index].x > 10.5f) dock.Add(index);
+                    float z = edge == 0 ? 36 : 6.5f;
+                    foreach (int index in dock)
+                    {
+                        vertices[index].z += z - anchors[index].y;
+                        anchors[index] = new Vector2(20, z);
+                    }
+                    mesh.SetUVs(2, anchors);
+                    GroundBeachLayoutRocks(mesh, vertices, edge == 0, edge == 1);
+                    mesh.vertices = vertices;
+                    Mesh saved = SaveMesh(mesh, "Beach Layout " + (i + 1) + (edge == 0 ? " Entrance" : " Exit"));
+                    CubeDashSceneryRise.BakeAnchors(saved);
+                    if (edge == 0) entrance[i] = saved; else exit[i] = saved;
+                }
+            SetArray(scenery, "entranceLayouts", entrance); SetArray(scenery, "exitLayouts", exit);
+        }
+
         private static void AddVarietyLayouts(Transform root, EnvironmentBiome biome, Material[] palette, bool repairOnly = false)
         {
             Folder(VarietyModels);
@@ -129,9 +204,11 @@ namespace CubeDash.Editor
             var models = new Dictionary<string, Mesh>();
             foreach (string name in names)
             {
-                Mesh mesh = repairOnly && name != "Sandstone Arch" && name != "Prickly Pear"
+                bool repaired = biome == EnvironmentBiome.Desert ? name == "Sandstone Arch" || name == "Prickly Pear"
+                    : name == "Fishing Boat" || name == "Beach Chairs" || name == "Lifeguard Hut" || name == "Striped Umbrella";
+                Mesh mesh = repairOnly && !repaired
                     ? AssetDatabase.LoadAssetAtPath<Mesh>(Meshes + "/" + biome + " " + name + ".asset")
-                        ?? throw new InvalidOperationException("Missing authored desert model: " + name)
+                        ?? throw new InvalidOperationException("Missing authored " + biome + " model: " + name)
                     : SaveMesh(BuildVarietyModel(biome, name, palette), biome + " " + name);
                 models[name] = mesh;
                 // Existing reusable prefabs inherit the repaired shared mesh. Do not rewrite
@@ -258,7 +335,16 @@ namespace CubeDash.Editor
                     Box(0, new Vector3(0, baseY + 1.4f, -2.56f), new Vector3(1.1f, 2.8f, 0.2f));
                     Box(9, new Vector3(0, baseY + 0.05f, -3.25f), new Vector3(7, 0.25f, 1.9f));
                     if (!beach) Box(3, new Vector3(2, 5.1f, 1), new Vector3(0.8f, 3, 0.8f));
-                    else for (int step = 0; step < 6; step++) Box(9, new Vector3(0, baseY - step * 0.37f, -4 - step * 0.43f), new Vector3(1.6f, 0.2f, 0.5f));
+                    else
+                    {
+                        for (int step = 0; step < 7; step++) Box(9, new Vector3(0, baseY - step * 0.37f, -4 - step * 0.43f), new Vector3(1.6f, 0.2f, 0.5f));
+                        for (int side = -1; side <= 1; side += 2)
+                        {
+                            Vector3 a = new Vector3(side * 0.63f, 2.1f, -3.85f), b = new Vector3(side * 0.63f, -0.08f, -6.75f);
+                            g.Add(cube, palette[9], (a + b) * 0.5f, new Vector3(0.16f, Vector3.Distance(a, b) + 0.16f, 0.16f),
+                                Quaternion.FromToRotation(Vector3.up, (b - a).normalized));
+                        }
+                    }
                     break;
                 case "Barrel Cactus":
                     for (int i = 0; i < 3; i++)
@@ -312,7 +398,8 @@ namespace CubeDash.Editor
                     Rock(13, new Vector3(0, 0.5f, 0), new Vector3(4, 1, 3));
                     break;
                 case "Striped Umbrella":
-                    Round(9, new Vector3(0, 1.8f, 0), new Vector3(0.14f, 1.8f, 0.14f));
+                    // The canopy's hub is at 3.5 + 0.32 * 2 = 4.14 metres, not at its rim.
+                    Round(9, new Vector3(0, 2.05f, 0), new Vector3(0.14f, 2.1f, 0.14f));
                     Mesh umbrella = Own(EnvironmentModelMeshes.UmbrellaCanopy());
                     g.AddSurface(umbrella, 0, palette[12], new Vector3(0, 3.5f, 0), new Vector3(5, 2, 5), 0);
                     g.AddSurface(umbrella, 1, palette[6], new Vector3(0, 3.5f, 0), new Vector3(5, 2, 5), 0);
@@ -346,6 +433,8 @@ namespace CubeDash.Editor
                         for (int end = -1; end <= 1; end += 2) Box(9, new Vector3(side * 1.2f, 0.28f, end * 0.7f), new Vector3(0.8f, 0.55f, 0.12f));
                     }
                     Round(9, new Vector3(0, 0.65f, -0.5f), new Vector3(0.85f, 0.07f, 0.85f));
+                    Round(9, new Vector3(0, 0.3f, -0.5f), new Vector3(0.16f, 0.28f, 0.16f));
+                    Round(9, new Vector3(0, 0.05f, -0.5f), new Vector3(0.55f, 0.05f, 0.55f));
                     break;
                 default:
                     BuildCityVariety(g, name);

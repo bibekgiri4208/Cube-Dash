@@ -11,6 +11,7 @@ trail, lighting, and original **Main Camera** are real saved scene/prefab object
   Two distinct presses within **0.35 seconds** count; holding the key does not toggle repeatedly.
 - **Collect gold 3D coins:** each coin disappears and awards **1 point**.
 - **Avoid obstacle cubes:** touching an obstacle ends the run.
+- **I** toggles the testing invincibility cheat; the HUD clearly shows when it is active.
 - **P/Escape** or gamepad **Menu/Start** pauses/resumes; **B / Circle** also resumes a paused run.
 - **R** restarts; **X / Square** restarts from pause or game over. **A / Cross** confirms the focused menu action.
 - Navigate pause-menu buttons using **Up/Down**, **Tab**, **D-pad**, or the **left stick**. Mouse clicks still work.
@@ -31,6 +32,13 @@ The default player is **red**. Choose Red, Blue, or Green using **Player Cube Co
 **Game Manager**. Gameplay uses explicit color identities rather than comparing shaded RGB values.
 The player and obstacle cubes use the saved palette materials; rewards always use gold coin materials. The best collection score
 is saved separately from the old distance record.
+
+### Testing cheat
+
+Press **I** to toggle invincibility. A persistent **CHEAT: INVINCIBILITY ACTIVE** HUD label shows while enabled.
+The toggle survives pause/retry, preserves coins, bonuses and shield charges, and resets when leaving the scene.
+Cheated runs never overwrite the normal best score, even if the cheat is switched off before crashing.
+The saved indicator is under **Canvas > Safe Area > Cheat Status**; **Tools > Cube Dash > Add Testing Cheat Indicator** reconnects it.
 
 ## Power-ups
 
@@ -232,6 +240,15 @@ animation anchors and reconnect the saved prefab. Mesh bounds include the downwa
 - **Beach:** leaning ringed palm trunks, curved fronds with individual leaflets and coconuts,
   turquoise ocean, wet shoreline sand, timber houses with hipped thatch roofs, framed windows,
   porches and steps, and individual jetty planks.
+  Boats have closed bow/stern walls, umbrellas connect to their poles, and beach tables and lifeguard stairs have ground-reaching supports,
+  and huts, palms and docks rise as whole objects. Saved entrance/exit dock layouts stay inside both curved bays;
+  Beach → City transition trees and headland clusters also share rigid reveal timing.
+  Shore rocks and sand skirts conform to the rendered, sloping transition bed rather than floating at the old beach elevation.
+  Ordinary seaside boulders also have individually buried, terrain-fitted lower facets in all eight normal/entrance/exit layouts, including where bays expose the seabed.
+  **Tools > Cube Dash > Ground Beach City Shore Rocks** grounds those boulders and the shoreline clusters without rebuilding other props.
+  Ocean edges follow the actual water/triangulated-bed intersection at the shore and both ends, including changing tides; no elevated cut edge or artificial water wall. Offshore swells and river motion are preserved.
+
+  **Tools > Cube Dash > Repair Beach Models and City Join** reapplies just this model/layout correction.
 - Beach sand extends **1,024 m to either side** and ocean reaches **1,024 m outward**, beyond the
   600 m camera far plane. All other landscape floors are widened too, removing lateral cutoffs
   at wide FOVs without reducing the view angle.

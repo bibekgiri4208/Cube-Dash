@@ -108,8 +108,8 @@ namespace CubeDash.Tests
                 float rockBottom = float.MaxValue;
                 foreach (int index in layout.GetTriangles(3))
                     if (vertices[index].x > 8) rockBottom = Mathf.Min(rockBottom, beach.transform.TransformPoint(vertices[index]).y);
-                Assert.That(rockBottom, Is.EqualTo(ocean.position.y - 1.2f).Within(0.001f),
-                    "Seaside boulders follow the lower water instead of hovering above it.");
+                Assert.That(rockBottom, Is.LessThan(ocean.position.y - 1.2f),
+                    "Seaside boulder feet reach the seabed, not an arbitrary water-relative elevation.");
             }
         }
 

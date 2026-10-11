@@ -28,7 +28,7 @@ namespace CubeDash
                 if (biomes[i] == null) continue;
                 bool active = i == (int)CurrentBiome;
                 biomes[i].SetActive(active);
-                if (active && biomes[i].TryGetComponent(out BiomeScenery scenery)) scenery.SelectLayout(sectionIndex);
+                if (active && biomes[i].TryGetComponent(out BiomeScenery scenery)) scenery.SelectLayout(sectionIndex, segmentsPerBiome);
                 if (active && biomes[i].TryGetComponent(out CityFlyover flyover)) flyover.Configure(sectionIndex, segmentsPerBiome);
                 if (active && biomes[i].TryGetComponent(out CoastalTransition coast))
                 {

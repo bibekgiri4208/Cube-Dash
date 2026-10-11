@@ -27,6 +27,8 @@ namespace CubeDash
         [SerializeField] private Text gameOverScore = null;
         [SerializeField] private Text collectionFeedback = null;
         [SerializeField] private Text powerUpStatus = null;
+        [SerializeField] private Text cheatStatus = null;
+        public Text CheatStatus => cheatStatus;
         public GameObject GameOverOverlay => gameOverOverlay;
         public Text GameOverScore => gameOverScore;
         private Rect lastSafeArea;
@@ -74,6 +76,7 @@ namespace CubeDash
             pauseQuitButton = card.Find("Quit")?.GetComponent<Button>();
             menuHint = card.Find("Keyboard Hint")?.GetComponent<Text>();
             if (powerUpStatus == null) powerUpStatus = safeRoot.Find("Power-Up Status")?.GetComponent<Text>();
+            if (cheatStatus == null) cheatStatus = safeRoot.Find("Cheat Status")?.GetComponent<Text>();
             primaryButton = card.Find("Primary Action")?.GetComponent<Button>();
             controls.SetActive(false);
             InputSystemUIInputModule module = EventSystem.current != null ? EventSystem.current.GetComponent<InputSystemUIInputModule>() : null;
@@ -271,6 +274,7 @@ namespace CubeDash
             if (pauseQuit != null) pauseQuit.SetActive(state == CubeDashGame.RunState.Paused);
             if (menuHint != null) menuHint.gameObject.SetActive(state == CubeDashGame.RunState.Ready);
             RefreshInputPrompts();
+            RefreshCheatStatus();
             if (!running) FocusPrimary();
         }
 
@@ -286,6 +290,7 @@ namespace CubeDash
             }
             AnimateFeedback();
             UpdatePowerUpStatus();
+            RefreshCheatStatus();
             Rect area = Screen.safeArea;
             Vector2 screen = new Vector2(Screen.width, Screen.height);
             if (screen.x <= 0 || screen.y <= 0 || (area == lastSafeArea && screen == lastScreen)) return;
@@ -332,6 +337,15 @@ namespace CubeDash
             powerUpStatus.text = status;
             powerUpStatus.gameObject.SetActive(status.Length > 0);
             powerUpStatus.rectTransform.anchoredPosition = new Vector2(0, safeRoot.rect.width < 780 ? -190 : -92);
+        }
+
+        public void RefreshCheatStatus()
+        {
+            if (cheatStatus == null || game == null) return;
+            cheatStatus.text = "CHEAT: INVINCIBILITY ACTIVE  |  I TO DISABLE";
+            cheatStatus.gameObject.SetActive(game.InvincibilityEnabled);
+            cheatStatus.rectTransform.anchoredPosition = new Vector2(0, safeRoot.rect.width < 780 ? -226 : -130);
+            cheatStatus.rectTransform.sizeDelta = new Vector2(Mathf.Max(200, Mathf.Min(620, safeRoot.rect.width - 32)), 48);
         }
 
         private static string AppendStatus(string current, string value)
