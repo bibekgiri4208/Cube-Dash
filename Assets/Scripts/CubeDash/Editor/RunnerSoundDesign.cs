@@ -10,6 +10,38 @@ namespace CubeDash.Editor
     {
         private const int Rate = 44100;
         private static readonly float[] PointNotes = { 523.25f, 659.25f, 783.99f, 1046.5f };
+
+        public static AudioClip TruckImpact(int variant)
+        {
+            int count = Mathf.RoundToInt((0.46f + variant * 0.02f) * Rate);
+            float[] samples = new float[count];
+            var random = new System.Random(19481 + variant * 719);
+            float low = 0, grit = 0, phase = 0, peak = 0;
+            for (int i = 0; i < count; i++)
+            {
+                float t = i / (float)Rate;
+                float noise = (float)random.NextDouble() * 2 - 1;
+                low += 0.13f * (noise - low); grit += 0.65f * (noise - grit);
+                phase += 2 * Mathf.PI * (48 + variant * 5 + 75 * Mathf.Exp(-t * 32)) / Rate;
+                float thud = Mathf.Sin(phase) * Mathf.Exp(-t * 18);
+                float crunch = (grit - low) * Mathf.Exp(-t * 26);
+                float fragments = 0;
+                for (int shard = 0; shard < 5; shard++)
+                {
+                    float age = t - (0.018f + shard * 0.035f + variant * 0.003f);
+                    if (age < 0) continue;
+                    float envelope = Mathf.SmoothStep(0, 1, age / 0.0015f) * Mathf.Exp(-age * 48);
+                    fragments += ((grit - low) * 0.18f + Tone(730 + shard * 317 + variant * 83, age) * 0.055f) * envelope;
+                }
+                float fade = Mathf.SmoothStep(0, 1, t / 0.002f)
+                    * Mathf.SmoothStep(0, 1, (count - 1 - i) / (Rate * 0.035f));
+                samples[i] = (thud * 0.52f + crunch * 0.62f + low * Mathf.Exp(-t * 10) * 0.25f + fragments) * fade;
+                peak = Mathf.Max(peak, Mathf.Abs(samples[i]));
+            }
+            float gain = 0.78f / Mathf.Max(0.001f, peak);
+            for (int i = 0; i < count; i++) samples[i] *= gain;
+            return Save("TruckImpact" + (variant + 1), samples);
+        }
         public static AudioClip Pickup(PowerUpType type)
         {
             string[] names = { "ShieldPickup", "DoublePointsPickup", "FlightPickup", "TruckPickup", "MagnetPickup" };

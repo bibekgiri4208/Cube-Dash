@@ -192,6 +192,7 @@ namespace CubeDash
                     }
                 }
                 for (int i = 0; i < track.LastPowerUps.Count; i++) ApplyPowerUp(track.LastPowerUps[i]);
+                if (audioPresentation != null) audioPresentation.PlayTruckImpacts(track.LastTruckSmashes);
                 if (wrongColor) Crash();
                 doublePointsTimer = Mathf.Max(0, doublePointsTimer - dt);
             }

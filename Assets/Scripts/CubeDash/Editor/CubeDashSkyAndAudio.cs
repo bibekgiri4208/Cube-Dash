@@ -69,6 +69,39 @@ namespace CubeDash.Editor
             Debug.Log("Vehicle audio refined from CC0 recordings: six-second crossfaded F-22 airflow and heavy truck engine loops. Pickup sounds, volume settings, sky and level unchanged.");
         }
 
+        [MenuItem("Tools/Cube Dash/Add Truck Collision Audio")]
+        public static void AddTruckCollisionAudioFromMenu()
+        {
+            if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) AddTruckCollisionAudioFromCommandLine();
+        }
+
+        public static void AddTruckCollisionAudioFromCommandLine()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+                throw new InvalidOperationException("Stop Play mode before authoring truck collision sounds.");
+            for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCount; i++)
+                if (UnityEngine.SceneManagement.SceneManager.GetSceneAt(i).isDirty)
+                    throw new InvalidOperationException("Save scene changes before adding truck collision audio.");
+            var scene = EditorSceneManager.OpenScene("Assets/Scenes/Level.unity");
+            CubeDashGame game = Object.FindAnyObjectByType<CubeDashGame>();
+            if (game == null || game.AudioPresentation == null)
+                throw new InvalidOperationException("The authored Level and Runner Audio are required.");
+            var settings = new SerializedObject(game.AudioPresentation);
+            var sources = settings.FindProperty("truckImpactSources"); sources.arraySize = 3;
+            var clips = settings.FindProperty("truckImpactClips"); clips.arraySize = 3;
+            for (int i = 0; i < 3; i++)
+            {
+                clips.GetArrayElementAtIndex(i).objectReferenceValue = RunnerSoundDesign.TruckImpact(i);
+                AudioSource source = Source(game.transform, "Truck Impact Audio " + (i + 1), false, null);
+                source.volume = 0; source.priority = 90;
+                sources.GetArrayElementAtIndex(i).objectReferenceValue = source;
+            }
+            settings.ApplyModifiedPropertiesWithoutUndo();
+            EditorSceneManager.MarkSceneDirty(scene);
+            AssetDatabase.SaveAssets(); EditorSceneManager.SaveScene(scene);
+            Debug.Log("Truck collision audio saved: three original thud/crunch variants and three bounded impact voices. Engines, coins, other audio levels, visuals and gameplay preserved.");
+        }
+
         internal static AudioSource Source(Transform parent, string name, bool loop, AudioClip clip)
         {
             Transform child = parent.Find(name);

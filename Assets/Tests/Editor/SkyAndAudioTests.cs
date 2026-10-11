@@ -12,6 +12,103 @@ namespace CubeDash.Tests
     public sealed class SkyAndAudioTests
     {
         [Test]
+        public void TruckImpactVariantsAreShortNonSilentPcmWithClickFreeEdges()
+        {
+            var distinct = new System.Collections.Generic.HashSet<AudioClip>();
+            for (int i = 1; i <= 3; i++)
+            {
+                string path = "Assets/Audio/TruckImpact" + i + ".wav";
+                AudioClip clip = AssetDatabase.LoadAssetAtPath<AudioClip>(path);
+                Assert.That(clip, Is.Not.Null); Assert.That(distinct.Add(clip), Is.True);
+                Assert.That(clip.channels, Is.EqualTo(1)); Assert.That(clip.frequency, Is.EqualTo(44100));
+                Assert.That(clip.length, Is.InRange(0.44f, 0.52f));
+                var settings = ((AudioImporter)AssetImporter.GetAtPath(path)).defaultSampleSettings;
+                Assert.That(settings.compressionFormat, Is.EqualTo(AudioCompressionFormat.PCM));
+                Assert.That(settings.loadType, Is.EqualTo(AudioClipLoadType.DecompressOnLoad));
+                Assert.That(settings.preloadAudioData, Is.True);
+                float[] data = new float[clip.samples]; Assert.That(clip.GetData(data, 0), Is.True);
+                float peak = 0, energy = 0;
+                foreach (float sample in data) { peak = Mathf.Max(peak, Mathf.Abs(sample)); energy += sample * sample; }
+                Assert.That(peak, Is.InRange(0.7f, 0.85f));
+                Assert.That(Mathf.Sqrt(energy / data.Length), Is.InRange(0.04f, 0.25f));
+                Assert.That(Mathf.Abs(data[0]), Is.LessThan(0.001f));
+                Assert.That(Mathf.Abs(data[data.Length - 1]), Is.LessThan(0.001f));
+            }
+        }
+
+        [Test]
+        public void SavedTruckImpactVoicesAreIndependentAndNeverAutoplayOrLoop()
+        {
+            var scene = EditorSceneManager.OpenPreviewScene("Assets/Scenes/Level.unity");
+            try
+            {
+                CubeDashGame game = null;
+                foreach (GameObject root in scene.GetRootGameObjects()) if (root.TryGetComponent(out CubeDashGame found)) game = found;
+                RunnerAudio audio = game.AudioPresentation;
+                Assert.That(audio.TruckImpactSources.Length, Is.EqualTo(3));
+                var sources = new System.Collections.Generic.HashSet<AudioSource>();
+                for (int i = 0; i < 3; i++)
+                {
+                    AudioSource source = audio.TruckImpactSources[i];
+                    Assert.That(source, Is.Not.Null); Assert.That(sources.Add(source), Is.True);
+                    Assert.That(source, Is.Not.SameAs(audio.TruckSource));
+                    Assert.That(source, Is.Not.SameAs(audio.PickupSource));
+                    Assert.That(source, Is.Not.SameAs(game.GetComponent<AudioSource>()));
+                    Assert.That(source.playOnAwake || source.loop, Is.False);
+                    Assert.That(source.spatialBlend, Is.Zero); Assert.That(source.volume, Is.Zero);
+                    Assert.That(audio.TruckImpactClip(i).name, Is.EqualTo("TruckImpact" + (i + 1)));
+                }
+            }
+            finally { EditorSceneManager.ClosePreviewScene(scene); }
+        }
+
+        [UnityTest]
+        public IEnumerator TruckImpactPoolVariesBoundsOverlapsAndPausesResumesAndClears()
+        {
+            yield return new EnterPlayMode();
+            yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/Level.unity", new LoadSceneParameters(LoadSceneMode.Single));
+            yield return null;
+            CubeDashGame game = Object.FindAnyObjectByType<CubeDashGame>();
+            game.enabled = false; game.StartRun(); Clear(game);
+            RunnerAudio audio = game.AudioPresentation;
+            AudioSource[] voices = audio.TruckImpactSources;
+            int count = game.GetComponentsInChildren<AudioSource>(true).Length;
+            AudioSource coins = game.GetComponent<AudioSource>(); coins.pitch = 1.135f;
+            audio.PlayTruckImpacts(0);
+            Assert.That(System.Array.Exists(voices, source => source.isPlaying), Is.False);
+            Apply(game, PowerUpType.Truck);
+            audio.Tick(0.1f, game.State, false, true, 20, 0);
+            float enginePitch = audio.TruckSource.pitch;
+            audio.PlayTruckImpacts(2);
+            yield return null;
+            Assert.That(voices[0].isPlaying && voices[1].isPlaying, Is.True);
+            Assert.That(voices[2].isPlaying, Is.False);
+            Assert.That(voices[0].clip, Is.Not.SameAs(voices[1].clip));
+            Assert.That(voices[0].pitch, Is.Not.EqualTo(voices[1].pitch));
+            Assert.That(voices[0].volume, Is.LessThan(0.5f), "Simultaneous impacts are gain-controlled.");
+            Assert.That(coins.pitch, Is.EqualTo(1.135f)); Assert.That(audio.TruckSource.pitch, Is.EqualTo(enginePitch));
+            game.TogglePause(); yield return null;
+            int position = voices[0].timeSamples;
+            audio.PlayTruckImpacts(1);
+            yield return new WaitForSecondsRealtime(0.08f);
+            Assert.That(voices[0].timeSamples, Is.EqualTo(position));
+            Assert.That(voices[2].clip, Is.Null, "No new collision voices may start while paused.");
+            game.TogglePause();
+            yield return new WaitForSecondsRealtime(0.04f);
+            Assert.That(voices[0].timeSamples, Is.GreaterThan(position));
+            for (int i = 0; i < 20; i++) audio.PlayTruckImpacts(100);
+            Assert.That(game.GetComponentsInChildren<AudioSource>(true).Length, Is.EqualTo(count));
+            foreach (AudioSource voice in voices) Assert.That(voice.volume, Is.LessThanOrEqualTo(0.35f));
+            game.StartRun();
+            foreach (AudioSource voice in voices) { Assert.That(voice.isPlaying, Is.False); Assert.That(voice.clip, Is.Null); }
+            audio.PlayTruckImpacts(1);
+            typeof(CubeDashGame).GetMethod("Crash", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(game, null);
+            foreach (AudioSource voice in voices) Assert.That(voice.isPlaying, Is.False);
+            game.StartRun(); audio.PlayTruckImpacts(1); audio.enabled = false;
+            foreach (AudioSource voice in voices) Assert.That(voice.isPlaying, Is.False);
+        }
+
+        [Test]
         public void SavedPowerUpSoundsAreDistinctNonSilentPcmAndEngineLoopsHaveSmoothSeams()
         {
             string[] names = { "ShieldPickup", "DoublePointsPickup", "FlightPickup", "TruckPickup", "MagnetPickup", "FlightEngineLoop", "TruckEngineLoop", "SupercarEngineLoop" };

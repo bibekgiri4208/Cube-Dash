@@ -2,25 +2,31 @@ using UnityEngine;
 
 namespace CubeDash
 {
-    /// <summary>Saved pickup cues and vehicle loops; gameplay owns their lifecycle, pause and pitch.</summary>
+    /// <summary>Saved pickup/impact cues and vehicle loops; gameplay owns their lifecycle, pause and pitch.</summary>
     public sealed class RunnerAudio : MonoBehaviour
     {
         [SerializeField] private AudioSource pickupSource = null;
         [SerializeField] private AudioSource flightSource = null;
         [SerializeField] private AudioSource truckSource = null;
         [SerializeField] private AudioSource supercarSource = null;
+        [SerializeField] private AudioSource[] truckImpactSources = new AudioSource[0];
+        [SerializeField] private AudioClip[] truckImpactClips = new AudioClip[3];
         [Tooltip("Shield, Double Points, Fighter Plane, Truck, Magnet.")]
         [SerializeField] private AudioClip[] pickupClips = new AudioClip[5];
         [SerializeField, Range(0, 1)] private float pickupVolume = 0.55f;
         [SerializeField, Range(0, 1)] private float flightVolume = 0.24f;
         [SerializeField, Range(0, 1)] private float truckVolume = 0.3f;
         [SerializeField, Range(0, 1)] private float supercarVolume = 0.3f;
+        [SerializeField, Range(0, 1)] private float truckImpactVolume = 0.6f;
         private bool flightActive, truckActive, supercarActive, paused;
+        private int nextTruckImpact;
 
         public AudioSource PickupSource => pickupSource;
         public AudioSource FlightSource => flightSource;
         public AudioSource TruckSource => truckSource;
         public AudioSource SupercarSource => supercarSource;
+        public AudioSource[] TruckImpactSources => truckImpactSources;
+        public AudioClip TruckImpactClip(int index) => index >= 0 && index < truckImpactClips.Length ? truckImpactClips[index] : null;
         public bool FlightActive => flightActive;
         public bool TruckActive => truckActive;
         public bool SupercarActive => supercarActive;
@@ -32,6 +38,27 @@ namespace CubeDash
             if (pickupSource == null || clip == null || paused) return;
             pickupSource.pitch = 1;
             pickupSource.PlayOneShot(clip, pickupVolume);
+        }
+
+        public void PlayTruckImpacts(int count)
+        {
+            if (count <= 0 || paused || truckImpactSources.Length == 0 || truckImpactClips.Length == 0) return;
+            // Fixed saved voices bound overlapping crashes, even during a long frame. Variation
+            // is deterministic and never consumes the obstacle generator's random sequence.
+            int voices = Mathf.Min(count, truckImpactSources.Length);
+            float volume = truckImpactVolume / Mathf.Sqrt(voices);
+            for (int i = 0; i < voices; i++)
+            {
+                int sequence = nextTruckImpact++;
+                AudioSource source = truckImpactSources[sequence % truckImpactSources.Length];
+                AudioClip clip = truckImpactClips[sequence % truckImpactClips.Length];
+                if (source == null || clip == null) continue;
+                source.Stop();
+                source.clip = clip;
+                source.volume = volume;
+                source.pitch = 0.96f + (sequence % 3) * 0.04f;
+                source.Play();
+            }
         }
 
         public void Tick(float dt, CubeDashGame.RunState state, bool flying, bool trucking, float speed, float steering, bool drivingCar = false)
@@ -81,6 +108,7 @@ namespace CubeDash
             PauseSource(flightSource, value);
             PauseSource(truckSource, value);
             PauseSource(supercarSource, value);
+            foreach (AudioSource source in truckImpactSources) PauseSource(source, value);
         }
 
         private static void PauseSource(AudioSource source, bool value)
@@ -92,10 +120,13 @@ namespace CubeDash
         public void ResetSounds()
         {
             flightActive = truckActive = supercarActive = paused = false;
+            nextTruckImpact = 0;
             if (pickupSource != null) pickupSource.Stop();
             if (flightSource != null) { flightSource.Stop(); flightSource.volume = 0; flightSource.pitch = 1; }
             if (truckSource != null) { truckSource.Stop(); truckSource.volume = 0; truckSource.pitch = 1; }
             if (supercarSource != null) { supercarSource.Stop(); supercarSource.volume = 0; supercarSource.pitch = 1; }
+            foreach (AudioSource source in truckImpactSources)
+                if (source != null) { source.Stop(); source.volume = 0; source.pitch = 1; source.clip = null; }
         }
 
         private void OnDisable() => ResetSounds();

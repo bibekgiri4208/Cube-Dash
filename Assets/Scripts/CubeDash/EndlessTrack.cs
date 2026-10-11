@@ -48,6 +48,8 @@ namespace CubeDash
         public EnvironmentDirector Environment => environment;
         public float Travelled => travelled;
         public ObstacleDebris Debris => debris;
+        /// <summary>Actual obstacle destructions in the latest sweep; coins and shield hits are excluded.</summary>
+        public int LastTruckSmashes { get; private set; }
         /// <summary>Bonuses collected by the most recent Advance call.</summary>
         public IReadOnlyList<PowerUpType> LastPowerUps => collectedPowerUps;
 
@@ -59,6 +61,7 @@ namespace CubeDash
             previousBlockedMask = 0;
             firstVisibleRow = true;
             travelled = 0;
+            LastTruckSmashes = 0;
             nextSectionIndex = segments.Length - 1;
             if (debris != null) debris.ResetDebris();
             if (environment != null) environment.ResetRun();
@@ -118,6 +121,7 @@ namespace CubeDash
             contacts.Clear();
             powerUpContacts.Clear();
             collectedPowerUps.Clear();
+            LastTruckSmashes = 0;
             collected = 0;
             shieldUsed = false;
             travelled += travel;
@@ -195,8 +199,11 @@ namespace CubeDash
                 if (contact.Time >= takeoffTime && !contact.Attracted) continue;
                 if (contact.Time >= truckTime)
                 {
-                    if (debris != null && contact.Cube.Color != playerColor)
-                        debris.Shatter(contact.Cube, travel * (1 - contact.Time));
+                    if (contact.Cube.Color != playerColor)
+                    {
+                        LastTruckSmashes++;
+                        if (debris != null) debris.Shatter(contact.Cube, travel * (1 - contact.Time));
+                    }
                     contact.Cube.gameObject.SetActive(false);
                     if (contact.Cube.Color == playerColor) collected++;
                     continue;

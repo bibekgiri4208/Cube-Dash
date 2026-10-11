@@ -58,6 +58,10 @@ is saved separately from the old distance record.
     stacks emit bounded, billowing smoke that rises and drifts behind the truck.
     Six tire-contact emitters add light gray smoke along the road, with stronger haze during steering
     and at higher speeds. Stopped tires produce no new smoke; the short-lived puffs fade naturally.
+    Smashing obstacle cubes plays a short impact/crunch with three original variations. Coins,
+    shield contacts and ordinary crashes do not trigger it. Three saved audio voices bound overlapping
+    impacts, freeze on pause and clear on restart/game over. Tune **Game Manager > Runner Audio > Truck Impact Volume**.
+    **Tools > Cube Dash > Add Truck Collision Audio** rebakes/reconnects only this sound feature.
 - When the truck ends, the cube receives **3 seconds of continuous exit shield**, with a cyan bubble
    and HUD countdown. Pause freezes the truck timer, wheels and debris; restart clears everything.
     Stack and tire smoke also freeze on pause and clear when the truck ends or the run restarts.
@@ -337,8 +341,9 @@ and retained sources in `Assets/Audio/VehicleSources/CREDITS.md`. Six-second loo
 sections, filtering and half-second crossfades, with restrained speed-responsive pitch and steering rev.
 Loops fade in, do not restart
 on refreshed power-ups, pause/resume with gameplay, and stop on expiry, restart, game over or disable.
-`RunnerAudio` on **Game Manager** exposes separate pickup/airplane/truck/supercar volumes; its four saved child
-AudioSources are non-spatial and never autoplay. All eight clips live in `Assets/Audio` and are edited
+`RunnerAudio` on **Game Manager** exposes separate pickup/airplane/truck/supercar/impact volumes; its seven saved child
+AudioSources are non-spatial and never autoplay. The eight pickup/engine clips and three truck-impact
+variants live in `Assets/Audio` and are edited
 offline, not synthesized during Play. **Tools > Cube Dash > Refine Vehicle Engine Audio** rebakes only
 the two engine loops without changing pickups, sky, volume settings or the level.
 **Tools > Cube Dash > Improve Sky and Power-Up Audio** rebakes

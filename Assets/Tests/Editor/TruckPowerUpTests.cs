@@ -119,6 +119,8 @@ namespace CubeDash.Tests
             Assert.That(wrong.gameObject.activeSelf, Is.False);
             Assert.That(game.State, Is.EqualTo(CubeDashGame.RunState.Running));
             Assert.That(game.Track.Debris.ActiveCount, Is.GreaterThan(0));
+            Assert.That(System.Array.Exists(game.AudioPresentation.TruckImpactSources, source => source.isPlaying), Is.True,
+                "The actual gameplay collision must play a truck impact, not just create fragments.");
             Assert.That(game.Score, Is.Zero, "Only matching cubes award points, even when smashing.");
             game.TogglePause();
             float timer = game.TruckRemaining;
@@ -143,6 +145,7 @@ namespace CubeDash.Tests
             game.StartRun();
             Assert.That(game.Trucking, Is.False);
             Assert.That(game.Track.Debris.ActiveCount, Is.Zero);
+            Assert.That(game.Track.LastTruckSmashes, Is.Zero);
             Assert.That(game.TruckPresentation.Truck.gameObject.activeSelf, Is.False);
             foreach (ParticleSystem system in game.TruckPresentation.Exhaust) Assert.That(system.particleCount, Is.Zero);
         }
@@ -211,6 +214,7 @@ namespace CubeDash.Tests
             Assert.That(game.Track.Advance(5, 0, 0, 0, Vector2.one * 0.575f, 0, true, false, true,
                 out int collected, out bool used), Is.False);
             Assert.That(used, Is.False); Assert.That(collected, Is.Zero); Assert.That(game.Shields, Is.EqualTo(1));
+            Assert.That(game.Track.LastTruckSmashes, Is.Zero, "Exit shielding is not an obstacle-smashing truck collision.");
             TickFlight(game, 2.9f); Assert.That(game.LandingShieldRemaining, Is.GreaterThan(0));
             TickFlight(game, 0.2f); Assert.That(game.LandingShieldRemaining, Is.Zero);
             game.StartRun();
@@ -236,11 +240,21 @@ namespace CubeDash.Tests
             Assert.That(wrong.gameObject.activeSelf || match.gameObject.activeSelf, Is.False);
             Assert.That(game.Track.LastPowerUps, Does.Contain(PowerUpType.Truck));
             Assert.That(game.Track.Debris.ActiveCount, Is.EqualTo(8), "Coins are collected, not shattered into obstacle debris.");
+            Assert.That(game.Track.LastTruckSmashes, Is.EqualTo(1));
+            game.Track.Advance(0, 0, 0, 0, Vector2.one * 0.575f, 0, false, false, false, true, out _, out _);
+            Assert.That(game.Track.LastTruckSmashes, Is.Zero, "Consumed cubes must not produce repeated impact sounds.");
+            Clear(game);
+            Place(game, 0, CubeColor.Blue, 2); Place(game, 1, CubeColor.Green, 5); Place(game, 2, CubeColor.Red, 8);
+            Assert.That(game.Track.Advance(10, 0, 0, 0, Vector2.one * 0.575f, 0, false, false, false, true,
+                out collected, out _), Is.False);
+            Assert.That(collected, Is.EqualTo(1)); Assert.That(game.Track.LastTruckSmashes, Is.EqualTo(2),
+                "Multiple swept obstacle hits produce multiple impacts; the coin does not.");
             Clear(game);
             Place(game, 0, CubeColor.Blue, 2);
             pickup.transform.position = new Vector3(0, 1.35f, 8); pickup.gameObject.SetActive(true);
             Assert.That(game.Track.Advance(10, 0, 0, 0, Vector2.one * 0.575f, 0, out collected), Is.True);
             Assert.That(game.Track.LastPowerUps, Is.Empty);
+            Assert.That(game.Track.LastTruckSmashes, Is.Zero, "Fatal ordinary contacts are not truck smash events.");
             int objects = game.Track.Debris.GetComponentsInChildren<Transform>(true).Length;
             for (int i = 0; i < 100; i++) game.Track.Debris.Shatter(wrong, 0);
             Assert.That(game.Track.Debris.ActiveCount, Is.EqualTo(game.Track.Debris.Capacity));
@@ -298,6 +312,7 @@ namespace CubeDash.Tests
             Assert.That(game.Track.LastPowerUps, Is.EqualTo(new[] { PowerUpType.DoublePoints }));
             Assert.That(wrong.gameObject.activeSelf || match.gameObject.activeSelf, Is.False);
             Assert.That(game.Track.Debris.ActiveCount, Is.EqualTo(8), "Only the obstacle creates fragments, not the coin.");
+            Assert.That(game.Track.LastTruckSmashes, Is.EqualTo(1));
 
             // A newly collected truck also blocks a later or simultaneous plane within the same sweep.
             foreach (float planeZ in new[] { 5f, 2f })
