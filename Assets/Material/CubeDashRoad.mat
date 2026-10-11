@@ -105,13 +105,14 @@ Material:
     - _Glossiness: 0
     - _GlossyReflections: 0
     - _Metallic: 0
+    - _MicroNormalStrength: 0.008
     - _OcclusionStrength: 1
     - _Parallax: 0.005
     - _QueueOffset: 0
     - _ReceiveShadows: 1
     - _SceneryStagger: 0.55
     - _ShoreX: 7
-    - _Smoothness: 0.1
+    - _Smoothness: 0.22
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 0
     - _SrcBlend: 1
@@ -133,7 +134,7 @@ Material:
     - _NeighborSecondary: {r: 0.29999998, g: 0.39999998, b: 0.29999998, a: 1}
     - _NeighborSurface: {r: 0, g: 1, b: 0.2, a: 0}
     - _SceneryRise: {r: 0, g: 0, b: 80, a: 1.25}
-    - _SecondaryColor: {r: 0.09, g: 0.1, b: 0.11, a: 1}
+    - _SecondaryColor: {r: 0.15, g: 0.16, b: 0.17, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

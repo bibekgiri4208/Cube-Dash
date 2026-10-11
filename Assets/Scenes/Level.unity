@@ -20,9 +20,9 @@ RenderSettings:
   m_FogDensity: 0.01
   m_LinearFogStart: 45
   m_LinearFogEnd: 260
-  m_AmbientSkyColor: {r: 0.66, g: 0.8, b: 0.91, a: 1}
-  m_AmbientEquatorColor: {r: 0.58, g: 0.7, b: 0.73, a: 1}
-  m_AmbientGroundColor: {r: 0.43, g: 0.47, b: 0.49, a: 1}
+  m_AmbientSkyColor: {r: 0.45143998, g: 0.55935997, b: 0.62092, a: 0.76}
+  m_AmbientEquatorColor: {r: 0.38873997, g: 0.43586, b: 0.44516, a: 0.62}
+  m_AmbientGroundColor: {r: 0.24, g: 0.25, b: 0.28, a: 1}
   m_AmbientIntensity: 1
   m_AmbientMode: 1
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
@@ -2376,42 +2376,42 @@ MonoBehaviour:
     Zenith: {r: 0.2, g: 0.5, b: 0.78, a: 1}
     Ground: {r: 0.6399999, g: 0.78, b: 0.75, a: 1}
     Sun: {r: 1, g: 0.91, b: 0.8, a: 1}
-    AmbientSky: {r: 0.66, g: 0.8, b: 0.91, a: 1}
-    AmbientEquator: {r: 0.58, g: 0.7, b: 0.73, a: 1}
-    AmbientGround: {r: 0.43, g: 0.47, b: 0.49, a: 1}
-    SunIntensity: 1.85
+    AmbientSky: {r: 0.45143998, g: 0.55935997, b: 0.62092, a: 0.76}
+    AmbientEquator: {r: 0.38873997, g: 0.43586, b: 0.44516, a: 0.62}
+    AmbientGround: {r: 0.24, g: 0.25, b: 0.28, a: 1}
+    SunIntensity: 2.05
   - Horizon: {r: 0.65, g: 0.82, b: 0.7, a: 1}
     Zenith: {r: 0.14, g: 0.44, b: 0.64, a: 1}
     Ground: {r: 0.24, g: 0.4, b: 0.28, a: 1}
     Sun: {r: 1, g: 0.94, b: 0.78, a: 1}
-    AmbientSky: {r: 0.727, g: 0.8596, b: 0.766, a: 1}
-    AmbientEquator: {r: 0.52699995, g: 0.694, b: 0.574, a: 1}
-    AmbientGround: {r: 0.392, g: 0.52, b: 0.424, a: 1}
-    SunIntensity: 1.6
+    AmbientSky: {r: 0.41039997, g: 0.53542, b: 0.56962, a: 0.76}
+    AmbientEquator: {r: 0.35525998, g: 0.41633, b: 0.40331, a: 0.62}
+    AmbientGround: {r: 0.24, g: 0.25, b: 0.28, a: 1}
+    SunIntensity: 1.85
   - Horizon: {r: 0.78, g: 0.88, b: 0.97, a: 1}
     Zenith: {r: 0.27, g: 0.53, b: 0.78, a: 1}
     Ground: {r: 0.49, g: 0.6, b: 0.68, a: 1}
     Sun: {r: 0.94, g: 0.97, b: 1, a: 1}
-    AmbientSky: {r: 0.82839996, g: 0.9064, b: 0.97660005, a: 1}
-    AmbientEquator: {r: 0.69299996, g: 0.796, b: 0.883, a: 1}
-    AmbientGround: {r: 0.592, g: 0.68, b: 0.744, a: 1}
-    SunIntensity: 1.7
+    AmbientSky: {r: 0.45485997, g: 0.55594003, b: 0.66196, a: 0.76}
+    AmbientEquator: {r: 0.39153, g: 0.43307, b: 0.47864002, a: 0.62}
+    AmbientGround: {r: 0.24, g: 0.25, b: 0.28, a: 1}
+    SunIntensity: 2.15
   - Horizon: {r: 0.96, g: 0.81, b: 0.62, a: 1}
     Zenith: {r: 0.3, g: 0.55, b: 0.76, a: 1}
     Ground: {r: 0.72, g: 0.52, b: 0.31, a: 1}
     Sun: {r: 1, g: 0.87, b: 0.65, a: 1}
-    AmbientSky: {r: 0.9688, g: 0.8518, b: 0.7036, a: 1}
-    AmbientEquator: {r: 0.888, g: 0.723, b: 0.527, a: 1}
-    AmbientGround: {r: 0.776, g: 0.616, b: 0.448, a: 1}
-    SunIntensity: 2
+    AmbientSky: {r: 0.51642, g: 0.532, b: 0.54226, a: 0.76}
+    AmbientEquator: {r: 0.44175, g: 0.41354, b: 0.38099, a: 0.62}
+    AmbientGround: {r: 0.24, g: 0.25, b: 0.28, a: 1}
+    SunIntensity: 2.25
   - Horizon: {r: 0.72, g: 0.9, b: 0.93, a: 1}
     Zenith: {r: 0.16, g: 0.56, b: 0.83, a: 1}
     Ground: {r: 0.43, g: 0.7, b: 0.7, a: 1}
     Sun: {r: 1, g: 0.95, b: 0.83, a: 1}
-    AmbientSky: {r: 0.7816, g: 0.922, b: 0.9454, a: 1}
-    AmbientEquator: {r: 0.633, g: 0.84, b: 0.861, a: 1}
-    AmbientGround: {r: 0.544, g: 0.76, b: 0.76, a: 1}
-    SunIntensity: 1.85
+    AmbientSky: {r: 0.43434, g: 0.56277996, b: 0.64827996, a: 0.76}
+    AmbientEquator: {r: 0.37479, g: 0.43864998, b: 0.46748, a: 0.62}
+    AmbientGround: {r: 0.24, g: 0.25, b: 0.28, a: 1}
+    SunIntensity: 2.1
 --- !u!1 &215359672
 GameObject:
   m_ObjectHideFlags: 0
@@ -2773,6 +2773,7 @@ GameObject:
   - component: {fileID: 237160365}
   - component: {fileID: 237160364}
   - component: {fileID: 237160367}
+  - component: {fileID: 237160368}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -2878,10 +2879,10 @@ MonoBehaviour:
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
   m_RenderPostProcessing: 1
-  m_Antialiasing: 2
+  m_Antialiasing: 1
   m_AntialiasingQuality: 2
-  m_StopNaN: 0
-  m_Dithering: 0
+  m_StopNaN: 1
+  m_Dithering: 1
   m_ClearDepth: 1
   m_AllowXRRendering: 1
   m_AllowHDROutput: 1
@@ -2898,6 +2899,22 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!114 &237160368
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 237160363}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49da669be02f62f4da31303cffc3c489, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CubeDash::CubeDash.RunnerGraphics
+  game: {fileID: 1782416639}
+  motionBlurStrength: 0
+  blurStartSpeed: 0
+  blurFullSpeed: 1
 --- !u!1 &239267173
 GameObject:
   m_ObjectHideFlags: 0
@@ -9399,7 +9416,7 @@ Light:
   serializedVersion: 13
   m_Type: 1
   m_Color: {r: 1, g: 0.91, b: 0.8, a: 1}
-  m_Intensity: 1.85
+  m_Intensity: 2.05
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -9408,9 +9425,9 @@ Light:
     m_Type: 2
     m_Resolution: -1
     m_CustomResolution: -1
-    m_Strength: 1
-    m_Bias: 0.05
-    m_NormalBias: 0.4
+    m_Strength: 0.92
+    m_Bias: 0.035
+    m_NormalBias: 0.25
     m_NearPlane: 0.2
     m_CullingMatrixOverride:
       e00: 1
@@ -9461,7 +9478,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 985602706}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.5035611, y: -0.29138294, z: 0.1852741, w: -0.79195696}
+  m_LocalRotation: {x: 0.39098036, y: -0.25180724, z: 0.112111814, w: 0.87815624}
   m_LocalPosition: {x: 0, y: 3, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -14698,8 +14715,8 @@ Light:
   m_Enabled: 1
   serializedVersion: 13
   m_Type: 1
-  m_Color: {r: 0.61, g: 0.78, b: 1, a: 1}
-  m_Intensity: 0.28
+  m_Color: {r: 0.45143998, g: 0.55935997, b: 0.62092, a: 0.76}
+  m_Intensity: 0.16
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208

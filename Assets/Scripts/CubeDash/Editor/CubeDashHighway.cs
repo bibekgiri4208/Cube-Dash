@@ -32,9 +32,11 @@ namespace CubeDash.Editor
                     throw new InvalidOperationException("Save scene changes before applying the highway.");
 
             Material road = Surface("Assets/Material/CubeDashRoad.mat", "CubeDashRoad",
-                new Color(0.17f, 0.18f, 0.19f), new Color(0.09f, 0.10f, 0.11f), 7, 0.10f);
+                new Color(0.17f, 0.18f, 0.19f), new Color(0.15f, 0.16f, 0.17f), 7, 0.22f);
+            road.SetFloat("_MicroNormalStrength", 0.008f);
             Material shoulder = Surface(MaterialFolder + "Highway Shoulder.mat", "Highway Shoulder",
                 new Color(0.30f, 0.31f, 0.30f), new Color(0.21f, 0.22f, 0.21f), 7, 0.08f);
+            shoulder.SetFloat("_MicroNormalStrength", 0.015f);
             Material paint = Surface(MaterialFolder + "Highway Paint.mat", "Highway Paint",
                 new Color(0.90f, 0.88f, 0.78f), new Color(0.80f, 0.79f, 0.72f), 0, 0.16f);
             Material steel = Surface(MaterialFolder + "Highway Guardrail.mat", "Highway Guardrail",

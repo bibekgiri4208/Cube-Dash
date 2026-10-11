@@ -73,6 +73,10 @@ namespace CubeDash.Editor
             Material sky = RenderSettings.skybox;
             if (sky != null && sun != null)
             {
+                var city = settings.FindProperty("atmospheres").GetArrayElementAtIndex(0);
+                sky.SetColor("_HorizonColor", city.FindPropertyRelative("Horizon").colorValue);
+                sky.SetColor("_ZenithColor", city.FindPropertyRelative("Zenith").colorValue);
+                sky.SetColor("_GroundColor", city.FindPropertyRelative("Ground").colorValue);
                 sky.SetVector("_SunDirection", -sun.transform.forward);
                 sky.SetFloat("_SunSize", 0.65f);
                 sky.SetColor("_SunColor", sun.color * 1.5f);

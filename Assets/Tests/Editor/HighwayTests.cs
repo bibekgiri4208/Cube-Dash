@@ -10,6 +10,18 @@ namespace CubeDash.Tests
         private const string TrackPath = "Assets/Prefab/CubeDash/TrackSegment.prefab";
 
         [Test]
+        public void AsphaltHasRestrainedGrainAndReliefInsteadOfRoughSparklingBumps()
+        {
+            Material asphalt = AssetDatabase.LoadAssetAtPath<Material>("Assets/Material/CubeDashRoad.mat");
+            Assert.That(asphalt.GetFloat("_MicroNormalStrength"), Is.InRange(0, 0.01f));
+            Assert.That(asphalt.GetFloat("_Smoothness"), Is.InRange(0.18f, 0.3f), "Smooth, not wet or mirror-like.");
+            Color contrast = asphalt.GetColor("_BaseColor") - asphalt.GetColor("_SecondaryColor");
+            Assert.That(Mathf.Max(Mathf.Abs(contrast.r), Mathf.Max(Mathf.Abs(contrast.g), Mathf.Abs(contrast.b))), Is.LessThan(0.025f));
+            Material shoulder = AssetDatabase.LoadAssetAtPath<Material>("Assets/Material/Environments/Highway Shoulder.mat");
+            Assert.That(shoulder.GetFloat("_MicroNormalStrength"), Is.InRange(0, 0.02f));
+        }
+
+        [Test]
         public void HighwayUsesNonBlueAsphaltAndSavedColliderFreeRoadDressing()
         {
             GameObject track = AssetDatabase.LoadAssetAtPath<GameObject>(TrackPath);

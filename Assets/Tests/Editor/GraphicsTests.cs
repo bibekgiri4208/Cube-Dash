@@ -65,6 +65,10 @@ namespace CubeDash.Tests
                 Assert.That(fill.intensity, Is.InRange(0.1f, 0.2f));
                 var looks = settings.FindProperty("atmospheres");
                 Assert.That(looks.arraySize, Is.EqualTo(BiomeRules.Count));
+                var sky = AssetDatabase.LoadAssetAtPath<Material>("Assets/Material/CubeDashHorizon.mat");
+                var city = looks.GetArrayElementAtIndex(0);
+                Assert.That(Vector4.Distance(sky.GetColor("_HorizonColor"), city.FindPropertyRelative("Horizon").colorValue), Is.LessThan(0.001f));
+                Assert.That(Vector4.Distance(sky.GetColor("_ZenithColor"), city.FindPropertyRelative("Zenith").colorValue), Is.LessThan(0.001f));
                 for (int i = 0; i < looks.arraySize; i++)
                 {
                     var look = looks.GetArrayElementAtIndex(i);
@@ -146,6 +150,11 @@ namespace CubeDash.Tests
             var image = new Texture2D(640, 360, TextureFormat.RGBA32, false);
             var oldTarget = game.GameCamera.targetTexture; var oldActive = RenderTexture.active;
             int oldQuality = QualitySettings.GetQualityLevel();
+            var cameraData = game.GameCamera.GetUniversalAdditionalCameraData();
+            bool oldDithering = cameraData.dithering;
+            // Dithering intentionally randomizes final sub-byte colors between renders; exclude
+            // that independent effect from this spatial blur comparison (saved setting tested above).
+            cameraData.dithering = false;
             try
             {
                 Color32[] Capture()
@@ -176,6 +185,7 @@ namespace CubeDash.Tests
             finally
             {
                 game.GameCamera.targetTexture = oldTarget; RenderTexture.active = oldActive;
+                cameraData.dithering = oldDithering;
                 QualitySettings.SetQualityLevel(oldQuality, true);
                 Object.DestroyImmediate(image); Object.DestroyImmediate(target);
             }

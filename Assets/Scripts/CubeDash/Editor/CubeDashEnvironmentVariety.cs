@@ -87,7 +87,41 @@ namespace CubeDash.Editor
             if (biome == EnvironmentBiome.Jungle) { jungleBark = bark; jungleLeaf = leaf; jungleHighlight = lightLeaf; }
         }
 
-        private static void AddVarietyLayouts(Transform root, EnvironmentBiome biome, Material[] palette)
+        [MenuItem("Tools/Cube Dash/Repair Desert Models")]
+        public static void RepairDesertFromCommandLine()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+                throw new InvalidOperationException("Stop Play mode before repairing desert models.");
+            InitializeModels();
+            try
+            {
+                // Update existing assets in place: no scene save, terrain rebuild or other biome edits.
+                string path = Prefabs + "/Desert.prefab";
+                GameObject root = PrefabUtility.LoadPrefabContents(path);
+                try
+                {
+                    Material[] palette = root.transform.Find("Landscape Details").GetComponent<Renderer>().sharedMaterials;
+                    UseNaturalPalette(palette, EnvironmentBiome.Desert);
+                    AddVarietyLayouts(root.transform, EnvironmentBiome.Desert, palette, repairOnly: true);
+                    BiomeScenery scenery = root.GetComponent<BiomeScenery>();
+                    foreach (Mesh mesh in scenery.Layouts) CubeDashSceneryRise.BakeAnchors(mesh);
+                    foreach (Mesh mesh in scenery.VarietyLayouts) CubeDashSceneryRise.BakeAnchors(mesh);
+                    PrefabUtility.SaveAsPrefabAsset(root, path);
+                }
+                finally { PrefabUtility.UnloadPrefabContents(root); }
+                // Cacti also appear in the two adjacent biome joins.
+                foreach (string name in new[] { "Mountains Exit Blend", "Beach Entrance Blend" })
+                {
+                    Mesh mesh = AssetDatabase.LoadAssetAtPath<Mesh>(Meshes + "/" + name + ".asset");
+                    if (mesh != null) CubeDashSceneryRise.BakeAnchors(mesh);
+                }
+                AssetDatabase.SaveAssets();
+                Debug.Log("Desert models repaired: outward-facing sandstone arches, connected prickly-pear pads and synchronized cactus arms. Scene, terrain, other biomes and gameplay preserved.");
+            }
+            finally { ReleaseModels(); }
+        }
+
+        private static void AddVarietyLayouts(Transform root, EnvironmentBiome biome, Material[] palette, bool repairOnly = false)
         {
             Folder(VarietyModels);
             string directory = VarietyModels + "/" + biome; Folder(directory);
@@ -95,8 +129,14 @@ namespace CubeDash.Editor
             var models = new Dictionary<string, Mesh>();
             foreach (string name in names)
             {
-                Mesh mesh = SaveMesh(BuildVarietyModel(biome, name, palette), biome + " " + name);
+                Mesh mesh = repairOnly && name != "Sandstone Arch" && name != "Prickly Pear"
+                    ? AssetDatabase.LoadAssetAtPath<Mesh>(Meshes + "/" + biome + " " + name + ".asset")
+                        ?? throw new InvalidOperationException("Missing authored desert model: " + name)
+                    : SaveMesh(BuildVarietyModel(biome, name, palette), biome + " " + name);
                 models[name] = mesh;
+                // Existing reusable prefabs inherit the repaired shared mesh. Do not rewrite
+                // their hierarchy/file IDs or overwrite custom work on unaffected models.
+                if (repairOnly) continue;
                 GameObject model = new GameObject(name);
                 try
                 {
@@ -235,9 +275,14 @@ namespace CubeDash.Editor
                     }
                     break;
                 case "Prickly Pear":
+                    // Each child pad overlaps its parent instead of jumping across a sine wave.
+                    Vector3[] pads = { new Vector3(0, 0.75f, 0), new Vector3(-0.3f, 1.85f, 0),
+                        new Vector3(0.45f, 1.9f, 0.06f), new Vector3(-0.85f, 2.85f, 0),
+                        new Vector3(0.95f, 2.9f, 0.06f), new Vector3(-1.3f, 3.9f, 0),
+                        new Vector3(1.4f, 3.95f, 0.06f), new Vector3(0, 2.95f, 0.1f) };
                     for (int pad = 0; pad < 8; pad++)
                     {
-                        Vector3 p = new Vector3(Mathf.Sin(pad * 2.3f) * (pad > 2 ? 1.4f : 0.3f), 0.7f + pad * 0.42f, pad % 2 * 0.2f);
+                        Vector3 p = pads[pad];
                         g.Add(crowns[0], palette[pad % 3 == 0 ? 2 : 1], p, new Vector3(1.2f, 1.7f, 0.38f), pad % 3 * 17);
                         if (pad > 4) Rock(6, p + Vector3.up * 0.8f, Vector3.one * 0.22f);
                     }

@@ -30,6 +30,7 @@ Material:
     - _DetailScale: 1
     - _DetailType: 7
     - _Metallic: 0
+    - _MicroNormalStrength: 0.015
     - _SceneryStagger: 0.55
     - _ShoreX: 7
     - _Smoothness: 0.08

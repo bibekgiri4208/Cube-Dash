@@ -222,7 +222,9 @@ animation anchors and reconnect the saved prefab. Mesh bounds include the downwa
 - **Mountains:** detailed asymmetric craggy ridges with broken snowlines, weathered rock grain,
   scree, distant peaks and five-tier evergreens with scalloped branch silhouettes.
 - **Desert:** wind-shaped dunes with subtle sand ripples, layered sandstone bluffs,
-  pebbles, dry grass and rounded, curved cactus arms.
+  pebbles, dry grass and rounded, curved cactus arms. Sandstone arches have outward-facing
+  solid surfaces, prickly-pear pads connect, and cactus arms share their trunk's rise timing.
+  **Tools > Cube Dash > Repair Desert Models** updates just these saved models/layouts.
 - **Beach:** leaning ringed palm trunks, curved fronds with individual leaflets and coconuts,
   turquoise ocean, wet shoreline sand, timber houses with hipped thatch roofs, framed windows,
   porches and steps, and individual jetty planks.
@@ -268,7 +270,7 @@ no trees, terrain or colliders are generated during a run.
 
 ### Ground-level highway
 
-The road now has charcoal asphalt with distance-filtered aggregate grain and subtle tire wear,
+The road now has smooth charcoal asphalt with low-contrast, distance-filtered grain, minimal bump relief and subtle tire wear,
 two dashed white lane dividers, solid white edge lines, graded shoulders and low steel guardrails.
 The original starting Plane uses the same asphalt. The road surface remains at gameplay height;
 all five landscape roots are raised together by **8.75 metres**, placing their ground just

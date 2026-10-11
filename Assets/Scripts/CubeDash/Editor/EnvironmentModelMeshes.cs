@@ -167,14 +167,16 @@ namespace CubeDash.Editor
             for (int i = 0; i < steps; i++)
             {
                 int a = i * 4, b = a + 4;
-                Triangle(triangles, a, a + 1, b); Triangle(triangles, a + 1, b + 1, b);
-                Triangle(triangles, a + 2, b + 2, a + 3); Triangle(triangles, a + 3, b + 2, b + 3);
-                Triangle(triangles, a, b, a + 2); Triangle(triangles, a + 2, b, b + 2);
-                Triangle(triangles, a + 1, a + 3, b + 1); Triangle(triangles, a + 3, b + 3, b + 1);
+                // Outward winding on front/back, opening and crown. Inward faces were
+                // culled from outside, making the arch look like a broken hollow shell.
+                Triangle(triangles, a, b, a + 1); Triangle(triangles, a + 1, b, b + 1);
+                Triangle(triangles, a + 2, a + 3, b + 2); Triangle(triangles, a + 3, b + 3, b + 2);
+                Triangle(triangles, a, a + 2, b); Triangle(triangles, a + 2, b + 2, b);
+                Triangle(triangles, a + 1, b + 1, a + 3); Triangle(triangles, a + 3, b + 1, b + 3);
             }
-            Triangle(triangles, 0, 2, 1); Triangle(triangles, 1, 2, 3);
+            Triangle(triangles, 0, 1, 2); Triangle(triangles, 1, 3, 2);
             int last = steps * 4;
-            Triangle(triangles, last, last + 1, last + 2); Triangle(triangles, last + 1, last + 3, last + 2);
+            Triangle(triangles, last, last + 2, last + 1); Triangle(triangles, last + 1, last + 2, last + 3);
             return Finish("Eroded sandstone arch", vertices, new[] { triangles }, false);
         }
 

@@ -59,7 +59,7 @@ namespace CubeDash.Editor
             finally { PrefabUtility.UnloadPrefabContents(root); }
         }
 
-        private static void BakeAnchors(Mesh mesh)
+        internal static void BakeAnchors(Mesh mesh)
         {
             // City models already carry one shared anchor for every part of each building/prop.
             // Reconstructing connected components would separate signs, balconies and roof pieces.
@@ -96,10 +96,16 @@ namespace CubeDash.Editor
             for (int surface = 0; surface < mesh.subMeshCount; surface++)
                 foreach (int index in mesh.GetTriangles(surface)) materials[Root(index)] = surface;
             var stems = new List<int>(); var mountains = new List<int>();
+            bool desertCacti = mesh.name.StartsWith("Desert Layout ", StringComparison.Ordinal)
+                || mesh.name == "Mountains Exit Blend" || mesh.name == "Beach Entrance Blend";
             foreach (var item in bounds)
             {
                 if (!materials.TryGetValue(item.Key, out int material)) continue;
                 if ((material == 0 || material == 15) && item.Value.size.y > 4 && item.Value.size.x < item.Value.size.y * 0.4f) stems.Add(item.Key);
+                // Cactus trunks use foliage, not bark. Their intersecting arms have separate
+                // topology but must share the trunk's reveal anchor to remain attached.
+                if (desertCacti && material == 1 && item.Value.size.y > 2.8f
+                    && item.Value.size.x < item.Value.size.y * 0.5f) stems.Add(item.Key);
                 if (material == 3 && item.Value.size.y > 12 && item.Value.size.x > 12) mountains.Add(item.Key);
             }
             var anchors = new Dictionary<int, Vector2>();
