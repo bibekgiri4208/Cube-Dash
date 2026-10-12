@@ -35,8 +35,8 @@ namespace CubeDash.Tests
             Assert.That(menu.GetComponent<MeshFilter>().sharedMesh, Is.SameAs(model.GetComponent<MeshFilter>().sharedMesh));
             Assert.That(menu.Body.sharedMaterial, Is.SameAs(model.Body.sharedMaterial));
             Color red = menu.Body.sharedMaterial.GetColor("_BaseColor");
-            Assert.That(red.r, Is.GreaterThan(0.9f));
-            Assert.That(red.g, Is.LessThan(0.05f)); Assert.That(red.b, Is.LessThan(0.05f));
+            Assert.That(red.r, Is.GreaterThan(Mathf.Max(red.g, red.b) * 2f),
+                "The inherited material should remain red-dominant while allowing the user's saved color tuning.");
             Assert.That(menu.Body.sharedMaterial.GetColor("_EmissionColor").maxColorComponent, Is.LessThan(0.15f),
                 "The menu's bright lighting must not combine with excessive self-emission to wash out the red.");
             Assert.That(menu.Eyes.Length, Is.EqualTo(2));

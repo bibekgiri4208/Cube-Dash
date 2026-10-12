@@ -71,6 +71,7 @@ namespace CubeDash.Editor
             ConfigureLighting(rootObject.transform);
             BuildUI(rootObject.transform, controller, camera);
             ConfigureBuildScenes();
+            MainMenuJapaneseGarden.ApplyToScene(scene);
             AssetDatabase.SaveAssets();
             EditorSceneManager.MarkSceneDirty(scene);
             if (!EditorSceneManager.SaveScene(scene)) throw new IOException("Could not save Main Menu.");

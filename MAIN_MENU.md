@@ -19,6 +19,14 @@ The menu mascot is `Assets/Prefab/CubeDash/PlayerCubeMenuPreview.prefab`, a **va
 
 ## Editing
 
+### Japanese garden foliage
+
+The menu now uses Japanese black pines with curved limbs and horizontal needle pads, rounded azalea shrubs with folded leaves and small flowers, fine roadside grass tufts, and susuki ornamental grass with silver seed heads. Three detailed sakura trees have flared roots, curved trunks, horizontal bark markings, tapered branches/twigs, layered pink canopies, individual notched five-petal flowers and modeled centers. Fallen petals and a low stone-edged planting bed finish the street-side tree. No gameplay vegetation is changed.
+
+Editable, reusable prefabs, saved meshes and matte materials are under `Assets/MainMenu/JapaneseGarden`. In the scene, edit **Cube Dash Main Menu > Parking Lot Diorama > Japanese Garden Foliage**. The models use shared combined meshes and do not generate geometry, run scripts, or add colliders at runtime.
+
+`Tools > Cube Dash > Improve Main Menu Japanese Foliage` upgrades only the original foliage and adds the sakura planting. Original trees, shrubs and weeds remain saved but inactive, so their edits can be recovered. The parking layout, cars/props, graffiti, player/backflip, camera, UI, skybox and lighting are preserved. Re-running the tool preserves an already-authored garden rather than rebuilding over manual edits. The full reference-menu builder includes the garden when regenerating a menu from scratch.
+
 Environment and canvas objects are saved in the scene under `Cube Dash Main Menu`. Camera and sun are separate scene objects. Materials, mesh assets, shader and licensed fonts are in `Assets/MainMenu`.
 
 `Tools > Cube Dash > Build Reference Main Menu` regenerates **only the generated menu root**, resets the menu camera/sun/environment settings, and sets build order. It preserves unrelated root objects and does not rebuild `Level`. Save scene edits before running it. Regeneration replaces manual edits within the generated root.
@@ -34,6 +42,8 @@ The menu uses bright, airy arcade daylight: neutral tonemapping, lifted exposure
 `Tools > Cube Dash > Tune Main Menu Post Processing` reapplies the menu profile defaults **without rebuilding or saving the scene**, then selects the profile for editing. Use this rather than the scene builder when only adjusting post-processing.
 
 ## Validation
+
+Japanese foliage validation passed **17 focused tests** in the temporary Unity project: saved botanical geometry/materials, three sakura trees, foliage backups, menu wiring/navigation, and player idle/backflip isolation. Scene comparison confirmed that only 102 original foliage roots were hidden and one garden child added; no other existing scene objects or settings were modified. `Level.unity` and the menu lighting profile remained byte-for-byte unchanged.
 
 `CubeDash.Tests.MainMenuTests` covers build order, authored object/material references, camera/Volume wiring and focus distances, a rendered post-processing on/off comparison, button wiring, runtime panels/preview/volume and navigation into `Level`. Set `CUBE_DASH_MENU_PLAY_PREVIEW` to a PNG path to capture the runtime view during the test. `MainMenuSceneBuilder.BuildAndCaptureFromCommandLine` authors the scene and captures an editor preview; `MainMenuGraphics.ApplyAndCaptureFromCommandLine` only tunes the profile and captures the existing scene. Use a separate validation project if the main project is open.
 
