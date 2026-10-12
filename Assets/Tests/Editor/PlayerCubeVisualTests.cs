@@ -82,6 +82,119 @@ namespace CubeDash.Tests
             Assert.That(PlayerCubeVisual.JellyScale(0), Is.EqualTo(Vector3.one));
         }
 
+        [Test]
+        public void MenuBackflipHasAnticipationAFullBackwardTurnAndASoftLanding()
+        {
+            Assert.That(PlayerCubeVisual.IdleAngularSpeed, Is.InRange(3f, 3.2f), "Only a modest increase from the previous 2.6 speed.");
+            float period = 2 * Mathf.PI / PlayerCubeVisual.IdleAngularSpeed;
+            Assert.That(Vector3.Distance(PlayerCubeVisual.JellyScale(0.3f), PlayerCubeVisual.JellyScale(0.3f + period)), Is.LessThan(0.00001f));
+
+            float start = PlayerCubeVisual.BackflipStart;
+            PlayerCubeVisual.SampleMenuIdle(start - 0.1f, out Vector3 idle, out Quaternion rotation, out float lift);
+            Assert.That(idle, Is.EqualTo(PlayerCubeVisual.JellyScale(start - 0.1f)));
+            Assert.That(rotation, Is.EqualTo(Quaternion.identity)); Assert.That(lift, Is.Zero);
+            PlayerCubeVisual.SampleMenuIdle(start + 0.09f, out Vector3 crouch, out rotation, out lift);
+            Assert.That(crouch.y, Is.LessThan(PlayerCubeVisual.JellyScale(start + 0.09f).y));
+            Assert.That(rotation, Is.EqualTo(Quaternion.identity)); Assert.That(lift, Is.Zero);
+            PlayerCubeVisual.SampleMenuIdle(start + 0.385f, out _, out rotation, out lift);
+            Assert.That((rotation * Vector3.back).y, Is.GreaterThan(0.7f), "The face pitches upward: a backflip, not a frontflip.");
+            Assert.That(lift, Is.GreaterThan(0.6f));
+            PlayerCubeVisual.SampleMenuIdle(start + 0.59f, out _, out rotation, out lift);
+            Assert.That(Quaternion.Angle(Quaternion.identity, rotation), Is.EqualTo(180).Within(0.01f));
+            Assert.That(lift, Is.EqualTo(0.95f).Within(0.00001f));
+            PlayerCubeVisual.SampleMenuIdle(start + 1.125f, out Vector3 landing, out rotation, out lift);
+            Assert.That(landing.y, Is.LessThan(PlayerCubeVisual.JellyScale(start + 1.125f).y));
+            Assert.That(rotation, Is.EqualTo(Quaternion.identity)); Assert.That(lift, Is.Zero);
+
+            foreach (float time in new[] { start, start + 0.18f, start + 1f, start + PlayerCubeVisual.BackflipDuration })
+            {
+                PlayerCubeVisual.SampleMenuIdle(time - 0.00001f, out Vector3 before, out Quaternion turnBefore, out float liftBefore);
+                PlayerCubeVisual.SampleMenuIdle(time + 0.00001f, out Vector3 after, out Quaternion turnAfter, out float liftAfter);
+                Assert.That(Vector3.Distance(before, after), Is.LessThan(0.001f), "No snapping between idle, takeoff and landing.");
+                Assert.That(Quaternion.Angle(turnBefore, turnAfter), Is.LessThan(0.1f));
+                Assert.That(Mathf.Abs(liftBefore - liftAfter), Is.LessThan(0.001f));
+            }
+            for (int i = 0; i <= 160; i++)
+            {
+                float time = start + i * 0.01f;
+                PlayerCubeVisual.SampleMenuIdle(time, out Vector3 scale, out rotation, out lift);
+                Assert.That(scale.x * scale.y * scale.z, Is.EqualTo(1).Within(0.00001f));
+                Assert.That(rotation * Vector3.right, Is.EqualTo(Vector3.right), "No unintended sideways spin.");
+                Vector3 position = PlayerCubeVisual.GroundedPosition(Vector3.zero, Vector3.one, scale, -0.5f) + Vector3.up * lift;
+                Vector3 rotatedUp = rotation * Vector3.up, rotatedForward = rotation * Vector3.forward;
+                float extent = (Mathf.Abs(rotatedUp.y) * scale.y + Mathf.Abs(rotatedForward.y) * scale.z) * 0.5f;
+                Assert.That(position.y - extent, Is.GreaterThanOrEqualTo(-0.5001f), "The airborne mesh must not rotate through the floor.");
+                PlayerCubeVisual.SampleMenuIdle(time + PlayerCubeVisual.BackflipInterval, out _, out Quaternion repeated, out float repeatedLift);
+                Assert.That(Quaternion.Angle(rotation, repeated), Is.LessThan(0.1f));
+                Assert.That(repeatedLift, Is.EqualTo(lift).Within(0.00001f));
+            }
+            float end = start + PlayerCubeVisual.BackflipDuration + 0.1f;
+            PlayerCubeVisual.SampleMenuIdle(end, out idle, out rotation, out lift);
+            Assert.That(idle, Is.EqualTo(PlayerCubeVisual.JellyScale(end)));
+            Assert.That(rotation, Is.EqualTo(Quaternion.identity)); Assert.That(lift, Is.Zero);
+        }
+
+        [UnityTest]
+        public IEnumerator BackflipRunsOnlyInTheMenuAndGameplayReadyNeverJumpsOrRotates()
+        {
+            yield return new EnterPlayMode();
+            yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/Main Menu.unity", new LoadSceneParameters(LoadSceneMode.Single));
+            yield return null;
+            MainMenuController menu = Object.FindAnyObjectByType<MainMenuController>();
+            Assert.That(menu != null, Is.True, "Main Menu must finish loading before checking its preview.");
+            Renderer hero = menu.Hero;
+            Assert.That(hero != null, Is.True, "The menu's player renderer must remain valid.");
+            PlayerCubeVisual model = hero.gameObject.GetComponent<PlayerCubeVisual>();
+            Assert.That(model != null, Is.True);
+            Transform root = model.transform.parent;
+            Vector3 rootPosition = root.position, rootScale = root.localScale;
+            Quaternion rootRotation = root.rotation;
+            FieldInfo menuAge = typeof(PlayerCubeVisual).GetField("age", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(menuAge, Is.Not.Null);
+            menuAge.SetValue(model, PlayerCubeVisual.BackflipStart + 0.4f);
+            float deadline = Time.time + 0.05f;
+            while (Time.time < deadline) yield return null;
+            Assert.That(Quaternion.Angle(model.transform.localRotation, Quaternion.identity), Is.GreaterThan(30));
+            Assert.That(model.transform.localPosition.y, Is.GreaterThan(0.5f));
+            Assert.That(root.position, Is.EqualTo(rootPosition)); Assert.That(root.rotation, Is.EqualTo(rootRotation));
+            Assert.That(root.localScale, Is.EqualTo(rootScale));
+            Assert.That(root.GetComponentsInChildren<Collider>(true), Is.Empty);
+            foreach (MeshRenderer eye in model.Eyes)
+            {
+                Assert.That(eye.transform.parent, Is.EqualTo(model.transform));
+                Assert.That(eye.enabled, Is.True);
+            }
+            model.enabled = false;
+            Assert.That(model.transform.localPosition, Is.EqualTo(Vector3.zero));
+            Assert.That(model.transform.localRotation, Is.EqualTo(Quaternion.identity));
+            Assert.That(model.transform.localScale, Is.EqualTo(Vector3.one), "Disabling a mid-flip preview restores its authored pose.");
+
+            yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/Level.unity", new LoadSceneParameters(LoadSceneMode.Single));
+            yield return null;
+            CubeDashGame game = Object.FindAnyObjectByType<CubeDashGame>(); game.enabled = false;
+            model = game.Player.Find("Cube Visual").GetComponent<PlayerCubeVisual>();
+            Assert.That(model.AutoplayIdle, Is.False, "Gameplay must never run the menu's backflip animator.");
+            Vector3 position = game.Player.position, scale = game.Player.localScale;
+            Bounds bounds = game.Player.GetComponent<BoxCollider>().bounds;
+            Quaternion originalRotation = model.transform.localRotation;
+            Vector3 origin = (Vector3)typeof(CubeDashGame).GetField("playerVisualOrigin", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(game);
+            FieldInfo time = typeof(CubeDashGame).GetField("animationTime", BindingFlags.Instance | BindingFlags.NonPublic);
+            MethodInfo animate = typeof(CubeDashGame).GetMethod("UpdatePlayerAnimation", BindingFlags.Instance | BindingFlags.NonPublic);
+            for (int i = 0; i < 200; i++)
+            {
+                time.SetValue(game, i * 0.1f); animate.Invoke(game, new object[] { 0f });
+                Assert.That(game.State, Is.EqualTo(CubeDashGame.RunState.Ready));
+                Assert.That(model.transform.localRotation, Is.EqualTo(originalRotation));
+                Assert.That(model.transform.localPosition.y - model.transform.localScale.y * 0.5f, Is.EqualTo(origin.y - 0.5f).Within(0.00001f),
+                    "Ready remains grounded even when the menu would backflip.");
+                Assert.That(game.Player.position, Is.EqualTo(position)); Assert.That(game.Player.localScale, Is.EqualTo(scale));
+                Assert.That(game.Player.GetComponent<BoxCollider>().bounds, Is.EqualTo(bounds));
+            }
+            game.StartRun();
+            Assert.That(model.transform.localRotation, Is.EqualTo(originalRotation));
+            Assert.That(model.transform.localPosition, Is.EqualTo(origin));
+        }
+
         [UnityTest]
         public IEnumerator MenuPlayerJelliesButKeyboardAndGamepadCannotMoveOrTransformIt()
         {

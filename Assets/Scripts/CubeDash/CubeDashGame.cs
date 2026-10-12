@@ -238,7 +238,7 @@ namespace CubeDash
                 playerVisual.localPosition = PlayerCubeVisual.GroundedPosition(playerVisualOrigin, playerScale, playerVisual.localScale, playerMeshBottom);
             if (State != RunState.GameOver)
             {
-                float breathing = State == RunState.Ready ? 1f + Mathf.Sin(animationTime * 2.6f) * 0.12f : 1f;
+                float breathing = State == RunState.Ready ? 1f + Mathf.Sin(animationTime * PlayerCubeVisual.IdleAngularSpeed) * 0.12f : 1f;
                 SetPlayerColor(playerColor, cubeEmission * breathing + absorptionPulse * pickupEmission);
             }
         }
