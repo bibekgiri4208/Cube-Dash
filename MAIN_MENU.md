@@ -29,11 +29,17 @@ Editable, reusable prefabs, saved meshes and matte materials are under `Assets/M
 
 ### Idyllic Fantasy Nature trees
 
-The active menu trees are linked prefab instances from `Assets/Idyllic Fantasy Nature/Prefabs`: three distinct `BlossomTree` variants for the sakura, seven green `BroadleafTree` instances and four `Fir` instances. They retain the package's textures, materials and three-level LODs. Their placement/orientation follows the old tree anchors, with scale fitted to the previous canopy footprint. Only the old tree renderers are hidden, preserving their planter children. Fallen petals and the rest of the parking lot are unchanged.
+The original imported tree arrangement used three distinct `BlossomTree` variants for the sakura, seven green `BroadleafTree` instances and four `Fir` instances from `Assets/Idyllic Fantasy Nature/Prefabs`. These linked instances retain the package's textures, trunk materials and three-level LODs; blossom shading uses the menu-only material below. Trees can be moved, added or removed when editing the layout. Only the old procedural tree renderers are hidden, preserving their planter children. Fallen petals and the rest of the parking lot are unchanged.
 
 Edit **Japanese Garden Foliage > Idyllic Fantasy Nature Trees** in the scene. `Tools > Cube Dash > Use Idyllic Fantasy Nature Menu Trees` performs this tree-only replacement and preserves an already-authored replacement on subsequent runs. Source prefab, model and material assets are not edited; capsule colliders are removed through scene-instance overrides, and static batching is disabled for shader-driven foliage. No demo controllers are added. Full menu regeneration uses the imported tree package when it is installed.
 
 Compatibility with URP 17: the package's `Shader/Vegetation.shadergraph` declares `_MAIN_LIGHT_SHADOWS` and `_MAIN_LIGHT_SHADOWS_CASCADE` as **Predefined** keywords rather than declaring them again. URP already supplies these keywords. This removes duplicate-declaration shader errors without changing textures, material colors, graph lighting/wind logic, pipeline assets, color space or post-processing.
+
+### Brighter menu sakura blossoms
+
+`Assets/MainMenu/Sakura/Menu Sakura Blossoms.mat` and its saved shader graph tune only the pink blossom slots on active imported sakura trees in the menu, including manually placed trees outside the generated group. The material keeps the package's blossom texture, alpha clipping and wind settings. HDR **Top Color** and **Bottom Color** use richer rose-pink tints; **Menu Blossom Glow** (default `0.95`) balances the existing textured emission without washing out petals. The menu shader smoothly blends shadow gradients and moderately lifts their darkest values, retaining canopy contrast and petal detail. Trunk materials, shadow casting, mesh geometry, positions, LODs, other foliage and the global Volume profile are unchanged.
+
+`Tools > Cube Dash > Brighten Main Menu Sakura Blossoms` creates these menu-only assets if missing and assigns them only where the original package blossom material is still used. Subsequent runs preserve material/shader edits and unrelated custom overrides. Full menu regeneration includes this tuning. The downloaded material and shader are not modified by this tool. Adjust the menu material's HDR colors or **Menu Blossom Glow** for further visual tuning rather than raising global bloom intensity.
 
 ### Idyllic Fantasy Nature bushes and grass
 
@@ -56,6 +62,8 @@ The menu uses bright, airy arcade daylight: neutral tonemapping, lifted exposure
 `Tools > Cube Dash > Tune Main Menu Post Processing` reapplies the menu profile defaults **without rebuilding or saving the scene**, then selects the profile for editing. Use this rather than the scene builder when only adjusting post-processing.
 
 ## Validation
+
+Menu sakura color refinement passed **23 focused tests** in the temporary Unity project. All four currently placed sakura trees use the menu material across their 12 blossom LOD slots. The rendered comparison measured mean saturation `0.147` higher and grayscale brightness `0.162` lower than the pale, over-bright color tuning, while remaining `0.026` brighter than the original package shading (values on 0–1 scales). This refinement changes only the menu material/shader and their regeneration defaults; scene files, source materials/shaders, tree geometry/placement, lighting profile and gameplay were preserved.
 
 Imported ground-cover validation passed **21 focused tests** in the temporary Unity project, including linked bushes/grass, hidden originals, package materials/LODs, absence of demo interactions, tree preservation, navigation and player animation. No shader errors or exceptions were reported. Scene comparison confirmed exactly 115 old plant renderers hidden and one replacement group added, with no other existing scene objects or settings changed.
 

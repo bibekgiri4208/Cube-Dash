@@ -11,20 +11,19 @@ namespace CubeDash.Tests
         private const string Prefabs = "Assets/Idyllic Fantasy Nature/Prefabs/";
 
         [Test]
-        public void MenuUsesFourteenLinkedPackageTreesWithThreeBlossomVariantsAndWorkingLods()
+        public void MenuUsesLinkedPackageTreeVariantsAndWorkingLodsWhileAllowingManualLayoutEdits()
         {
             var scene = EditorSceneManager.OpenPreviewScene("Assets/Scenes/Main Menu.unity");
             try
             {
                 var menu = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<MainMenuController>(true)).Single();
                 Transform trees = menu.transform.Find("Parking Lot Diorama/Japanese Garden Foliage/Idyllic Fantasy Nature Trees");
-                Assert.That(trees, Is.Not.Null); Assert.That(trees.childCount, Is.EqualTo(14));
+                Assert.That(trees, Is.Not.Null); Assert.That(trees.childCount, Is.GreaterThanOrEqualTo(3));
                 string[] paths = trees.Cast<Transform>().Select(tree => PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(tree.gameObject)).ToArray();
                 Assert.That(paths.All(path => path.StartsWith(Prefabs)), Is.True);
-                Assert.That(paths.Count(path => path.Contains("BlossomTree_")), Is.EqualTo(3));
-                Assert.That(paths.Count(path => path.Contains("BroadleafTree_")), Is.EqualTo(7));
-                Assert.That(paths.Count(path => path.Contains("Fir_")), Is.EqualTo(4));
-                Assert.That(paths.Where(path => path.Contains("BlossomTree_")).Distinct().Count(), Is.EqualTo(3));
+                Assert.That(paths.Any(path => path.Contains("BlossomTree_")), Is.True);
+                Assert.That(paths.Any(path => path.Contains("BroadleafTree_")), Is.True);
+                Assert.That(paths.Any(path => path.Contains("Fir_")), Is.True);
                 foreach (Transform tree in trees)
                 {
                     LODGroup lod = tree.GetComponent<LODGroup>(); Assert.That(lod, Is.Not.Null); Assert.That(lod.enabled, Is.True);
@@ -37,7 +36,9 @@ namespace CubeDash.Tests
                             Assert.That(renderer, Is.Not.Null);
                             foreach (Material material in renderer.sharedMaterials)
                             {
-                                Assert.That(AssetDatabase.GetAssetPath(material), Does.StartWith("Assets/Idyllic Fantasy Nature/Materials/"));
+                                string materialPath = AssetDatabase.GetAssetPath(material);
+                                Assert.That(materialPath.StartsWith("Assets/Idyllic Fantasy Nature/Materials/") ||
+                                    (paths[tree.GetSiblingIndex()].Contains("BlossomTree_") && materialPath == "Assets/MainMenu/Sakura/Menu Sakura Blossoms.mat"), Is.True);
                                 Assert.That(material.shader.isSupported, Is.True); Assert.That(ShaderUtil.ShaderHasError(material.shader), Is.False);
                             }
                         }

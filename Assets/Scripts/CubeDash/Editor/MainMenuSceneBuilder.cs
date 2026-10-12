@@ -76,6 +76,7 @@ namespace CubeDash.Editor
             {
                 MainMenuAssetStoreTrees.ApplyToScene(scene);
                 MainMenuAssetStoreGroundCover.ApplyToScene(scene);
+                MainMenuSakuraBlossoms.ApplyToScene(scene);
             }
             AssetDatabase.SaveAssets();
             EditorSceneManager.MarkSceneDirty(scene);
