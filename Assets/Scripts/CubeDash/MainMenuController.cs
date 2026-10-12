@@ -93,7 +93,7 @@ namespace CubeDash
         }
 
         public void SetFullscreen(bool value) => Screen.fullScreen = value;
-        public void PreviewRed() => Preview(new Color(0.95f, 0.018f, 0.10f));
+        public void PreviewRed() => Preview(hero != null ? hero.sharedMaterial.GetColor("_BaseColor") : new Color(0.95f, 0.012f, 0.025f));
         public void PreviewBlue() => Preview(new Color(0.08f, 0.35f, 0.95f));
         public void PreviewGreen() => Preview(new Color(0.12f, 0.8f, 0.3f));
         private void Preview(Color color)

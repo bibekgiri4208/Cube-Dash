@@ -41,7 +41,10 @@ namespace CubeDash.Tests
                 var controller = roots.SelectMany(root => root.GetComponentsInChildren<MainMenuController>(true)).Single();
                 Assert.That(controller.GameplayScene, Is.EqualTo("Level"));
                 Assert.That(controller.Hero.sharedMaterial.GetColor("_BaseColor").r, Is.GreaterThan(0.8f));
-                Assert.That(controller.Hero.transform.parent.childCount, Is.EqualTo(3), "Body and two black eyes.");
+                PlayerCubeVisual mascot = controller.Hero.GetComponent<PlayerCubeVisual>();
+                Assert.That(mascot, Is.Not.Null);
+                Assert.That(mascot.Eyes.Length, Is.EqualTo(2));
+                Assert.That(mascot.transform.childCount, Is.EqualTo(2), "Both eyes deform with the player mesh.");
                 Assert.That(controller.GetComponentsInChildren<MeshRenderer>(true).Length, Is.GreaterThan(200));
                 var ribbons = controller.GetComponentsInChildren<MenuRibbonGraphic>(true);
                 Assert.That(ribbons.Length, Is.EqualTo(4));
@@ -224,7 +227,8 @@ namespace CubeDash.Tests
                 System.IO.File.WriteAllBytes(path, image.EncodeToPNG());
                 Vector3 probe = camera.WorldToScreenPoint(menu.Hero.transform.position + Vector3.up * 0.3f);
                 Color pixel = image.GetPixel(Mathf.RoundToInt(probe.x), Mathf.RoundToInt(probe.y));
-                Assert.That(pixel.r, Is.GreaterThan(pixel.g * 1.5f), "The rendered hero must remain red.");
+                Assert.That(pixel.r, Is.GreaterThan(pixel.g * 2f), "The rendered player must remain saturated red, not faded pink.");
+                Assert.That(pixel.r, Is.GreaterThan(pixel.b * 2f));
                 Assert.That(image.GetPixel(250, 620).r, Is.GreaterThan(0.5f), "The Start ribbon must be visible.");
                 Assert.That(image.GetPixel(720, 220).grayscale, Is.LessThan(0.85f), "Bright asphalt must retain surface detail instead of clipping to white.");
             }

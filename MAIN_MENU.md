@@ -9,6 +9,14 @@ The reference-inspired scene contains editable 3D parking bays, weathered asphal
 - **Quit:** closes the application, or stops Play mode in the Editor.
 - Mouse, keyboard/UI navigation and gamepad are supported. Escape/back closes a panel.
 
+## Player preview and idle
+
+The menu mascot is `Assets/Prefab/CubeDash/PlayerCubeMenuPreview.prefab`, a **variant of the actual PlayerCube prefab**, not an independently modeled cube. It inherits the player's beveled mesh, material and two black rectangular eyes. The variant removes the collider, gameplay/power-up components and vehicle/effect models; its only script is mesh presentation. Keyboard/gamepad input continues to navigate the UI but cannot steer or transform this preview.
+
+`PlayerCubeVisual` gives the menu preview a grounded, volume-preserving jelly squash/rebound with a small secondary jiggle. The same idle pose is used in gameplay's Ready state. Only the visual child deforms: the player's collider, root scale and movement rules are unchanged. Starting a run restores its normal scale; pause freezes animation. Eyes follow the cube's visibility and disappear during plane/truck/supercar presentation.
+
+`Tools > Cube Dash > Update Player Eyes and Menu Preview` updates the player prefab and replaces only the old mascot, preserving the menu camera, environment, skybox and lighting/profile edits. It does not regenerate `Level.unity` or the menu environment.
+
 ## Editing
 
 Environment and canvas objects are saved in the scene under `Cube Dash Main Menu`. Camera and sun are separate scene objects. Materials, mesh assets, shader and licensed fonts are in `Assets/MainMenu`.
@@ -28,5 +36,7 @@ The menu uses bright, airy arcade daylight: neutral tonemapping, lifted exposure
 ## Validation
 
 `CubeDash.Tests.MainMenuTests` covers build order, authored object/material references, camera/Volume wiring and focus distances, a rendered post-processing on/off comparison, button wiring, runtime panels/preview/volume and navigation into `Level`. Set `CUBE_DASH_MENU_PLAY_PREVIEW` to a PNG path to capture the runtime view during the test. `MainMenuSceneBuilder.BuildAndCaptureFromCommandLine` authors the scene and captures an editor preview; `MainMenuGraphics.ApplyAndCaptureFromCommandLine` only tunes the profile and captures the existing scene. Use a separate validation project if the main project is open.
+
+`PlayerCubeVisualTests` covers shared-player prefab inheritance, the preview's absence of gameplay components, grounded volume-preserving squash/rebound, keyboard/gamepad isolation, Ready-state idle, pause, unchanged collision bounds and eye visibility during all three vehicle power-ups. The player-presentation validation in Unity 6000.4.1f1 passed all five preview/idle/navigation checks after correcting EditMode wait timing and the old mascot's rendered-color expectation. Across that recheck and the initial 52-test regression run, 51 unique tests passed. The remaining existing audio test hard-codes a `0.045` pitch step while the authored Level uses `0.041`; neither the scene's audio setting nor that unrelated test was changed. Validation used `-burst-disable-compilation` in the temporary project only.
 
 Fonts: Anton (SIL Open Font License) and Permanent Marker (Apache License 2.0), bundled with their respective license files.

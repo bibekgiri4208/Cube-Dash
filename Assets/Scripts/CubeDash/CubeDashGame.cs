@@ -68,6 +68,8 @@ namespace CubeDash
 
         private const string BestKey = "CubeDash.BestColorScore";
         private Renderer playerRenderer;
+        private PlayerCubeVisual cubeVisualPresentation;
+        private float playerMeshBottom = -0.5f;
         private MaterialPropertyBlock playerAppearance;
         private Color playerColor;
         private Vector3 playerOrigin;
@@ -129,13 +131,17 @@ namespace CubeDash
                 return;
             }
             playerOrigin = player.position;
+            if (playerVisual == null) playerVisual = player;
+            cubeVisualPresentation = playerVisual.GetComponent<PlayerCubeVisual>();
+            if (cubeVisualPresentation != null) cubeVisualPresentation.UseGameplayAnimation();
+            if (playerVisual.TryGetComponent(out MeshFilter playerMesh) && playerMesh.sharedMesh != null)
+                playerMeshBottom = playerMesh.sharedMesh.bounds.min.y;
             track.PreparePresentation(player);
             if (audioPresentation == null) audioPresentation = GetComponent<RunnerAudio>();
             if (ambiencePresentation == null) ambiencePresentation = GetComponent<BiomeAmbience>();
             if (flightPresentation == null) flightPresentation = player.GetComponent<PlayerFlight>();
             if (truckPresentation == null) truckPresentation = player.GetComponent<PlayerTruck>();
             if (supercarPresentation == null) supercarPresentation = player.GetComponent<PlayerSupercar>();
-            if (playerVisual == null) playerVisual = player;
             playerRotation = playerVisual.localRotation;
             playerScale = playerVisual.localScale;
             playerVisualOrigin = playerVisual.localPosition;
@@ -224,12 +230,12 @@ namespace CubeDash
             // Compress first, then rebound; settle smoothly at the authored scale.
             float phase = Mathf.Clamp01(pickupAge / pickupDuration);
             float pop = -Mathf.Sin(phase * Mathf.PI * 2f) * Mathf.Pow(1f - phase, 2);
-            float idle = State == RunState.Ready ? Mathf.Sin(animationTime * 2.6f) * 0.025f : 0;
-            playerVisual.localScale = Vector3.Scale(playerScale, new Vector3(1f - pop * 0.13f + idle,
-                1f + pop * 0.19f - idle, 1f - pop * 0.13f + idle));
+            Vector3 idle = State == RunState.Ready ? PlayerCubeVisual.JellyScale(animationTime) : Vector3.one;
+            Vector3 pickup = new Vector3(1f - pop * 0.13f, 1f + pop * 0.19f, 1f - pop * 0.13f);
+            playerVisual.localScale = Vector3.Scale(playerScale, Vector3.Scale(pickup, idle));
             // Keep the visual's feet on the road without changing the gameplay collider.
             if (playerVisual != player)
-                playerVisual.localPosition = playerVisualOrigin + Vector3.up * ((playerVisual.localScale.y - playerScale.y) * 0.5f);
+                playerVisual.localPosition = PlayerCubeVisual.GroundedPosition(playerVisualOrigin, playerScale, playerVisual.localScale, playerMeshBottom);
             if (State != RunState.GameOver)
             {
                 float breathing = State == RunState.Ready ? 1f + Mathf.Sin(animationTime * 2.6f) * 0.12f : 1f;
@@ -381,6 +387,7 @@ namespace CubeDash
             magnetTimer = 0;
             SupercarEnabled = false; supercarEnter.Reset();
             playerRenderer.enabled = true;
+            if (cubeVisualPresentation != null) cubeVisualPresentation.SyncEyes();
             playerCollider.enabled = true;
             if (flightPresentation != null) flightPresentation.ResetPresentation();
             if (truckPresentation != null) truckPresentation.ResetPresentation();
@@ -514,6 +521,7 @@ namespace CubeDash
             bool carVisible = SupercarDriving && supercarPresentation != null;
             if (supercarPresentation != null) supercarPresentation.SetDriving(carVisible);
             playerRenderer.enabled = !Flying && !Trucking && !carVisible;
+            if (cubeVisualPresentation != null) cubeVisualPresentation.SyncEyes();
             playerCollider.enabled = !Flying;
             // Preserve the player's matching-color wake even though the reference car stays cyan.
             if (wake != null) wake.SetVisible(!Flying && !Trucking);

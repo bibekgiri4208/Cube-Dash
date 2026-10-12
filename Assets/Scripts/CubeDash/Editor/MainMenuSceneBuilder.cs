@@ -445,11 +445,12 @@ namespace CubeDash.Editor
 
         private static Renderer BuildHero()
         {
-            Transform hero = Group("Red cube mascot",world); hero.localPosition = new Vector3(3.0f,0.74f,-0.9f); hero.localRotation = Quaternion.Euler(0,35,0);
-            Renderer renderer = Box("Red cube body",hero,Vector3.zero,Vector3.one * 1.45f,"Hero red").GetComponent<Renderer>();
-            for (int side = -1; side <= 1; side += 2)
-                Box("Black rectangular eye",hero,new Vector3(side * 0.28f,0.07f,-0.735f),new Vector3(0.17f,0.38f,0.035f),"Ink black");
-            return renderer;
+            PlayerCubePresentationBuilder.PrepareAssets();
+            PlayerCubeVisual visual = PlayerCubePresentationBuilder.InstantiatePreview(world);
+            Transform hero = visual.transform.parent;
+            hero.localPosition = new Vector3(3.0f,0.74f,-0.9f); hero.localRotation = Quaternion.Euler(0,35,0);
+            hero.localScale = Vector3.one * 1.45f;
+            return visual.Body;
         }
 
         private static void ConfigureLighting(Transform parent)

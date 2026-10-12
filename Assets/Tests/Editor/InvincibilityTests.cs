@@ -66,7 +66,7 @@ namespace CubeDash.Tests
             MethodInfo read = typeof(CubeDashGame).GetMethod("ReadInput", BindingFlags.Instance | BindingFlags.NonPublic);
             try
             {
-                int objects = Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length;
+                int objects = Object.FindObjectsByType<Transform>(FindObjectsInactive.Include).Length;
                 Assert.That(game.InvincibilityEnabled, Is.False);
                 InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.I)); InputSystem.Update(); read.Invoke(game, null);
                 Assert.That(game.InvincibilityEnabled, Is.True);
@@ -83,7 +83,7 @@ namespace CubeDash.Tests
                 InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.I)); InputSystem.Update(); read.Invoke(game, null);
                 Assert.That(game.InvincibilityEnabled, Is.False);
                 Assert.That(hud.CheatStatus.gameObject.activeSelf, Is.False);
-                Assert.That(Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length, Is.EqualTo(objects));
+                Assert.That(Object.FindObjectsByType<Transform>(FindObjectsInactive.Include).Length, Is.EqualTo(objects));
             }
             finally
             {
