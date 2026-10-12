@@ -8150,7 +8150,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 0.8, b: 0.22, a: 1}
@@ -18514,8 +18514,8 @@ MonoBehaviour:
   collectionSound: {fileID: 8300000, guid: 412ca27765d7dc04bb473d357a85df58, type: 3}
   audioPresentation: {fileID: 1782416642}
   ambiencePresentation: {fileID: 1782416643}
-  collectionVolume: 0.65
-  collectionPitchStep: 0.045
+  collectionVolume: 0.495
+  collectionPitchStep: 0.041
   laneSmoothTime: 0.085
   cubeEmission: 0.75
   pickupEmission: 2.8
@@ -18527,7 +18527,7 @@ MonoBehaviour:
   scoreForMaximumDifficulty: 180
   laneChangeSpeed: 18
   fixedSeed: 0
-  doublePointsDuration: 7
+  doublePointsDuration: 10
   flightPresentation: {fileID: 2129001441}
   flightDuration: 10
   landingShieldDuration: 3

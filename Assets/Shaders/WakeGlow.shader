@@ -13,6 +13,7 @@ Shader "CubeDash/Wake Glow"
             #pragma fragment Frag
             #pragma multi_compile_fog
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "RoadCurve.hlsl"
             CBUFFER_START(UnityPerMaterial)
                 half4 _Tint;
             CBUFFER_END
@@ -21,7 +22,7 @@ Shader "CubeDash/Wake Glow"
             Varyings Vert(Attributes input)
             {
                 Varyings output;
-                output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
+                output.positionCS = TransformWorldToHClip(CubeDashBend(TransformObjectToWorld(input.positionOS.xyz)));
                 output.uv = input.positionOS.xz + 0.5;
                 output.fog = ComputeFogFactor(output.positionCS.z);
                 return output;

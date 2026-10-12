@@ -198,7 +198,7 @@ namespace CubeDash.Tests
         }
 
         [UnityTest]
-        public IEnumerator GeneratedLayoutsOfferChoicesAndRecycleWithoutDriftingOrGrowing()
+        public IEnumerator LegacyGeneratedLayoutsOfferChoicesAndRecycleWithoutDriftingOrGrowing()
         {
             yield return new EnterPlayMode();
             yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/Level.unity",
@@ -207,6 +207,11 @@ namespace CubeDash.Tests
             CubeDashGame game = Object.FindAnyObjectByType<CubeDashGame>();
             game.enabled = false;
             EndlessTrack track = game.Track;
+            // Preserve regression coverage for the optional original generator. Patterned
+            // encounters intentionally allow consecutive gates and are covered separately.
+            var generation = new UnityEditor.SerializedObject(track);
+            generation.FindProperty("patternedEncounters").boolValue = false;
+            generation.ApplyModifiedPropertiesWithoutUndo();
             track.Reset(42);
             int objects = track.GetComponentsInChildren<Transform>(true).Length;
             string initialLayout = LayoutFingerprint(track);

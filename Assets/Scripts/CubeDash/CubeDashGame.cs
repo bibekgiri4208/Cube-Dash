@@ -31,10 +31,12 @@ namespace CubeDash
         [SerializeField] private CubeColor playerCubeColor = CubeColor.Red;
         [SerializeField, Min(1f)] private float startSpeed = 12f;
         [SerializeField, Range(12f, 48f)] private float maximumSpeed = 30f;
-        [Tooltip("How quickly speed approaches the score-based target, in metres per second squared.")]
+        [Tooltip("How quickly speed approaches the progression target, in metres per second squared.")]
         [SerializeField, Min(0f)] private float acceleration = 0.8f;
         [Tooltip("Points needed to reach top speed and the most demanding lane patterns.")]
         [SerializeField, Min(30)] private int scoreForMaximumDifficulty = 180;
+        [Tooltip("Progression continues even when coins are skipped. Turn off for the original score-based ramp.")]
+        [SerializeField] private bool distanceBasedProgression = true;
         [SerializeField, Min(12f)] private float laneChangeSpeed = 18f;
         [Tooltip("0 gives each run a fresh seed. Use a nonzero value to reproduce a track.")]
         [SerializeField] private int fixedSeed = 0;
@@ -59,7 +61,9 @@ namespace CubeDash
         public float Speed { get; private set; }
         public int Best { get; private set; }
         public int Score { get; private set; }
-        public float Difficulty => RunnerRules.DifficultyForScore(Score, scoreForMaximumDifficulty);
+        public float Difficulty => distanceBasedProgression ? LevelProgression.Difficulty(Distance)
+            : RunnerRules.DifficultyForScore(Score, scoreForMaximumDifficulty);
+        public int Stage => LevelProgression.Stage(Distance);
         public CubeColor PlayerCubeColor => playerCubeColor;
 
         private const string BestKey = "CubeDash.BestColorScore";
@@ -125,6 +129,7 @@ namespace CubeDash
                 return;
             }
             playerOrigin = player.position;
+            track.PreparePresentation(player);
             if (audioPresentation == null) audioPresentation = GetComponent<RunnerAudio>();
             if (ambiencePresentation == null) ambiencePresentation = GetComponent<BiomeAmbience>();
             if (flightPresentation == null) flightPresentation = player.GetComponent<PlayerFlight>();

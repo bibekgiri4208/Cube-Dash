@@ -30,6 +30,7 @@ Shader "CubeDash/Environment Surface"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
         #include "BeachTides.hlsl"
+        #include "RoadCurve.hlsl"
         CBUFFER_START(UnityPerMaterial)
             half4 _BaseColor, _SecondaryColor;
             half4 _EndTint;
@@ -69,6 +70,7 @@ Shader "CubeDash/Environment Surface"
                 + frac(abs(input.riseAnchor.x) * 0.137) * 0.25) * _SceneryStagger;
             float reveal = smoothstep(0, 1, saturate((_CubeDashEnvironmentTime - _SceneryRise.y - delay) / max(0.1, _SceneryRise.w)));
             output.world.y -= _SceneryRise.x * _SceneryRise.z * (1 - reveal);
+            CubeDashBendVertex(output.world, output.normal);
             output.positionCS = TransformWorldToHClip(output.world);
             return output;
         }
@@ -163,8 +165,9 @@ Shader "CubeDash/Environment Surface"
                 albedo = lerp(albedo, neighborAlbedo, neighborBlend);
                 float edgeBlend = (1 - _BiomeBoundary.x) * _LandEnd.x * smoothstep(_LandEnd.y - max(1, _LandEnd.z), _LandEnd.y, input.metres.z);
                 albedo = lerp(albedo, _EndTint.rgb, edgeBlend);
-                float wet = _CoastalWetness * smoothstep(-2, 0.8, input.world.x
-                    - BeachShoreline(input.world.xz, _CubeDashEnvironmentTime, _ShoreX, _TideDistance, _TidePeriod));
+                float3 unbent = CubeDashUnbend(input.world);
+                float wet = _CoastalWetness * smoothstep(-2, 0.8, unbent.x
+                    - BeachShoreline(unbent.xz, _CubeDashEnvironmentTime, _ShoreX, _TideDistance, _TidePeriod));
                 wet *= (1 - edgeBlend) * (1 - _BiomeBoundary.x * (1 - smoothstep(0, 18, abs(samplePosition.z))));
                 albedo *= 1 - wet * 0.34;
                 InputData data = (InputData)0;

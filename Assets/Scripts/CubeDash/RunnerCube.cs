@@ -14,6 +14,11 @@ namespace CubeDash
         private bool coinHomeCached;
         private float coinAge;
         private Vector3 attractionOffset;
+        private Mesh homeMesh;
+        private Bounds homeRenderBounds;
+        private Vector3 homeColliderSize, homeColliderCenter;
+        private bool hazardLayoutCached;
+        public HighwayHazard Hazard { get; private set; }
         public CubeColor Color => color;
         public BoxCollider Collider => GetComponent<BoxCollider>();
         public Transform CoinVisual => coinVisual;
@@ -26,7 +31,20 @@ namespace CubeDash
         {
             color = value;
             if (cubeRenderer == null) cubeRenderer = GetComponent<Renderer>();
-            cubeRenderer.sharedMaterial = material;
+            if (!hazardLayoutCached)
+            {
+                homeMesh = GetComponent<MeshFilter>().sharedMesh;
+                homeRenderBounds = cubeRenderer.localBounds;
+                homeColliderSize = Collider.size;
+                homeColliderCenter = Collider.center;
+                hazardLayoutCached = true;
+            }
+            GetComponent<MeshFilter>().sharedMesh = homeMesh;
+            cubeRenderer.localBounds = homeRenderBounds;
+            Collider.size = homeColliderSize;
+            Collider.center = homeColliderCenter;
+            Hazard = HighwayHazard.Cube;
+            cubeRenderer.sharedMaterials = new[] { material };
             cubeRenderer.enabled = !collectible || coinVisual == null;
             if (coinVisual == null) return;
             if (!coinHomeCached) { coinHome = coinVisual.localPosition; coinHomeCached = true; }
@@ -35,6 +53,17 @@ namespace CubeDash
             coinVisual.localPosition = coinHome;
             coinVisual.localRotation = Quaternion.Euler(0, 25, 0);
             coinVisual.gameObject.SetActive(collectible);
+        }
+
+        public void SetHazard(HighwayHazard hazard, Mesh mesh, Material[] materials, Vector3 worldSize)
+        {
+            Hazard = hazard;
+            GetComponent<MeshFilter>().sharedMesh = mesh;
+            cubeRenderer.localBounds = HighwayPresentation.CurveBounds(mesh.bounds, transform);
+            cubeRenderer.sharedMaterials = materials;
+            Collider.size = new Vector3(worldSize.x / transform.lossyScale.x,
+                worldSize.y / transform.lossyScale.y, worldSize.z / transform.lossyScale.z);
+            Collider.center = new Vector3(0, (worldSize.y * 0.5f - transform.localPosition.y) / transform.lossyScale.y, 0);
         }
 
         public void TickCoin(float dt, bool attracted = false)

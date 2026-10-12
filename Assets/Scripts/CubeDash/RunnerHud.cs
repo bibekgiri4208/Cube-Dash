@@ -286,7 +286,7 @@ namespace CubeDash
             if (shownMetres != metres)
             {
                 shownMetres = metres;
-                speed.text = "COLLECT COINS  ·  " + metres + " m";
+                speed.text = "STAGE " + game.Stage + "  ·  " + metres + " m";
             }
             AnimateFeedback();
             UpdatePowerUpStatus();

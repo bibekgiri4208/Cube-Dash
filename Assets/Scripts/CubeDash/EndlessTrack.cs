@@ -29,6 +29,13 @@ namespace CubeDash
         [Tooltip("Chance that a visible row carries a bonus in one of its open lanes.")]
         [SerializeField, Range(0f, 0.5f)] private float powerUpChance = 0.16f;
         [SerializeField] private EnvironmentDirector environment = null;
+        [Header("Highway progression")]
+        [SerializeField] private bool patternedEncounters = true;
+        [SerializeField, Range(0, 1)] private float roadCurveStrength = 1f;
+        private HighwayPatterns patterns;
+        private HighwayPresentation presentation;
+        private float curvePhase;
+        private float curveOriginZ;
         private readonly List<Contact> contacts = new List<Contact>(12);
         private readonly List<PowerUpContact> powerUpContacts = new List<PowerUpContact>(3);
         private readonly List<PowerUpType> collectedPowerUps = new List<PowerUpType>(3);
@@ -42,8 +49,18 @@ namespace CubeDash
 
         public float LaneWidth => laneWidth;
         public TrackSegment[] Segments => segments;
-        public Material ColorMaterial(CubeColor color) => colorMaterials[(int)color];
-        public Material PowerUpMaterial(PowerUpType type) => powerUpMaterials[(int)type];
+        public Material ColorMaterial(CubeColor color) => PresentationMaterial(colorMaterials[(int)color]);
+        public Material PowerUpMaterial(PowerUpType type) => PresentationMaterial(powerUpMaterials[(int)type]);
+        public Material PresentationMaterial(Material material) => presentation != null ? presentation.MaterialFor(material) : material;
+        public void PreparePresentation(Transform player)
+        {
+            if (!Application.isPlaying || presentation != null) return;
+            presentation = new HighwayPresentation();
+            presentation.Prepare(transform);
+            presentation.Prepare(player);
+            foreach (TrackSegment segment in segments)
+                foreach (RunnerCube cube in segment.Cubes) presentation.Prewarm(cube);
+        }
         public float PowerUpChance => powerUpChance;
         public EnvironmentDirector Environment => environment;
         public float Travelled => travelled;
@@ -56,6 +73,8 @@ namespace CubeDash
         public void Reset(int seed, CubeColor color = CubeColor.Red)
         {
             random = new System.Random(seed);
+            patterns = new HighwayPatterns(seed);
+            curvePhase = RoadCurve.Phase(seed);
             playerColor = color;
             matchingLane = 1;
             previousBlockedMask = 0;
@@ -68,13 +87,14 @@ namespace CubeDash
             for (int i = 0; i < segments.Length; i++)
             {
                 segments[i].transform.localPosition = new Vector3(0, 0, (i - 1) * RunnerRules.SegmentLength);
-                Populate(segments[i], i == 0 ? 3 : i == 1 ? 1 : 0);
+                Populate(segments[i], i == 0 ? 3 : i == 1 ? 1 : 0, 0, (i - 1) * RunnerRules.SegmentLength);
                 ConfigureEnvironment(segments[i], i - 1);
                 SceneryRise rise = segments[i].GetComponent<SceneryRise>();
                 // Only the original farthest spawn slot rises; closer starting scenery is already present.
                 if (rise != null) rise.Begin(i == segments.Length - 1, 0);
             }
             UpdateHorizonEdges();
+            if (Application.isPlaying) RoadCurve.Apply(0, curvePhase, roadCurveStrength, curveOriginZ);
         }
 
         public bool Advance(float travel, float previousPlayerX, float playerX, float difficulty,
@@ -125,6 +145,8 @@ namespace CubeDash
             collected = 0;
             shieldUsed = false;
             travelled += travel;
+            curveOriginZ = playerZ;
+            if (Application.isPlaying) RoadCurve.Apply(travelled, curvePhase, roadCurveStrength, playerZ);
             if (debris != null) debris.Tick(Time.deltaTime, travel);
             if (environment != null) environment.ApplyDistance(travelled, Time.deltaTime);
             float furthest = float.MinValue;
@@ -239,7 +261,7 @@ namespace CubeDash
                 if (oldest == null) break;
                 furthest += RunnerRules.SegmentLength;
                 oldest.transform.position = new Vector3(transform.position.x, transform.position.y, furthest);
-                Populate(oldest, 0, difficulty);
+                Populate(oldest, 0, difficulty, travelled + furthest - playerZ);
                 ConfigureEnvironment(oldest, nextSectionIndex++);
                 SceneryRise rise = oldest.GetComponent<SceneryRise>();
                 if (rise != null) rise.Begin(true, Shader.GetGlobalFloat("_CubeDashEnvironmentTime"));
@@ -320,7 +342,7 @@ namespace CubeDash
                 if (segment.Environment != null) segment.Environment.SetHorizonEdges(segment == rear, segment == front);
         }
 
-        private void Populate(TrackSegment segment, int warmupRows, float difficulty = 0f)
+        private void Populate(TrackSegment segment, int warmupRows, float difficulty = 0f, float sectionDistance = 0f)
         {
             for (int row = 0; row < 3; row++)
             {
@@ -328,13 +350,23 @@ namespace CubeDash
                 int blockedMask = 0;
                 int collectibleMask = 0;
                 int leadLane = -1;
+                HighwayHazard hazard = HighwayHazard.Cube;
                 if (visible)
                 {
-                    if (!firstVisibleRow) matchingLane = RunnerRules.NextSafeLane(random, matchingLane, difficulty);
-                    // Start with all lanes open. Most later rows block only one lane, not two.
-                    blockedMask = firstVisibleRow ? 0 : RunnerRules.BlockedLanes(random, matchingLane, difficulty, previousBlockedMask);
+                    if (patternedEncounters)
+                    {
+                        HighwayPatterns.Row pattern = patterns.Next(sectionDistance + segment.CubeHomePosition(row * 3).z);
+                        matchingLane = pattern.SafeLane;
+                        blockedMask = firstVisibleRow ? 0 : pattern.BlockedMask;
+                        hazard = pattern.Hazard;
+                    }
+                    else
+                    {
+                        if (!firstVisibleRow) matchingLane = RunnerRules.NextSafeLane(random, matchingLane, difficulty);
+                        blockedMask = firstVisibleRow ? 0 : RunnerRules.BlockedLanes(random, matchingLane, difficulty, previousBlockedMask);
+                    }
                     collectibleMask = RunnerRules.CollectibleLanes(random, blockedMask, matchingLane);
-                    if (blockedMask != 0 && random.NextDouble() < 0.6f) leadLane = RunnerRules.PickLane(random, blockedMask);
+                    if (!patternedEncounters && blockedMask != 0 && random.NextDouble() < 0.6f) leadLane = RunnerRules.PickLane(random, blockedMask);
                     previousBlockedMask = blockedMask;
                     firstVisibleRow = false;
                 }
@@ -346,6 +378,7 @@ namespace CubeDash
                     CubeColor color = (collectibleMask & bit) != 0 ? playerColor
                         : RunnerRules.ColorForLane(lane, matchingLane, playerColor, swapOthers);
                     cube.Configure(color, ColorMaterial(color), (collectibleMask & bit) != 0);
+                    if (presentation != null && (blockedMask & bit) != 0) presentation.ConfigureHazard(cube, hazard);
                     Vector3 position = segment.CubeHomePosition(row * 3 + lane);
                     position.x = (lane - 1) * laneWidth;
                     // Lead obstacles arrive before rewards, leaving the previous row clear when steering away.
@@ -356,6 +389,14 @@ namespace CubeDash
                 PlacePowerUp(segment, row, visible, 7 & ~blockedMask);
             }
         }
+
+        private void OnDestroy()
+        {
+            RoadCurve.Clear();
+            presentation?.Dispose();
+        }
+
+        private void OnDisable() { if (Application.isPlaying) RoadCurve.Clear(); }
 
         private void ConfigureEnvironment(TrackSegment segment, int sectionIndex)
         {

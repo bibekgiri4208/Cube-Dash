@@ -22,6 +22,7 @@ Shader "CubeDash/City Glass"
             #pragma multi_compile_instancing
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+            #include "RoadCurve.hlsl"
             CBUFFER_START(UnityPerMaterial)
                 half4 _BaseColor, _CoolWindows, _WarmWindows;
                 float4 _WindowSpacing;
@@ -41,8 +42,10 @@ Shader "CubeDash/City Glass"
                 Varyings output;
                 UNITY_SETUP_INSTANCE_ID(input);
                 UNITY_TRANSFER_INSTANCE_ID(input, output);
-                output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
+                float3 world = TransformObjectToWorld(input.positionOS.xyz);
                 output.normalWS = TransformObjectToWorldNormal(input.normalOS);
+                CubeDashBendVertex(world, output.normalWS);
+                output.positionCS = TransformWorldToHClip(world);
                 // Scale with the tower, but don't move the window pattern as the track scrolls.
                 output.localMetres = mul((float3x3)GetObjectToWorldMatrix(), input.positionOS.xyz);
                 output.fog = ComputeFogFactor(output.positionCS.z);

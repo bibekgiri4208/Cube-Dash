@@ -12,6 +12,7 @@ Shader "CubeDash/Supercar Glass"
         HLSLINCLUDE
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+        #include "RoadCurve.hlsl"
         CBUFFER_START(UnityPerMaterial)
             half4 _BaseColor, _UpperColor;
             float4 _HeightRange;
@@ -31,8 +32,9 @@ Shader "CubeDash/Supercar Glass"
             Varyings output = (Varyings)0;
             UNITY_SETUP_INSTANCE_ID(input); UNITY_TRANSFER_INSTANCE_ID(input, output);
             output.world = TransformObjectToWorld(input.positionOS.xyz);
-            output.positionCS = TransformWorldToHClip(output.world);
             output.normal = TransformObjectToWorldNormal(input.normalOS);
+            CubeDashBendVertex(output.world, output.normal);
+            output.positionCS = TransformWorldToHClip(output.world);
             output.height = input.positionOS.y;
             output.fog = ComputeFogFactor(output.positionCS.z);
             return output;

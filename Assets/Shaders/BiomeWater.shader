@@ -33,6 +33,7 @@ Shader "CubeDash/Biome Water"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
         #include "BeachTides.hlsl"
+        #include "RoadCurve.hlsl"
         CBUFFER_START(UnityPerMaterial)
             half4 _BaseColor, _ShallowColor, _FoamColor, _ReflectionColor;
             float _WaveHeight, _ShoreMode, _ShoreX, _ShallowWidth;
@@ -55,7 +56,7 @@ Shader "CubeDash/Biome Water"
         #include "BeachWaterMotion.hlsl"
         void WaterClip(Varyings input)
         {
-            clip(WaterCoverage(input.world, input.surface, input.metres));
+            clip(WaterCoverage(CubeDashUnbend(input.world), input.surface, input.metres));
         }
         float FoamNoise(float2 p)
         {
@@ -76,6 +77,7 @@ Shader "CubeDash/Biome Water"
             output.surface = output.world;
             float3 normal; float crest;
             output.world += WaterMotion(output.surface, output.metres, normal, crest);
+            output.world = CubeDashBend(output.world);
             output.positionCS = TransformWorldToHClip(output.world);
             return output;
         }
@@ -85,6 +87,7 @@ Shader "CubeDash/Biome Water"
             WaterClip(input);
             float3 normal; float crest;
             WaterMotion(input.surface, input.metres, normal, crest);
+            normal = CubeDashBendNormal(normal, input.world.z);
             #if defined(_GBUFFER_NORMALS_OCT)
                 return half4(PackFloat2To888(saturate(PackNormalOctQuadEncode(normal) * 0.5 + 0.5)), 0);
             #else
@@ -113,11 +116,12 @@ Shader "CubeDash/Biome Water"
             half4 Frag(Varyings input) : SV_Target
             {
                 UNITY_SETUP_INSTANCE_ID(input);
-                float bayDistance = _ShoreMode > 0.5 ? max(0, OceanDepth(input.world, input.surface, input.metres)) : BoundaryDistance(input.metres);
+                float bayDistance = _ShoreMode > 0.5 ? max(0, OceanDepth(CubeDashUnbend(input.world), input.surface, input.metres)) : BoundaryDistance(input.metres);
                 WaterClip(input);
                 float t = _CubeDashEnvironmentTime;
                 float3 normal; float crest;
                 float3 motion = WaterMotion(input.surface, input.metres, normal, crest);
+                normal = CubeDashBendNormal(normal, input.world.z);
                 float distanceToCamera = distance(_WorldSpaceCameraPos, input.world);
                 float detailFade = 1 - smoothstep(25, 110, distanceToCamera);
                 if (_ShoreMode < 0.5)
