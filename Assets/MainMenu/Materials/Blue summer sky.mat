@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Blue summer sky
+  m_Shader: {fileID: 4800000, guid: b7fa13dc72634f4e82d3a587c76d5e89, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs: []
+    m_Ints: []
+    m_Floats:
+    - _CloudCoverage: 0.48
+    - _CloudOpacity: 0
+    - _CloudScale: 0.9
+    - _CloudSpeed: 0.012
+    - _GradientPower: 0.45
+    - _SunSize: 0.6
+    m_Colors:
+    - _CloudColor: {r: 0.94, g: 0.96999997, b: 1, a: 1}
+    - _GroundColor: {r: 0.3, g: 0.46, b: 0.43, a: 1}
+    - _HorizonColor: {r: 0.3, g: 0.69, b: 0.95, a: 1}
+    - _SunColor: {r: 1.3, g: 1.15, b: 0.88, a: 1}
+    - _SunDirection: {r: 0.34765834, g: 0.75470954, b: -0.55636966, a: 0}
+    - _ZenithColor: {r: 0.035, g: 0.35, b: 0.83, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
