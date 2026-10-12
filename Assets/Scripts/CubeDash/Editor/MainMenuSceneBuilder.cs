@@ -457,12 +457,12 @@ namespace CubeDash.Editor
             Light sun = GameObject.Find("Directional Light")?.GetComponent<Light>();
             if (sun == null) sun = new GameObject("Directional Light").AddComponent<Light>();
             sun.type = LightType.Directional; sun.transform.rotation = Quaternion.Euler(49,-32,0);
-            sun.color = new Color(1,0.91f,0.78f); sun.intensity = 2.25f; sun.shadows = LightShadows.Soft;
-            sun.shadowStrength = 0.88f; sun.shadowBias = 0.025f; sun.shadowNormalBias = 0.20f;
+            sun.color = new Color(1,0.96f,0.87f); sun.intensity = 2.4f; sun.shadows = LightShadows.Soft;
+            sun.shadowStrength = 0.65f; sun.shadowBias = 0.025f; sun.shadowNormalBias = 0.20f;
             RenderSettings.sun = sun; RenderSettings.ambientMode = AmbientMode.Trilight;
-            RenderSettings.ambientSkyColor = new Color(0.43f,0.62f,0.83f) * 0.72f;
-            RenderSettings.ambientEquatorColor = new Color(0.54f,0.59f,0.61f) * 0.59f;
-            RenderSettings.ambientGroundColor = new Color(0.24f,0.25f,0.22f);
+            RenderSettings.ambientSkyColor = new Color(0.40f,0.55f,0.69f);
+            RenderSettings.ambientEquatorColor = new Color(0.42f,0.46f,0.49f);
+            RenderSettings.ambientGroundColor = new Color(0.30f,0.32f,0.30f);
             RenderSettings.fog = true; RenderSettings.fogMode = FogMode.Linear;
             RenderSettings.fogColor = new Color(0.52f,0.77f,0.92f); RenderSettings.fogStartDistance = 52; RenderSettings.fogEndDistance = 160;
             Material sky = AssetDatabase.LoadAssetAtPath<Material>(Art + "Materials/Blue summer sky.mat");
@@ -472,17 +472,9 @@ namespace CubeDash.Editor
             sky.SetFloat("_CloudOpacity",0); sky.SetColor("_SunColor",new Color(1.3f,1.15f,0.88f));
             sky.SetVector("_SunDirection",-sun.transform.forward); sky.SetFloat("_SunSize",0.6f);
             RenderSettings.skybox = sky; EditorUtility.SetDirty(sky);
-            var profile = AssetDatabase.LoadAssetAtPath<VolumeProfile>(Art + "Menu Lighting.asset");
-            if (profile == null) { profile = ScriptableObject.CreateInstance<VolumeProfile>(); AssetDatabase.CreateAsset(profile,Art + "Menu Lighting.asset"); }
-            T Effect<T>() where T : VolumeComponent
-            {
-                if (profile.TryGet(out T existing)) return existing;
-                T value = profile.Add<T>(true); AssetDatabase.AddObjectToAsset(value,profile); return value;
-            }
-            Effect<Tonemapping>().mode.Override(TonemappingMode.Neutral);
-            Bloom bloom = Effect<Bloom>(); bloom.intensity.Override(0.23f); bloom.threshold.Override(1.1f); bloom.scatter.Override(0.55f);
-            ColorAdjustments grade = Effect<ColorAdjustments>(); grade.contrast.Override(8); grade.saturation.Override(8); grade.postExposure.Override(0.08f);
-            Vignette vignette = Effect<Vignette>(); vignette.intensity.Override(0.08f); vignette.smoothness.Override(0.6f);
+            var profile = AssetDatabase.LoadAssetAtPath<VolumeProfile>(MainMenuGraphics.ProfilePath);
+            if (profile == null) { profile = ScriptableObject.CreateInstance<VolumeProfile>(); AssetDatabase.CreateAsset(profile,MainMenuGraphics.ProfilePath); }
+            MainMenuGraphics.ConfigureProfile(profile);
             var volume = new GameObject("Menu daylight grading").AddComponent<Volume>(); volume.transform.SetParent(parent,false); volume.isGlobal = true; volume.sharedProfile = profile;
             EditorUtility.SetDirty(profile);
         }
