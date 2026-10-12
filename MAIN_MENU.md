@@ -21,11 +21,25 @@ The menu mascot is `Assets/Prefab/CubeDash/PlayerCubeMenuPreview.prefab`, a **va
 
 ### Japanese garden foliage
 
-The menu now uses Japanese black pines with curved limbs and horizontal needle pads, rounded azalea shrubs with folded leaves and small flowers, fine roadside grass tufts, and susuki ornamental grass with silver seed heads. Three detailed sakura trees have flared roots, curved trunks, horizontal bark markings, tapered branches/twigs, layered pink canopies, individual notched five-petal flowers and modeled centers. Fallen petals and a low stone-edged planting bed finish the street-side tree. No gameplay vegetation is changed.
+The garden uses the downloaded tree, leafy bush and grass prefabs described below. Fallen petals and a low stone-edged planting bed finish the street-side tree. Original procedural Japanese pines, sakura, rounded azaleas and grasses remain saved with hidden renderers as recoverable backups. No gameplay vegetation is changed.
 
 Editable, reusable prefabs, saved meshes and matte materials are under `Assets/MainMenu/JapaneseGarden`. In the scene, edit **Cube Dash Main Menu > Parking Lot Diorama > Japanese Garden Foliage**. The models use shared combined meshes and do not generate geometry, run scripts, or add colliders at runtime.
 
 `Tools > Cube Dash > Improve Main Menu Japanese Foliage` upgrades only the original foliage and adds the sakura planting. Original trees, shrubs and weeds remain saved but inactive, so their edits can be recovered. The parking layout, cars/props, graffiti, player/backflip, camera, UI, skybox and lighting are preserved. Re-running the tool preserves an already-authored garden rather than rebuilding over manual edits. The full reference-menu builder includes the garden when regenerating a menu from scratch.
+
+### Idyllic Fantasy Nature trees
+
+The active menu trees are linked prefab instances from `Assets/Idyllic Fantasy Nature/Prefabs`: three distinct `BlossomTree` variants for the sakura, seven green `BroadleafTree` instances and four `Fir` instances. They retain the package's textures, materials and three-level LODs. Their placement/orientation follows the old tree anchors, with scale fitted to the previous canopy footprint. Only the old tree renderers are hidden, preserving their planter children. Fallen petals and the rest of the parking lot are unchanged.
+
+Edit **Japanese Garden Foliage > Idyllic Fantasy Nature Trees** in the scene. `Tools > Cube Dash > Use Idyllic Fantasy Nature Menu Trees` performs this tree-only replacement and preserves an already-authored replacement on subsequent runs. Source prefab, model and material assets are not edited; capsule colliders are removed through scene-instance overrides, and static batching is disabled for shader-driven foliage. No demo controllers are added. Full menu regeneration uses the imported tree package when it is installed.
+
+Compatibility with URP 17: the package's `Shader/Vegetation.shadergraph` declares `_MAIN_LIGHT_SHADOWS` and `_MAIN_LIGHT_SHADOWS_CASCADE` as **Predefined** keywords rather than declaring them again. URP already supplies these keywords. This removes duplicate-declaration shader errors without changing textures, material colors, graph lighting/wind logic, pipeline assets, color space or post-processing.
+
+### Idyllic Fantasy Nature bushes and grass
+
+The 51 round azalea meshes are replaced with six leafy `Bush` variants. The 64 susuki, roadside and sakura-planter grass tufts are replaced with the three `Grass` variants. Linked prefab instances keep the package materials and bush LODs, at the old plant anchors with uniform scaling fitted to the previous footprints. Old plant renderers are hidden without deleting their objects or user-added children.
+
+Edit **Japanese Garden Foliage > Idyllic Fantasy Nature Bushes and Grass**. `Tools > Cube Dash > Use Idyllic Fantasy Nature Menu Bushes and Grass` replaces only these plants and preserves an existing replacement on subsequent runs. The package's bush demo `LeafTrigger` subtree (interaction script, collider and leaf particles) is removed only from scene instances, not source prefabs. Static batching is disabled for shader-driven foliage. The tree instances, planters, petals, camera, lighting, UI, vehicles, hero and gameplay remain unchanged. Full menu regeneration includes both imported tree and ground-cover replacements.
 
 Environment and canvas objects are saved in the scene under `Cube Dash Main Menu`. Camera and sun are separate scene objects. Materials, mesh assets, shader and licensed fonts are in `Assets/MainMenu`.
 
@@ -42,6 +56,8 @@ The menu uses bright, airy arcade daylight: neutral tonemapping, lifted exposure
 `Tools > Cube Dash > Tune Main Menu Post Processing` reapplies the menu profile defaults **without rebuilding or saving the scene**, then selects the profile for editing. Use this rather than the scene builder when only adjusting post-processing.
 
 ## Validation
+
+Imported ground-cover validation passed **21 focused tests** in the temporary Unity project, including linked bushes/grass, hidden originals, package materials/LODs, absence of demo interactions, tree preservation, navigation and player animation. No shader errors or exceptions were reported. Scene comparison confirmed exactly 115 old plant renderers hidden and one replacement group added, with no other existing scene objects or settings changed.
 
 Japanese foliage validation passed **17 focused tests** in the temporary Unity project: saved botanical geometry/materials, three sakura trees, foliage backups, menu wiring/navigation, and player idle/backflip isolation. Scene comparison confirmed that only 102 original foliage roots were hidden and one garden child added; no other existing scene objects or settings were modified. `Level.unity` and the menu lighting profile remained byte-for-byte unchanged.
 

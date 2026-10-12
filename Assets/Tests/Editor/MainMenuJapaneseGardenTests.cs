@@ -61,7 +61,8 @@ namespace CubeDash.Tests
                 Assert.That(models.Count(model => model.sharedMesh == Mesh("Susuki Grass")), Is.GreaterThanOrEqualTo(15));
                 Assert.That(models.Count(model => model.sharedMesh == Mesh("Roadside Grass")), Is.GreaterThan(20));
                 Assert.That(models.Count(model => model.sharedMesh == Mesh("Fallen Sakura Petals")), Is.EqualTo(3));
-                Assert.That(garden.GetComponentsInChildren<MeshRenderer>().Length, Is.LessThan(180));
+                // Imported bushes and trees each save three LOD renderers; only one level renders at a time.
+                Assert.That(garden.GetComponentsInChildren<MeshRenderer>().Count(renderer => renderer.enabled), Is.LessThan(400));
                 Assert.That(garden.GetComponentsInChildren<MonoBehaviour>(true), Is.Empty);
                 Assert.That(garden.GetComponentsInChildren<Collider>(true), Is.Empty);
                 var backups = world.GetComponentsInChildren<Transform>(true).Where(child => child.name == "Layered low-poly evergreen" ||
