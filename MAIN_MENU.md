@@ -53,6 +53,18 @@ Environment and canvas objects are saved in the scene under `Cube Dash Main Menu
 
 `MainMenuSceneBuilder` holds the camera, prop and ribbon layout. `MainMenuController` holds navigation and panel behavior. The menu does not use gameplay's road-deformation shader.
 
+### Smoother UI edges and icons
+
+The four ribbons and their vector icons use small, screen-pixel-scaled alpha fringes to smooth edges even on the overlay canvas, where camera anti-aliasing does not apply. Icons have refined curves, round-capped strokes, an outlined shopping basket and a smoother eight-tooth gear with a clean center hole. The Start button's diagonal bands are clipped against an inset of its inner polygon, including their antialias fringes, so they cannot cross the border at different button sizes.
+
+Ribbon labels use `MenuLabelText`, a compatible `Text` subclass that samples the existing dynamic Anton font at twice the resolution and maps the vertices back to the original layout. Font size, text, colors, alignment, transforms, button actions and navigation remain unchanged. `Tools > Cube Dash > Improve Main Menu UI Edge Quality` upgrades existing ribbon labels without rebuilding the environment; full menu regeneration includes the sharper labels. The graphical edge/stripe fixes apply automatically through `MenuRibbonGraphic` and `MenuGlyphGraphic`, with no new textures, world shaders or post-processing settings.
+
+### Gentle menu camera sway
+
+The menu's **Main Camera > Main Menu Camera Sway** component adds slow, camera-relative motion around its authored pose: up to `0.06 m` sideways and `0.035 m` vertically, with `0.16°` pitch, `0.28°` yaw and `0.06°` roll. The base period is ten seconds, with slightly different axis speeds and a two-second fade-in. Adjust the amplitudes and period in the Inspector for a quieter or stronger effect.
+
+Sway runs only in Play mode in a scene containing the menu controller, uses unscaled time, never accumulates positional drift and restores the original pose when disabled. It does not change field of view, animate the overlay UI or affect the gameplay camera. `Tools > Cube Dash > Add Gentle Main Menu Camera Sway` adds just this component without rebuilding the environment or resetting the camera/lighting; subsequent runs preserve existing sway settings. Full menu regeneration includes it.
+
 ## Post-processing
 
 Select **Cube Dash Main Menu > Menu daylight grading** in the Hierarchy. Its global Volume uses `Assets/MainMenu/Menu Lighting.asset`; the Main Camera has post-processing enabled and includes the Volume's Default layer. Inspect the result in **Game view**. For Scene view, also enable **Post Processing** in its effects menu.
@@ -62,6 +74,10 @@ The menu uses bright, airy arcade daylight: neutral tonemapping, lifted exposure
 `Tools > Cube Dash > Tune Main Menu Post Processing` reapplies the menu profile defaults **without rebuilding or saving the scene**, then selects the profile for editing. Use this rather than the scene builder when only adjusting post-processing.
 
 ## Validation
+
+UI quality validation passed **39 focused tests** in the temporary Unity project. Coverage includes stripe containment at four button sizes, valid antialiased icon meshes, the gear's open center, resolution-scaled fringes, preserved label size/layout, existing menu navigation and camera/player/foliage regressions. An isolated GPU render produced 297 intermediate edge pixels with camera anti-aliasing and post-processing disabled, confirming that the UI contours actually render smoothly. The saved-scene UI upgrade changes only the four label script references, preserving component identities, layout, event wiring and all non-UI scene settings.
+
+Menu camera sway validation passed **26 focused tests** in the temporary Unity project, including bounded/drift-free sampling, no Edit-mode motion, unscaled-time animation, pose restoration, gameplay isolation, existing menu navigation, foliage and player animation. The scene change adds only one component to the existing Main Camera; its authored transform/lens and all other scene objects, lighting and materials remain unchanged.
 
 Menu sakura color refinement passed **23 focused tests** in the temporary Unity project. All four currently placed sakura trees use the menu material across their 12 blossom LOD slots. The rendered comparison measured mean saturation `0.147` higher and grayscale brightness `0.162` lower than the pale, over-bright color tuning, while remaining `0.026` brighter than the original package shading (values on 0–1 scales). This refinement changes only the menu material/shader and their regeneration defaults; scene files, source materials/shaders, tree geometry/placement, lighting profile and gameplay were preserved.
 

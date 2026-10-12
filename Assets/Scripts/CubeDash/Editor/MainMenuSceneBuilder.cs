@@ -78,6 +78,7 @@ namespace CubeDash.Editor
                 MainMenuAssetStoreGroundCover.ApplyToScene(scene);
                 MainMenuSakuraBlossoms.ApplyToScene(scene);
             }
+            MainMenuCameraMotion.ApplyToScene(scene);
             AssetDatabase.SaveAssets();
             EditorSceneManager.MarkSceneDirty(scene);
             if (!EditorSceneManager.SaveScene(scene)) throw new IOException("Could not save Main Menu.");
@@ -566,7 +567,7 @@ namespace CubeDash.Editor
             RectTransform icon = Rect("Vector icon",root); icon.anchorMin = icon.anchorMax = new Vector2(0,0.5f); icon.pivot = new Vector2(0,0.5f);
             icon.anchoredPosition = new Vector2(39,0); icon.sizeDelta = new Vector2(primary ? 62 : 68,primary ? 62 : 68);
             MenuGlyphGraphic graphic = icon.gameObject.AddComponent<MenuGlyphGraphic>(); graphic.Symbol = glyph; graphic.color = primary ? new Color(1,0.98f,0.85f) : Color.black; graphic.raycastTarget = false;
-            Text label = Label("Label",root,name,primary ? 65 : 47,primary ? new Color(1,0.99f,0.94f) : Color.black);
+            Text label = Label("Label",root,name,primary ? 65 : 47,primary ? new Color(1,0.99f,0.94f) : Color.black,true);
             label.alignment = TextAnchor.MiddleLeft; label.rectTransform.anchorMin = label.rectTransform.anchorMax = new Vector2(0,0.5f);
             label.rectTransform.pivot = new Vector2(0,0.5f); label.rectTransform.anchoredPosition = new Vector2(primary ? 148 : 136,primary ? 1 : 0);
             label.rectTransform.sizeDelta = new Vector2(size.x - 152,size.y - 15);
@@ -582,9 +583,10 @@ namespace CubeDash.Editor
             Text text = Label("Label",root,name,29,Color.white); Stretch(text.rectTransform); return button;
         }
 
-        private static Text Label(string name,Transform parent,string value,int size,Color color)
+        private static Text Label(string name,Transform parent,string value,int size,Color color,bool sharp = false)
         {
-            Text label = Rect(name,parent).gameObject.AddComponent<Text>(); label.text = value; label.font = displayFont; label.fontSize = size;
+            GameObject root = Rect(name,parent).gameObject;
+            Text label = sharp ? root.AddComponent<MenuLabelText>() : root.AddComponent<Text>(); label.text = value; label.font = displayFont; label.fontSize = size;
             label.color = color; label.alignment = TextAnchor.MiddleCenter; label.raycastTarget = false; return label;
         }
 

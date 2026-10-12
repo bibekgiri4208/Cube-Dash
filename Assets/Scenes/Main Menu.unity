@@ -4095,6 +4095,7 @@ GameObject:
   - component: {fileID: 59564725}
   - component: {fileID: 59564724}
   - component: {fileID: 59564727}
+  - component: {fileID: 59564728}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -4220,6 +4221,22 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!114 &59564728
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 59564723}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2c5cb4b3ad804ac1a92687564073620c, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: CubeDash::CubeDash.MainMenuCameraSway
+  positionAmplitude: {x: 0.06, y: 0.035}
+  rotationAmplitude: {x: 0.16, y: 0.28, z: 0.06}
+  period: 10
+  fadeIn: 2
 --- !u!1 &59645709
 GameObject:
   m_ObjectHideFlags: 0
@@ -33175,7 +33192,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 546794032}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Script: {fileID: 11500000, guid: c9b6705e9643416bba82e3805bedb057, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
@@ -49654,7 +49671,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 812140363}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Script: {fileID: 11500000, guid: c9b6705e9643416bba82e3805bedb057, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
@@ -114155,7 +114172,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1908525253}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Script: {fileID: 11500000, guid: c9b6705e9643416bba82e3805bedb057, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
@@ -118608,7 +118625,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1997369322}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Script: {fileID: 11500000, guid: c9b6705e9643416bba82e3805bedb057, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
