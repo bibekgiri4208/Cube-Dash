@@ -7,7 +7,7 @@ namespace CubeDash
     public sealed class MenuGlyphGraphic : MaskableGraphic
     {
         private const int CurveSegments = 64;
-        public enum Glyph { Play, Cart, Gear, Exit }
+        public enum Glyph { Play, Cart, Gear, Exit, Collection, Check }
         [SerializeField] private Glyph symbol;
         public Glyph Symbol { get => symbol; set { symbol = value; SetVerticesDirty(); } }
 
@@ -37,12 +37,25 @@ namespace CubeDash
                 }
                 Ring(vh, outer, inner);
             }
-            else
+            else if (symbol == Glyph.Exit)
             {
                 Ring(vh, new[] { new Vector2(0.10f, 0.01f), new Vector2(0.10f, 0.97f), new Vector2(0.95f, 0.97f), new Vector2(0.95f, 0.01f) },
                     new[] { new Vector2(0.24f, 0.15f), new Vector2(0.24f, 0.83f), new Vector2(0.81f, 0.83f), new Vector2(0.81f, 0.15f) });
                 Stroke(vh, new Vector2(0.3f, 0.5f), new Vector2(0.62f, 0.5f), 0.13f);
                 Polygon(vh, Rounded(new[] { new Vector2(0.54f, 0.23f), new Vector2(0.80f, 0.5f), new Vector2(0.54f, 0.77f) }, 0.018f));
+            }
+            else if (symbol == Glyph.Collection)
+            {
+                Stroke(vh, new Vector2(0.15f, 0.32f), new Vector2(0.15f, 0.87f), 0.055f);
+                Stroke(vh, new Vector2(0.15f, 0.87f), new Vector2(0.70f, 0.87f), 0.055f);
+                Ring(vh, new[] { new Vector2(0.27f, 0.10f), new Vector2(0.27f, 0.73f), new Vector2(0.86f, 0.73f), new Vector2(0.86f, 0.10f) },
+                    new[] { new Vector2(0.34f, 0.17f), new Vector2(0.34f, 0.66f), new Vector2(0.79f, 0.66f), new Vector2(0.79f, 0.17f) });
+                Polygon(vh, new[] { new Vector2(0.56f, 0.26f), new Vector2(0.43f, 0.41f), new Vector2(0.56f, 0.56f), new Vector2(0.69f, 0.41f) });
+            }
+            else if (symbol == Glyph.Check)
+            {
+                Stroke(vh, new Vector2(0.16f, 0.49f), new Vector2(0.40f, 0.26f), 0.105f);
+                Stroke(vh, new Vector2(0.40f, 0.26f), new Vector2(0.87f, 0.80f), 0.105f);
             }
         }
         private static Vector2 Point(float angle, float radius) => new Vector2(0.5f + Mathf.Cos(angle) * radius, 0.5f + Mathf.Sin(angle) * radius);

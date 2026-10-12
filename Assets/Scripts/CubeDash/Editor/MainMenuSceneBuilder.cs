@@ -84,7 +84,7 @@ namespace CubeDash.Editor
             if (!EditorSceneManager.SaveScene(scene)) throw new IOException("Could not save Main Menu.");
             // Unity writes trailing blanks for empty serialized strings; keep generated diffs clean.
             File.WriteAllText(ScenePath, Regex.Replace(File.ReadAllText(ScenePath), @"[ \t]+(?=\r?$)", string.Empty, RegexOptions.Multiline));
-            Debug.Log("Reference main menu authored: parking-lot diorama, graffiti, hero cube, condensed ribbon UI, options and garage preview. Main Menu is first in the build scene list; Level is preserved.");
+            Debug.Log("Reference main menu authored: parking-lot diorama, graffiti, hero cube, condensed ribbon UI, audio/display options and empty skin collections. Main Menu is first in the build scene list; Level is preserved.");
         }
 
         private static void InitializeArt()
@@ -516,46 +516,7 @@ namespace CubeDash.Editor
 
         private static void BuildPanels(RectTransform canvas,MainMenuController controller)
         {
-            RectTransform Panel(string name,string title)
-            {
-                RectTransform overlay = Rect(name,canvas); Stretch(overlay); overlay.gameObject.AddComponent<Image>().color = new Color(0.025f,0.03f,0.055f,0.7f);
-                RectTransform card = Rect("Card",overlay); Place(card,new Vector2(0.5f,0.5f),Vector2.zero,new Vector2(640,440));
-                card.gameObject.AddComponent<Image>().color = new Color(1,0.79f,0.82f);
-                Text heading = Label("Heading",card,title,46,Color.black); Place(heading.rectTransform,new Vector2(0.5f,1),new Vector2(0,-55),new Vector2(540,70));
-                return overlay;
-            }
-            RectTransform shop = Panel("Shop preview panel","GARAGE PREVIEW");
-            RectTransform shopCard = (RectTransform)shop.Find("Card");
-            Text description = Label("Preview explanation",shopCard,"Preview the cube's colors.\nPurchases and unlocks are not available yet.",23,new Color(0.14f,0.12f,0.15f));
-            Place(description.rectTransform,new Vector2(0.5f,0.5f),new Vector2(0,40),new Vector2(560,90));
-            RectTransform choices = Rect("Preview colors",shopCard); Place(choices,new Vector2(0.5f,0.5f),new Vector2(0,-48),new Vector2(530,65));
-            SmallButton(choices,"RED",new Vector2(-170,0),controller.PreviewRed);
-            SmallButton(choices,"BLUE",Vector2.zero,controller.PreviewBlue);
-            SmallButton(choices,"GREEN",new Vector2(170,0),controller.PreviewGreen);
-            Button shopClose = SmallButton(shopCard,"BACK",new Vector2(0,-160),controller.ClosePanels);
-            Set(controller,"shopPanel",shop.gameObject); Set(controller,"shopClose",shopClose);
-            shop.gameObject.SetActive(false);
-            RectTransform options = Panel("Options panel","OPTIONS"); RectTransform optionsCard = (RectTransform)options.Find("Card");
-            Text volumeLabel = Label("Volume label",optionsCard,"MASTER VOLUME",25,Color.black); Place(volumeLabel.rectTransform,new Vector2(0.5f,0.5f),new Vector2(0,65),new Vector2(500,40));
-            RectTransform sliderRect = Rect("Volume slider",optionsCard); Place(sliderRect,new Vector2(0.5f,0.5f),new Vector2(0,12),new Vector2(430,32));
-            Image sliderBack = sliderRect.gameObject.AddComponent<Image>(); sliderBack.color = new Color(0.25f,0.18f,0.22f);
-            Slider slider = sliderRect.gameObject.AddComponent<Slider>(); slider.minValue = 0; slider.maxValue = 1; slider.value = 1;
-            RectTransform handle = Rect("Handle",sliderRect); handle.sizeDelta = new Vector2(24,48);
-            Image handleGraphic = handle.gameObject.AddComponent<Image>(); handleGraphic.color = new Color(0.94f,0.03f,0.12f);
-            slider.handleRect = handle; slider.targetGraphic = handleGraphic;
-            UnityEventTools.AddPersistentListener(slider.onValueChanged,controller.SetVolume); Set(controller,"volume",slider);
-            RectTransform toggleRect = Rect("Fullscreen toggle",optionsCard); Place(toggleRect,new Vector2(0.5f,0.5f),new Vector2(-90,-70),new Vector2(260,40));
-            Toggle toggle = toggleRect.gameObject.AddComponent<Toggle>();
-            RectTransform check = Rect("Checkbox",toggleRect); Place(check,new Vector2(0,0.5f),new Vector2(12,0),new Vector2(34,34));
-            Image box = check.gameObject.AddComponent<Image>(); box.color = new Color(0.25f,0.18f,0.22f);
-            RectTransform tick = Rect("Checked",check); Stretch(tick); tick.offsetMin = Vector2.one * 6; tick.offsetMax = Vector2.one * -6;
-            Image tickGraphic = tick.gameObject.AddComponent<Image>(); tickGraphic.color = new Color(0.95f,0.03f,0.12f);
-            toggle.targetGraphic = box; toggle.graphic = tickGraphic;
-            Text fullscreenLabel = Label("Fullscreen label",toggleRect,"FULLSCREEN",25,Color.black); Place(fullscreenLabel.rectTransform,new Vector2(0.5f,0.5f),new Vector2(45,0),new Vector2(210,40));
-            UnityEventTools.AddPersistentListener(toggle.onValueChanged,controller.SetFullscreen); Set(controller,"fullscreen",toggle);
-            Button optionsClose = SmallButton(optionsCard,"BACK",new Vector2(0,-160),controller.ClosePanels);
-            Set(controller,"optionsPanel",options.gameObject); Set(controller,"optionsClose",optionsClose);
-            options.gameObject.SetActive(false);
+            MainMenuSections.ApplyToScene(canvas.gameObject.scene);
         }
 
         private static Button Ribbon(Transform parent,string name,MenuGlyphGraphic.Glyph glyph,Vector2 position,Vector2 size,bool primary,UnityAction action)
@@ -572,15 +533,6 @@ namespace CubeDash.Editor
             label.rectTransform.pivot = new Vector2(0,0.5f); label.rectTransform.anchoredPosition = new Vector2(primary ? 148 : 136,primary ? 1 : 0);
             label.rectTransform.sizeDelta = new Vector2(size.x - 152,size.y - 15);
             return button;
-        }
-
-        private static Button SmallButton(Transform parent,string name,Vector2 position,UnityAction action)
-        {
-            RectTransform root = Rect(name,parent); Place(root,new Vector2(0.5f,0.5f),position,new Vector2(152,58));
-            Image image = root.gameObject.AddComponent<Image>(); image.color = new Color(0.94f,0.025f,0.11f);
-            Button button = root.gameObject.AddComponent<Button>(); button.targetGraphic = image; root.gameObject.AddComponent<ArcadeButton>();
-            UnityEventTools.AddPersistentListener(button.onClick,action);
-            Text text = Label("Label",root,name,29,Color.white); Stretch(text.rectTransform); return button;
         }
 
         private static Text Label(string name,Transform parent,string value,int size,Color color,bool sharp = false)

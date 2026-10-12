@@ -58,6 +58,8 @@ namespace CubeDash.Tests
         [TestCase(MenuGlyphGraphic.Glyph.Cart)]
         [TestCase(MenuGlyphGraphic.Glyph.Gear)]
         [TestCase(MenuGlyphGraphic.Glyph.Exit)]
+        [TestCase(MenuGlyphGraphic.Glyph.Collection)]
+        [TestCase(MenuGlyphGraphic.Glyph.Check)]
         public void IconsHaveSmoothAlphaContoursAndValidVectorGeometry(MenuGlyphGraphic.Glyph symbol)
         {
             var root = new GameObject("Icon sample", typeof(RectTransform));

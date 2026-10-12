@@ -4,8 +4,8 @@ Open `Assets/Scenes/Main Menu.unity` and press Play. It is the first enabled bui
 
 The reference-inspired scene contains editable 3D parking bays, weathered asphalt, concrete/graffiti wall, warm sconces, layered foliage, neighborhood buildings, overhead wires, a classic sedan, safety props, and a red cube with black eyes. Its low camera and left-hand cut-corner ribbons use the supplied image's composition. This is a recreation, not the image's original models or a pixel-identical reproduction.
 
-- **Shop:** a clearly labeled, non-purchasing color preview. Preview colors are not persisted or applied to gameplay.
-- **Options:** persistent master volume and fullscreen toggle.
+- **Shop:** empty **Common**, **Rare**, and **Epic** skin collections. No skins, purchase buttons or equipment actions are added yet.
+- **Options:** saved master volume with a live percentage readout, and a fullscreen toggle in separate Audio and Display sections.
 - **Quit:** closes the application, or stops Play mode in the Editor.
 - Mouse, keyboard/UI navigation and gamepad are supported. Escape/back closes a panel.
 
@@ -65,6 +65,14 @@ The menu's **Main Camera > Main Menu Camera Sway** component adds slow, camera-r
 
 Sway runs only in Play mode in a scene containing the menu controller, uses unscaled time, never accumulates positional drift and restores the original pose when disabled. It does not change field of view, animate the overlay UI or affect the gameplay camera. `Tools > Cube Dash > Add Gentle Main Menu Camera Sway` adds just this component without rebuilding the environment or resetting the camera/lighting; subsequent runs preserve existing sway settings. Full menu regeneration includes it.
 
+### Shop and Options sections
+
+`Tools > Cube Dash > Improve Main Menu Shop and Options` authors only the two modal panels, using smooth rounded cards, sharper text, section icons and consistent Back buttons. Start still loads `Level` directly and Quit keeps its existing behavior. The previous color-preview shop and options panel are retained as inactive backups. Re-running the tool preserves already-authored sections and manual edits; full menu regeneration includes the new panels.
+
+Edit **Cube Dash Main Menu > Reference Menu Canvas > Shop - Skin Collections > Card** for the three rarity cards. Each has an explicitly empty state and an empty **Skin viewport > Skin slots** grid, with no invented skin products, prices or unlocks. Later, add actual skin UI to those grids and remove or hide the corresponding **Empty state**; no skin inventory, purchase system or equipment behavior is implemented yet.
+
+**Options - Audio and Display > Card** holds the rounded volume slider, live percentage badge and fullscreen checkbox. Volume remains clamped and saved through the existing preference. Back, Escape and gamepad Back close either panel; Options has an explicit keyboard/gamepad navigation loop through Back, volume and fullscreen. The full slider row is clickable and the modal backdrop blocks pointer input from reaching the main ribbons.
+
 ## Post-processing
 
 Select **Cube Dash Main Menu > Menu daylight grading** in the Hierarchy. Its global Volume uses `Assets/MainMenu/Menu Lighting.asset`; the Main Camera has post-processing enabled and includes the Volume's Default layer. Inspect the result in **Game view**. For Scene view, also enable **Post Processing** in its effects menu.
@@ -74,6 +82,8 @@ The menu uses bright, airy arcade daylight: neutral tonemapping, lifted exposure
 `Tools > Cube Dash > Tune Main Menu Post Processing` reapplies the menu profile defaults **without rebuilding or saving the scene**, then selects the profile for editing. Use this rather than the scene builder when only adjusting post-processing.
 
 ## Validation
+
+Shop/Options validation passed **45 focused tests** in the temporary Unity project, including empty rarity grids, persistent button/control wiring, recoverable old panels, idempotent panel upgrades, visible headings, slider dimensions, pointer routing, live/clamped/saved volume, navigation and existing UI/camera/player/foliage regressions. The scene comparison changes only the menu controller's panel/control references, adds two canvas children and renames the two inactive backups. All existing objects are retained; environment, main ribbons, camera, lighting, sakura assets and gameplay are preserved.
 
 UI quality validation passed **39 focused tests** in the temporary Unity project. Coverage includes stripe containment at four button sizes, valid antialiased icon meshes, the gear's open center, resolution-scaled fringes, preserved label size/layout, existing menu navigation and camera/player/foliage regressions. An isolated GPU render produced 297 intermediate edge pixels with camera anti-aliasing and post-processing disabled, confirming that the UI contours actually render smoothly. The saved-scene UI upgrade changes only the four label script references, preserving component identities, layout, event wiring and all non-UI scene settings.
 

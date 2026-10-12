@@ -16,6 +16,7 @@ namespace CubeDash
         [SerializeField] private Button shopClose = null;
         [SerializeField] private Button optionsClose = null;
         [SerializeField] private Slider volume = null;
+        [SerializeField] private Text volumeReadout = null;
         [SerializeField] private Toggle fullscreen = null;
         [SerializeField] private Renderer hero = null;
         private MaterialPropertyBlock appearance;
@@ -37,6 +38,7 @@ namespace CubeDash
             float savedVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(VolumePreference, 1));
             AudioListener.volume = savedVolume;
             if (volume != null) volume.SetValueWithoutNotify(savedVolume);
+            RefreshVolumeReadout(savedVolume);
             if (fullscreen != null) fullscreen.SetIsOnWithoutNotify(Screen.fullScreen);
         }
 
@@ -89,7 +91,14 @@ namespace CubeDash
         public void SetVolume(float value)
         {
             AudioListener.volume = Mathf.Clamp01(value);
+            if (volume != null) volume.SetValueWithoutNotify(AudioListener.volume);
             PlayerPrefs.SetFloat(VolumePreference, AudioListener.volume);
+            RefreshVolumeReadout(AudioListener.volume);
+        }
+
+        private void RefreshVolumeReadout(float value)
+        {
+            if (volumeReadout != null) volumeReadout.text = Mathf.RoundToInt(value * 100) + "%";
         }
 
         public void SetFullscreen(bool value) => Screen.fullScreen = value;
