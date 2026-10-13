@@ -320,6 +320,7 @@ namespace CubeDash.Editor
 
         private static void StyleCanvas()
         {
+            if (GameObject.Find("Canvas").GetComponent<RunnerHud>().RibbonTheme) return;
             Transform safe = GameObject.Find("Canvas").transform.Find("Safe Area");
             foreach (Text text in safe.GetComponentsInChildren<Text>(true)) text.color = Ink;
             foreach (Button button in safe.GetComponentsInChildren<Button>(true))

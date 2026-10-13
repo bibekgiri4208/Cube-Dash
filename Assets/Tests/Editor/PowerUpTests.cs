@@ -55,7 +55,7 @@ namespace CubeDash.Tests
                 Assert.That(hud, Is.Not.Null);
                 Text status = hud.transform.Find("Safe Area/Power-Up Status").GetComponent<Text>();
                 Assert.That(status, Is.Not.Null);
-                Assert.That(status.fontSize, Is.EqualTo(16));
+                Assert.That(status.fontSize, Is.EqualTo(20));
                 Assert.That(status.gameObject.activeSelf, Is.False);
             }
             finally { EditorSceneManager.ClosePreviewScene(scene); }

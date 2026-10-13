@@ -28,6 +28,15 @@ namespace CubeDash
         [SerializeField] private Text collectionFeedback = null;
         [SerializeField] private Text powerUpStatus = null;
         [SerializeField] private Text cheatStatus = null;
+        [Header("Main-menu ribbon presentation (scene opt-in)")]
+        [SerializeField] private bool ribbonTheme = false;
+        [SerializeField] private GameObject countdownOverlay = null;
+        [SerializeField] private Text countdownNumber = null;
+        [SerializeField] private RectTransform powerUpRibbon = null;
+        [SerializeField] private RectTransform cheatRibbon = null;
+        public bool RibbonTheme => ribbonTheme;
+        public GameObject CountdownOverlay => countdownOverlay;
+        public Text CountdownNumber => countdownNumber;
         public Text CheatStatus => cheatStatus;
         public GameObject GameOverOverlay => gameOverOverlay;
         public Text GameOverScore => gameOverScore;
@@ -63,7 +72,7 @@ namespace CubeDash
         public void Initialize(CubeDashGame controller)
         {
             game = controller;
-            speed.color = new Color(1f, 0.78f, 0.25f);
+            if (!ribbonTheme) speed.color = new Color(1f, 0.78f, 0.25f);
             scoreColor = distance.color;
             if (collectionFeedback != null) feedbackOrigin = collectionFeedback.rectTransform.anchoredPosition;
             menuGroup = overlay.GetComponent<CanvasGroup>();
@@ -147,7 +156,7 @@ namespace CubeDash
         public void PrimaryAction()
         {
             if (game.State == CubeDashGame.RunState.Paused) game.TogglePause();
-            else game.StartRun();
+            else game.RequestRun();
         }
 
         /// <summary>Stops the run in the editor, or closes the built player.</summary>
@@ -174,6 +183,7 @@ namespace CubeDash
 
         public void ConfirmSelection()
         {
+            if (game.CountdownActive && game.State == CubeDashGame.RunState.Ready) return;
             if (game.State == CubeDashGame.RunState.Running) return;
             GameObject selected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
             Button button = selected != null ? selected.GetComponent<Button>() : null;
@@ -198,6 +208,10 @@ namespace CubeDash
         private void FocusPrimary()
         {
             if (EventSystem.current == null) return;
+            if (ribbonTheme && game.State == CubeDashGame.RunState.Ready)
+            {
+                EventSystem.current.SetSelectedGameObject(null); return;
+            }
             Button button = game.State == CubeDashGame.RunState.GameOver ? retryButton : primaryButton;
             EventSystem.current.SetSelectedGameObject(button != null ? button.gameObject : null);
         }
@@ -238,7 +252,8 @@ namespace CubeDash
                     collectionFeedback.gameObject.SetActive(false);
                 }
             }
-            overlay.SetActive(!running && !(ended && gameOverOverlay != null));
+            overlay.SetActive(!running && !(ended && gameOverOverlay != null) && !(ribbonTheme && state == CubeDashGame.RunState.Ready));
+            if (countdownOverlay != null) countdownOverlay.SetActive(state == CubeDashGame.RunState.Ready && game.CountdownActive);
             if (gameOverOverlay != null) gameOverOverlay.SetActive(ended);
             if (gameOverScore != null) gameOverScore.text = game.Score.ToString();
             distance.gameObject.SetActive(!ended);
@@ -249,7 +264,7 @@ namespace CubeDash
             if (brand != null) brand.SetActive(!ended);
             if (ended && collectionFeedback != null) collectionFeedback.gameObject.SetActive(false);
             controls.SetActive(false);
-            pauseButton.SetActive(running);
+            pauseButton.SetActive(running || (ribbonTheme && state == CubeDashGame.RunState.Ready && game.CountdownActive));
             secondaryButton.SetActive(state == CubeDashGame.RunState.Paused);
             if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);
             switch (state)
@@ -269,10 +284,10 @@ namespace CubeDash
                     actionLabel.text = "TRY AGAIN";
                     break;
             }
-            if (pauseMotif != null) pauseMotif.SetActive(state == CubeDashGame.RunState.Paused);
-            if (menuAccent != null) menuAccent.SetActive(state == CubeDashGame.RunState.Ready);
+            if (pauseMotif != null) pauseMotif.SetActive(!ribbonTheme && state == CubeDashGame.RunState.Paused);
+            if (menuAccent != null) menuAccent.SetActive(!ribbonTheme && state == CubeDashGame.RunState.Ready);
             if (pauseQuit != null) pauseQuit.SetActive(state == CubeDashGame.RunState.Paused);
-            if (menuHint != null) menuHint.gameObject.SetActive(state == CubeDashGame.RunState.Ready);
+            if (menuHint != null) menuHint.gameObject.SetActive(!ribbonTheme && state == CubeDashGame.RunState.Ready);
             RefreshInputPrompts();
             RefreshCheatStatus();
             if (!running) FocusPrimary();
@@ -280,6 +295,8 @@ namespace CubeDash
 
         public void UpdateStats()
         {
+            if (countdownNumber != null && game.CountdownActive)
+                countdownNumber.text = Mathf.CeilToInt(game.CountdownRemaining).ToString();
             if (shownScore != game.Score) { shownScore = game.Score; distance.text = shownScore + " POINTS"; }
             if (shownBest != game.Best) { shownBest = game.Best; best.text = "BEST  " + shownBest; }
             int metres = Mathf.FloorToInt(game.Distance);
@@ -300,15 +317,41 @@ namespace CubeDash
             safeRoot.anchorMax = new Vector2(area.xMax / screen.x, area.yMax / screen.y);
             safeRoot.offsetMin = safeRoot.offsetMax = Vector2.zero;
             Canvas.ForceUpdateCanvases();
-            float width = Mathf.Min(540, Mathf.Max(240, safeRoot.rect.width - 32));
-            card.sizeDelta = new Vector2(width, 360);
+            float width = Mathf.Min(ribbonTheme ? 560 : 540, Mathf.Max(240, safeRoot.rect.width - 32));
+            card.sizeDelta = new Vector2(width, ribbonTheme ? 440 : 360);
             heading.rectTransform.sizeDelta = new Vector2(width - 30, 86);
             description.rectTransform.sizeDelta = new Vector2(width - 36, 40);
-            float objectiveY = safeRoot.rect.width < 780 ? -174 : -42;
+            float objectiveY = safeRoot.rect.width < 780 ? -184 : ribbonTheme ? -60 : -42;
             speed.rectTransform.anchoredPosition = new Vector2(0, objectiveY);
             if (objectivePanel != null) ((RectTransform)objectivePanel.transform).anchoredPosition = new Vector2(0, objectiveY);
             Transform controlsHint = controls.transform.Find("Controls Hint");
             if (controlsHint != null) controlsHint.gameObject.SetActive(safeRoot.rect.width >= 580);
+            if (ribbonTheme) LayoutRibbonMenus(width);
+        }
+
+        private void LayoutRibbonMenus(float width)
+        {
+            foreach (Button button in card.GetComponentsInChildren<Button>(true))
+            {
+                button.GetComponent<RectTransform>().sizeDelta = new Vector2(Mathf.Min(420, width - 64), 68);
+                button.GetComponentInChildren<Text>(true).rectTransform.sizeDelta = new Vector2(Mathf.Min(420, width - 64) - 24, 64);
+            }
+            Transform header = card.Find("Ribbon header");
+            if (header != null) header.GetComponent<RectTransform>().sizeDelta = new Vector2(width - 40, 98);
+            if (endComposition != null)
+            {
+                float endWidth = Mathf.Min(520, Mathf.Max(240, safeRoot.rect.width - 32));
+                endComposition.sizeDelta = new Vector2(endWidth, 440);
+                foreach (Button button in endComposition.GetComponentsInChildren<Button>(true))
+                {
+                    button.GetComponent<RectTransform>().sizeDelta = new Vector2(Mathf.Min(380, endWidth - 64), 68);
+                    button.GetComponentInChildren<Text>(true).rectTransform.sizeDelta = new Vector2(Mathf.Min(380, endWidth - 64) - 24, 64);
+                }
+                foreach (Text label in endComposition.GetComponentsInChildren<Text>(true))
+                    if (label.transform.parent == endComposition) label.rectTransform.sizeDelta = new Vector2(endWidth - 48, label.rectTransform.sizeDelta.y);
+                Transform endHeader = endComposition.Find("Ribbon header");
+                if (endHeader != null) endHeader.GetComponent<RectTransform>().sizeDelta = new Vector2(endWidth - 40, 92);
+            }
         }
 
         private void UpdatePowerUpStatus()
@@ -318,6 +361,7 @@ namespace CubeDash
             if (game.State != CubeDashGame.RunState.Running)
             {
                 powerUpStatus.gameObject.SetActive(false);
+                if (powerUpRibbon != null) powerUpRibbon.gameObject.SetActive(false);
                 return;
             }
             string status;
@@ -336,7 +380,12 @@ namespace CubeDash
             }
             powerUpStatus.text = status;
             powerUpStatus.gameObject.SetActive(status.Length > 0);
-            powerUpStatus.rectTransform.anchoredPosition = new Vector2(0, safeRoot.rect.width < 780 ? -190 : -92);
+            powerUpStatus.rectTransform.anchoredPosition = new Vector2(0, safeRoot.rect.width < 780 ? (ribbonTheme ? -250 : -190) : (ribbonTheme ? -176 : -92));
+            if (ribbonTheme)
+            {
+                powerUpStatus.rectTransform.sizeDelta = new Vector2(Mathf.Max(200, Mathf.Min(720, safeRoot.rect.width - 48)), 48);
+                SyncStatusRibbon(powerUpRibbon, powerUpStatus);
+            }
         }
 
         public void RefreshCheatStatus()
@@ -344,8 +393,20 @@ namespace CubeDash
             if (cheatStatus == null || game == null) return;
             cheatStatus.text = "CHEAT: INVINCIBILITY ACTIVE  |  I TO DISABLE";
             cheatStatus.gameObject.SetActive(game.InvincibilityEnabled);
-            cheatStatus.rectTransform.anchoredPosition = new Vector2(0, safeRoot.rect.width < 780 ? -226 : -130);
+            cheatStatus.rectTransform.anchoredPosition = new Vector2(0, safeRoot.rect.width < 780 ? (ribbonTheme ? -314 : -226) : (ribbonTheme ? -244 : -130));
             cheatStatus.rectTransform.sizeDelta = new Vector2(Mathf.Max(200, Mathf.Min(620, safeRoot.rect.width - 32)), 48);
+            if (ribbonTheme) SyncStatusRibbon(cheatRibbon, cheatStatus);
+        }
+
+        private static void SyncStatusRibbon(RectTransform ribbon, Text label)
+        {
+            if (ribbon == null) return;
+            ribbon.gameObject.SetActive(label.gameObject.activeSelf);
+            ribbon.anchorMin = label.rectTransform.anchorMin;
+            ribbon.anchorMax = label.rectTransform.anchorMax;
+            ribbon.pivot = label.rectTransform.pivot;
+            ribbon.anchoredPosition = label.rectTransform.anchoredPosition + Vector2.Scale(ribbon.pivot - Vector2.one * 0.5f, new Vector2(16, 12));
+            ribbon.sizeDelta = label.rectTransform.sizeDelta + new Vector2(16, 12);
         }
 
         private static string AppendStatus(string current, string value)
@@ -358,7 +419,7 @@ namespace CubeDash
             float dt = game.State == CubeDashGame.RunState.Paused ? 0 : Time.unscaledDeltaTime;
             scorePulse = Mathf.MoveTowards(scorePulse, 0, dt * 2.7f);
             distance.rectTransform.localScale = Vector3.one * (1 + Mathf.Sin(scorePulse * Mathf.PI) * 0.16f);
-            distance.color = Color.Lerp(scoreColor, new Color(1f, 0.75f, 0.42f), scorePulse);
+            distance.color = Color.Lerp(scoreColor, ribbonTheme ? new Color(0.95f, 0.02f, 0.11f) : new Color(1f, 0.75f, 0.42f), scorePulse);
             if (collectionFeedback != null && collectionFeedback.gameObject.activeSelf)
             {
                 Color color = collectionFeedback.color;

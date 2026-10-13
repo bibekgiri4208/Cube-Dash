@@ -234,6 +234,7 @@ namespace CubeDash.Editor
 
         private static void UpgradeHud(RunnerHud hud)
         {
+            if (hud.RibbonTheme) return;
             Transform safe = hud.transform.Find("Safe Area");
             foreach (Text text in safe.GetComponentsInChildren<Text>(true)) text.color = White;
             foreach (Button button in safe.GetComponentsInChildren<Button>(true))

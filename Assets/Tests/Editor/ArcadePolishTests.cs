@@ -70,8 +70,8 @@ namespace CubeDash.Tests
                 Assert.That(fill.shadows, Is.EqualTo(LightShadows.None));
                 foreach (Button button in hud.GetComponentsInChildren<Button>(true))
                     Assert.That(button.GetComponent<ArcadeButton>(), Is.Not.Null);
-                Image panel = hud.transform.Find("Safe Area/Score Panel").GetComponent<Image>();
-                Assert.That(panel.sprite, Is.Not.Null);
+                MenuRibbonGraphic panel = hud.transform.Find("Safe Area/Score Panel").GetComponent<MenuRibbonGraphic>();
+                Assert.That(panel, Is.Not.Null);
                 Assert.That(panel.raycastTarget, Is.False);
             }
             finally { EditorSceneManager.ClosePreviewScene(scene); }

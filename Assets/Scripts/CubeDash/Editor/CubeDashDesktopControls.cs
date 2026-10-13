@@ -27,6 +27,7 @@ namespace CubeDash.Editor
 
         public static void ApplyToScene(RunnerHud hud)
         {
+            if (hud.RibbonTheme) { Debug.Log("Themed Level UI already has desktop/gamepad navigation; existing controls were preserved."); return; }
             Transform safe = hud.transform.Find("Safe Area");
             safe.Find("Lane Controls").gameObject.SetActive(false);
             Transform existing = safe.Find("Desktop Controls Hint");

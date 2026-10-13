@@ -71,7 +71,7 @@ namespace CubeDash.Tests
                 Transform safe = sceneHud.transform.Find("Safe Area");
                 Assert.That(safe.Find("Lane Controls").gameObject.activeSelf, Is.False);
                 Assert.That(safe.Find("Desktop Controls Hint").gameObject.activeSelf, Is.False);
-                Assert.That(safe.Find("Menu Overlay/Menu Card/Primary Action").GetComponentInChildren<Text>().text, Is.EqualTo("START RUN"));
+                Assert.That(safe.Find("Menu Overlay/Menu Card/Primary Action").GetComponentInChildren<Text>(true).text, Is.EqualTo("RESUME RUN"));
                 Assert.That(safe.Find("Menu Overlay/Menu Card/Description").GetComponent<Text>().text, Does.Not.Contain("swipe"));
                 Assert.That(module.move, Is.Not.Null);
                 Assert.That(module.submit, Is.Null);
@@ -105,6 +105,7 @@ namespace CubeDash.Tests
             yield return null;
             InputSystem.AddDevice<Gamepad>("DesktopTestGamepad");
             yield return null;
+            yield return FinishCountdown();
             SendPad(new GamepadState().WithButton(GamepadButton.South));
             yield return null;
             Assert.That(game.State, Is.EqualTo(CubeDashGame.RunState.Running));
@@ -145,6 +146,7 @@ namespace CubeDash.Tests
             yield return null;
             InputSystem.AddDevice<Gamepad>("DesktopTestGamepad");
             yield return null;
+            yield return FinishCountdown();
             SendPad(new GamepadState().WithButton(GamepadButton.South));
             yield return null;
             PlaceCube(CubeColor.Red);
@@ -169,6 +171,8 @@ namespace CubeDash.Tests
             Assert.That(EventSystem.current.currentSelectedGameObject.name, Is.EqualTo("Restart"));
             SendPad(new GamepadState().WithButton(GamepadButton.South));
             yield return null;
+            Assert.That(game.CountdownActive, Is.True);
+            yield return FinishCountdown();
             Assert.That(game.State, Is.EqualTo(CubeDashGame.RunState.Running));
             Assert.That(game.Score, Is.Zero, "Confirming the focused Restart button should restart, not resume.");
             ClearTrack();
@@ -182,11 +186,13 @@ namespace CubeDash.Tests
             Assert.That(game.State, Is.EqualTo(CubeDashGame.RunState.GameOver));
             SendPad(new GamepadState().WithButton(GamepadButton.West));
             yield return null;
+            yield return FinishCountdown();
             Assert.That(game.State, Is.EqualTo(CubeDashGame.RunState.Running));
             PlaceCube(CubeColor.Blue);
             yield return null;
             SendPad(new GamepadState().WithButton(GamepadButton.South));
             yield return null;
+            yield return FinishCountdown();
             Assert.That(game.State, Is.EqualTo(CubeDashGame.RunState.Running));
         }
 
@@ -198,6 +204,7 @@ namespace CubeDash.Tests
             yield return null;
             InputSystem.AddDevice<Gamepad>("DesktopTestGamepad");
             yield return null;
+            yield return FinishCountdown();
             SendPad(new GamepadState().WithButton(GamepadButton.South));
             yield return null;
             ClearTrack();
@@ -221,6 +228,13 @@ namespace CubeDash.Tests
             InputSystem.RemoveDevice(pad);
             yield return null;
             Assert.That(game.State, Is.EqualTo(CubeDashGame.RunState.Running), "An unused controller disconnect must not interrupt keyboard play.");
+        }
+
+        private IEnumerator FinishCountdown()
+        {
+            float deadline = Time.realtimeSinceStartup + 20;
+            while (game.CountdownActive && Time.realtimeSinceStartup < deadline) yield return null;
+            Assert.That(game.CountdownActive, Is.False, "Countdown must complete, rather than be skipped by confirm.");
         }
 
         [UnityTearDown]

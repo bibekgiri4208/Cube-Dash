@@ -7,7 +7,7 @@ The separate playable **`Assets/Scenes/Country Side.unity`** uses the same runne
 
 ## Play
 
-- Desktop-first: press **Play**, then **Space/Enter**, gamepad **A / Cross**, or click **START RUN**.
+- **Level:** press Play (or Start from the Main Menu); an automatic **3, 2, 1** countdown replaces the old start screen. Retries/restarts use the same countdown. Country Side retains its existing Space/Enter, gamepad A/Cross or START RUN entry.
 - Move with **A/D**, **Left/Right**, gamepad **left stick**, or **D-pad left/right**.
 - While running, **double-press Enter** (or numpad Enter) to toggle **Supercar ↔ Cube**.
   Two distinct presses within **0.35 seconds** count; holding the key does not toggle repeatedly.
@@ -26,9 +26,7 @@ Touch swipes and click-anywhere start/retry gestures are removed. The existing *
 retained for editing but hidden both in the saved scene and during Play. Desktop controls are shown instead,
 with prompts switching automatically when you use a keyboard/mouse or gamepad. Menu focus has a visible outline.
 
-Game over uses an abstract, transparent overlay: a small geometric cube motif, one score,
-and **TRY AGAIN**, without explanatory paragraphs or duplicate HUD stats. The current landscape remains
-visible behind it. Edit it under **Canvas > Safe Area > Game Over Overlay**.
+Level's points/best, stage/distance, pause icon, pause menu, power-up/cheat indicators, countdown and game-over UI share the Main Menu's pink cut-corner panels, red/pink ribbons, dark outlines and Anton font. Pause offers **RESUME RUN**, **RESTART** and **QUIT**; game over keeps one score with **TRY AGAIN** and **QUIT**, without duplicate HUD stats. The current landscape remains visible behind the dimmed panels. See [LEVEL_UI.md](LEVEL_UI.md) for authoring and countdown behavior. Country Side retains its existing saved UI.
 
 The default player is **red**. Choose Red, Blue, or Green using **Player Cube Color** on
 **Game Manager**. Gameplay uses explicit color identities rather than comparing shaded RGB values.

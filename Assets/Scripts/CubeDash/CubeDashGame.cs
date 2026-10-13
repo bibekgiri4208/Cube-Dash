@@ -15,6 +15,13 @@ namespace CubeDash
         [SerializeField] private EndlessTrack track = null;
         [SerializeField] private RunnerHud hud = null;
         [SerializeField] private CubeWake wake = null;
+        [Header("Run entry")]
+        [SerializeField] private bool useStartCountdown = false;
+        public bool UsesStartCountdown => useStartCountdown;
+        public bool CountdownActive => countdownRemaining > 0;
+        public float CountdownRemaining => countdownRemaining;
+        private float countdownRemaining;
+        private bool pausedCountdown;
         [Header("Arcade feedback")]
         [SerializeField] private AudioSource collectionAudio = null;
         [SerializeField] private AudioClip collectionSound = null;
@@ -160,10 +167,16 @@ namespace CubeDash
             hud.Show(State);
         }
 
+        private void Start()
+        {
+            if (useStartCountdown && State == RunState.Ready) RequestRun();
+        }
+
         private void Update()
         {
             ReadInput();
             float dt = Time.deltaTime;
+            TickStartCountdown(dt);
             if (State == RunState.Running)
             {
                 bool landingProtection = landingShieldTimer > 0;
@@ -264,7 +277,7 @@ namespace CubeDash
             if (activeGamepad != null && (!activeGamepad.added || !activeGamepad.enabled))
             {
                 activeGamepad = null;
-                if (hud.UsingGamepad && State == RunState.Running) TogglePause();
+                if (hud.UsingGamepad && (State == RunState.Running || (State == RunState.Ready && CountdownActive))) TogglePause();
                 hud.SetInputMode(false);
             }
             Gamepad pad = Gamepad.current;
@@ -277,11 +290,19 @@ namespace CubeDash
             Keyboard keyboard = Keyboard.current;
             if ((keyboard != null && keyboard.anyKey.wasPressedThisFrame) ||
                 (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)) hud.SetInputMode(false);
+            // There is no start button during countdown. Confirm/retry/steering cannot skip it.
+            if (CountdownActive && State == RunState.Ready)
+            {
+                if (pad != null && (pad.buttonSouth.wasPressedThisFrame || pad.startButton.wasPressedThisFrame)) hud.SetInputMode(true);
+                if ((keyboard != null && (keyboard.escapeKey.wasPressedThisFrame || keyboard.pKey.wasPressedThisFrame)) ||
+                    (pad != null && pad.startButton.wasPressedThisFrame)) TogglePause();
+                return;
+            }
             if (keyboard != null)
             {
                 if (keyboard.iKey.wasPressedThisFrame) ToggleInvincibility();
                 if (keyboard.escapeKey.wasPressedThisFrame || keyboard.pKey.wasPressedThisFrame) { TogglePause(); return; }
-                if (keyboard.rKey.wasPressedThisFrame && State != RunState.Ready) { StartRun(); return; }
+                if (keyboard.rKey.wasPressedThisFrame && State != RunState.Ready) { RequestRun(); return; }
                 bool enter = keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame;
                 if (enter && State == RunState.Running) PressSupercarEnter(Time.unscaledTimeAsDouble);
                 if (keyboard.spaceKey.wasPressedThisFrame || (enter && State != RunState.Running))
@@ -307,12 +328,12 @@ namespace CubeDash
             // Confirm is owned here, not also by the UI module: one press causes one action.
             if (pause)
             {
-                if (State == RunState.Ready || State == RunState.GameOver) StartRun();
+                if (State == RunState.Ready || State == RunState.GameOver) RequestRun();
                 else TogglePause();
                 return;
             }
             if (back && State == RunState.Paused) { TogglePause(); return; }
-            if (retry && (State == RunState.GameOver || State == RunState.Paused)) { StartRun(); return; }
+            if (retry && (State == RunState.GameOver || State == RunState.Paused)) { RequestRun(); return; }
             if (confirm && State != RunState.Running) { hud.ConfirmSelection(); return; }
             if (State == RunState.Running) ChangeLane(dpadDirection != 0 ? dpadDirection : stickDirection);
         }
@@ -325,6 +346,8 @@ namespace CubeDash
 
         private void OnDisable()
         {
+            countdownRemaining = 0;
+            pausedCountdown = false;
             InvincibilityEnabled = false;
             if (hud != null) hud.RefreshCheatStatus();
             if (gameCamera != null && gameCamera.TryGetComponent(out RunnerGraphics graphics))
@@ -363,8 +386,33 @@ namespace CubeDash
             return true;
         }
 
+        /// <summary>Player-facing start/retry; opted-in scenes prepare a run behind a frozen 3, 2, 1 countdown.</summary>
+        public void RequestRun()
+        {
+            if (CountdownActive && State == RunState.Ready) return;
+            StartRun();
+            if (!useStartCountdown) return;
+            countdownRemaining = 3;
+            State = RunState.Ready;
+            hud.Show(State);
+            hud.UpdateStats();
+        }
+
+        private void TickStartCountdown(float dt)
+        {
+            if (!CountdownActive || State != RunState.Ready) return;
+            countdownRemaining = Mathf.Max(0, countdownRemaining - Mathf.Max(0, dt));
+            if (CountdownActive) return;
+            ResetGamepadStick();
+            State = RunState.Running;
+            hud.Show(State);
+        }
+
+        /// <summary>Immediate reset/start for programmatic simulations. Player UI uses RequestRun.</summary>
         public void StartRun()
         {
+            countdownRemaining = 0;
+            pausedCountdown = false;
             if (gameCamera != null && gameCamera.TryGetComponent(out RunnerGraphics graphics))
                 graphics.Tick(0, RunState.Ready, 0);
             targetLane = 1;
@@ -412,8 +460,16 @@ namespace CubeDash
 
         public void TogglePause()
         {
-            if (State == RunState.Running) State = RunState.Paused;
-            else if (State == RunState.Paused) State = RunState.Running;
+            if (State == RunState.Running || (State == RunState.Ready && CountdownActive))
+            {
+                pausedCountdown = State == RunState.Ready;
+                State = RunState.Paused;
+            }
+            else if (State == RunState.Paused)
+            {
+                State = pausedCountdown ? RunState.Ready : RunState.Running;
+                pausedCountdown = false;
+            }
             else return;
             ResetGamepadStick();
             supercarEnter.Reset();
@@ -531,7 +587,7 @@ namespace CubeDash
 
         private void OnApplicationFocus(bool focused)
         {
-            if (!focused && State == RunState.Running) TogglePause();
+            if (!focused && (State == RunState.Running || (State == RunState.Ready && CountdownActive))) TogglePause();
         }
 
         private void OnValidate()

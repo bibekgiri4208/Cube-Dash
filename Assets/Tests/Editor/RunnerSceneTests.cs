@@ -90,7 +90,9 @@ namespace CubeDash.Tests
 
                 Assert.That(safe.Find("Desktop Controls Hint").gameObject.activeSelf, Is.False);
                 Assert.That(safe.Find("Menu Overlay/Menu Card/Eyebrow").gameObject.activeSelf, Is.False);
-                Assert.That(safe.Find("Menu Overlay/Menu Card/Accent").gameObject.activeSelf, Is.True);
+                Assert.That(safe.Find("Menu Overlay/Menu Card/Accent").gameObject.activeSelf, Is.False);
+                Assert.That(hud.RibbonTheme, Is.True);
+                Assert.That(safe.Find("Menu Overlay/Menu Card/Ribbon header").GetComponent<MenuRibbonGraphic>(), Is.Not.Null);
                 Assert.That(safe.Find("Menu Overlay/Menu Card/Pause Motif"), Is.Not.Null);
                 Assert.That(safe.Find("Menu Overlay/Menu Card/Pause Motif").gameObject.activeSelf, Is.False,
                     "The abstract pause motif only shows while paused.");
@@ -121,7 +123,7 @@ namespace CubeDash.Tests
         }
 
         [UnityTest]
-        public IEnumerator PauseMenuShowsAbstractMotifOnlyWhilePaused()
+        public IEnumerator PauseMenuUsesRibbonHeaderAndNeverRestoresTheOldStartScreenOrMotif()
         {
             yield return new EnterPlayMode();
             yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/Level.unity",
@@ -131,8 +133,10 @@ namespace CubeDash.Tests
             RunnerHud hud = Object.FindAnyObjectByType<RunnerHud>();
             Transform card = hud.transform.Find("Safe Area/Menu Overlay/Menu Card");
             Assert.That(card.Find("Pause Motif").gameObject.activeSelf, Is.False);
-            Assert.That(card.Find("Accent").gameObject.activeSelf, Is.True);
-            Assert.That(card.Find("Keyboard Hint").gameObject.activeSelf, Is.True);
+            Assert.That(card.Find("Accent").gameObject.activeSelf, Is.False);
+            Assert.That(card.Find("Keyboard Hint").gameObject.activeSelf, Is.False);
+            Assert.That(card.parent.gameObject.activeSelf, Is.False);
+            Assert.That(hud.CountdownOverlay.activeSelf, Is.True);
             Assert.That(card.Find("Quit").gameObject.activeSelf, Is.False);
 
             game.StartRun();
@@ -140,7 +144,8 @@ namespace CubeDash.Tests
             game.TogglePause();
             yield return null;
             Assert.That(game.State, Is.EqualTo(CubeDashGame.RunState.Paused));
-            Assert.That(card.Find("Pause Motif").gameObject.activeSelf, Is.True);
+            Assert.That(card.Find("Pause Motif").gameObject.activeSelf, Is.False);
+            Assert.That(card.Find("Ribbon header").gameObject.activeInHierarchy, Is.True);
             Assert.That(card.Find("Accent").gameObject.activeSelf, Is.False, "The start-menu accent yields to the pause motif.");
             Assert.That(card.Find("Keyboard Hint").gameObject.activeSelf, Is.False, "The pause menu drops the instruction line.");
             Assert.That(card.Find("Quit").gameObject.activeSelf, Is.True, "The pause menu offers Quit.");
@@ -411,6 +416,10 @@ namespace CubeDash.Tests
             Assert.That(hud.GameOverOverlay.activeSelf, Is.True);
             Assert.That(hud.GameOverScore.text, Is.EqualTo("0"));
             hud.GameOverOverlay.transform.Find("Abstract Composition/Retry").GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
+            Assert.That(game.State, Is.EqualTo(CubeDashGame.RunState.Ready));
+            Assert.That(game.CountdownActive, Is.True);
+            float deadline = Time.realtimeSinceStartup + 20;
+            while (game.CountdownActive && Time.realtimeSinceStartup < deadline) yield return null;
             Assert.That(game.State, Is.EqualTo(CubeDashGame.RunState.Running));
             Assert.That(game.Score, Is.Zero);
             Assert.That(hud.GameOverOverlay.activeSelf, Is.False);

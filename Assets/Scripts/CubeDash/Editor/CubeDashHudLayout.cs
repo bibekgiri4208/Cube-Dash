@@ -44,6 +44,7 @@ namespace CubeDash.Editor
 
         public static void Apply(RunnerHud hud)
         {
+            if (hud.RibbonTheme) { Debug.Log("Main Menu-themed Level UI preserved; legacy HUD layout was not reapplied."); return; }
             Transform safe = hud.transform.Find("Safe Area");
             MoveScoreTopRight(safe);
             MovePauseTopLeft(safe);
