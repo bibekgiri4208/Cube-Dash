@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace CubeDash
 {
-    /// <summary>Mesh-only presentation: jelly idle and occasional menu backflips. Never reads input or moves a collider.</summary>
+    /// <summary>Mesh-only presentation: blinking, jelly idle and menu backflips. Never reads input or moves a collider.</summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
     public sealed class PlayerCubeVisual : MonoBehaviour
@@ -13,12 +13,20 @@ namespace CubeDash
         private Vector3 restScale, restPosition;
         private Quaternion restRotation;
         private float bottom, age;
+        private float blinkAge;
+        private Vector3[] eyeRestScales;
         private bool cached;
 
         public const float IdleAngularSpeed = 3.1f;
         public const float BackflipStart = 6f;
         public const float BackflipInterval = 8.5f;
         public const float BackflipDuration = 1.25f;
+        public const float BlinkStart = 3.1f;
+        public const float BlinkInterval = 4.3f;
+        public const float BlinkDuration = 0.18f;
+        private const float BlinkCloseDuration = 0.06f;
+        private const float BlinkHoldDuration = 0.025f;
+        private const float ClosedEyeHeight = 0.06f;
         private const float CrouchDuration = 0.18f;
         private const float FlightDuration = 0.82f;
 
@@ -26,6 +34,7 @@ namespace CubeDash
         public MeshRenderer[] Eyes => eyes;
         public bool AutoplayIdle => autoplayIdle;
         public float IdleAge => age;
+        public float BlinkAge => blinkAge;
 
         private void Awake() => CachePose();
 
@@ -38,6 +47,9 @@ namespace CubeDash
             restScale = transform.localScale;
             restPosition = transform.localPosition;
             restRotation = transform.localRotation;
+            eyeRestScales = new Vector3[eyes.Length];
+            for (int i = 0; i < eyes.Length; i++)
+                if (eyes[i] != null) eyeRestScales[i] = eyes[i].transform.localScale;
             cached = true;
         }
 
@@ -47,6 +59,27 @@ namespace CubeDash
             CachePose();
             if (autoplayIdle) RestorePose();
             autoplayIdle = false;
+            RestoreEyes();
+        }
+
+        /// <summary>A quick close/hold/reopen, sampled without consuming the gameplay random stream.</summary>
+        public static float BlinkOpenness(float seconds)
+        {
+            float phase = Mathf.Repeat(Mathf.Max(0, seconds), BlinkInterval) - BlinkStart;
+            if (phase < 0 || phase >= BlinkDuration) return 1;
+            if (phase < BlinkCloseDuration)
+                return Mathf.Lerp(1, ClosedEyeHeight, Mathf.SmoothStep(0, 1, phase / BlinkCloseDuration));
+            if (phase < BlinkCloseDuration + BlinkHoldDuration) return ClosedEyeHeight;
+            return Mathf.Lerp(ClosedEyeHeight, 1, Mathf.SmoothStep(0, 1,
+                (phase - BlinkCloseDuration - BlinkHoldDuration) / (BlinkDuration - BlinkCloseDuration - BlinkHoldDuration)));
+        }
+
+        /// <summary>The menu ticks itself; gameplay ticks this only while its presentation is unpaused.</summary>
+        public void TickBlink(float deltaTime)
+        {
+            CachePose();
+            blinkAge += Mathf.Max(0, deltaTime);
+            SyncEyes();
         }
 
         public static Vector3 JellyScale(float seconds)
@@ -104,15 +137,31 @@ namespace CubeDash
                 transform.localRotation = restRotation * rotation;
                 transform.localPosition = GroundedPosition(restPosition, restScale, transform.localScale, bottom)
                     + Vector3.up * (lift * restScale.y);
+                TickBlink(Time.deltaTime);
             }
-            SyncEyes();
+            else SyncEyes();
         }
 
         public void SyncEyes()
         {
             CachePose();
-            foreach (MeshRenderer eye in eyes)
-                if (eye != null) eye.enabled = body != null && body.enabled;
+            float openness = BlinkOpenness(blinkAge);
+            bool visible = body != null && body.enabled;
+            for (int i = 0; i < eyes.Length; i++)
+            {
+                MeshRenderer eye = eyes[i];
+                if (eye == null) continue;
+                if (eye.enabled != visible) eye.enabled = visible;
+                Vector3 scale = eyeRestScales[i]; scale.y *= openness;
+                if (eye.transform.localScale != scale) eye.transform.localScale = scale;
+            }
+        }
+
+        private void RestoreEyes()
+        {
+            blinkAge = 0;
+            for (int i = 0; i < eyes.Length; i++)
+                if (eyes[i] != null) eyes[i].transform.localScale = eyeRestScales[i];
         }
 
         private void RestorePose()
@@ -126,6 +175,7 @@ namespace CubeDash
         private void OnDisable()
         {
             if (cached && autoplayIdle) RestorePose();
+            if (cached) RestoreEyes();
         }
     }
 }

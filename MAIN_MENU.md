@@ -15,6 +15,10 @@ The menu mascot is `Assets/Prefab/CubeDash/PlayerCubeMenuPreview.prefab`, a **va
 
 `PlayerCubeVisual` gives the menu preview a grounded, volume-preserving jelly squash/rebound with a small secondary jiggle, now about 19% faster. In the **Main Menu only**, the cube occasionally crouches, hops into a full backflip and lands with a soft squash (first at six seconds, repeating every 8.5 seconds). Gameplay's Ready state uses only the faster jelly idle, never the backflip. Only the visual child animates: the player's collider, root scale and movement rules are unchanged. Starting a run restores its normal scale; pause freezes animation. Eyes follow the cube's visibility and disappear during plane/truck/supercar presentation.
 
+Both the preview and gameplay cube blink: the two eye meshes briefly squash vertically, hold closed, and smoothly reopen over 0.18 seconds, first after 3.1 seconds and then every 4.3 seconds. Eye centers/width/depth, body pose, materials and colliders stay unchanged. Gameplay owns the blink clock so pause freezes it; disabling the presentation restores open eyes. Timing is deterministic and does not consume the obstacle/coin random stream. The saved Level turns only its **Cube Visual** child 180 degrees to face down the `+Z` road; the menu's camera-facing mascot, player root/collider and vehicle models are not rotated.
+
+`PlayerBlinkAndFacingTests` covers the smooth blink curve, synchronized eye-only scaling, unchanged body/collider geometry, renderer visibility, disable restoration, the saved Level-only facing override, automatic menu blinking, gameplay pause/resume, right-lane banking and restart facing. The restart bounds assertion synchronizes physics after the player's teleport before comparing world-space collider bounds.
+
 `Tools > Cube Dash > Update Player Eyes and Menu Preview` updates the player prefab and replaces only the old mascot, preserving the menu camera, environment, skybox and lighting/profile edits. It does not regenerate `Level.unity` or the menu environment.
 
 ## Editing
@@ -71,6 +75,8 @@ Sway runs only in Play mode in a scene containing the menu controller, uses unsc
 
 `Tools > Cube Dash > Match Shop and Options to Menu Ribbons` applies the visual theme in place with Undo, without rebuilding scenery, replacing controls, changing callbacks/navigation/preferences/music, or deleting skin-grid content. Reapplying does not duplicate decorations. Rarity emblems keep their distinct colors.
 
+Shop/Options instruction paragraphs and helper notes are hidden: panel descriptions, empty-collection explanations, availability/settings notes, and the fullscreen explanation. They remain inactive editable text objects; headings, rarity labels, "NO SKINS YET" status, percentages and controls remain visible. New panel generation also keeps this helper copy inactive.
+
 Edit **Cube Dash Main Menu > Reference Menu Canvas > Shop - Skin Collections > Card** for the three rarity cards. Each has an explicitly empty state and an empty **Skin viewport > Skin slots** grid, with no invented skin products, prices or unlocks. Later, add actual skin UI to those grids and remove or hide the corresponding **Empty state**; no skin inventory, purchase system or equipment behavior is implemented yet.
 
 **Options - Audio and Display > Card** holds outlined master/music volume sliders, dark live percentage badges and a cut-corner fullscreen checkbox. Square fill caps span the entire inner track width, removing the pale leading gap at partial/full volume; the unfilled rail at partial volume is intentional. Values remain clamped and saved through independent preferences. Back, Escape and gamepad Back close either panel; Options has an explicit keyboard/gamepad navigation loop through Back, master volume, music volume and fullscreen. Each full slider row is clickable and the modal backdrop blocks pointer input from reaching the main ribbons.
@@ -98,6 +104,8 @@ The same optimization runs automatically on the transient Main Menu scene during
 `ArcadeButton` retains its existing feedback curve, but snaps the imperceptible final animation tail to the exact target scale and stops writing the UI transform while idle. It continues checking interactability and responds normally to pointer/keyboard/gamepad events.
 
 ## Validation
+
+Blink/facing validation passed **42 focused tests**, including five new eye/facing checks and existing idle/backflip, desktop-input, plane/truck/supercar and menu-optimization regressions. Instruction-free Shop/Options validation passed **12 menu/music tests**, covering all eight hidden helper labels, preserved functional labels and empty status, panel regeneration, slider geometry/input/navigation, music playback and saved audio settings. Both runs used an isolated Unity project without disturbing the open Editor or concurrent menu scenery edits.
 
 Ribbon-theme/slider validation passed **17 focused tests** in an isolated Unity project. Coverage includes both saved panel themes, live fill-edge alignment at 0/1/42/100 percent on both sliders, unchanged controls/navigation/music preferences, preserved skin-grid contents, repeatable upgrades, and existing menu optimization/render checks. Shop/Options render previews were inspected; scene-document comparison confirms all changed source objects belong to those two panels, leaving the main ribbons, environment, camera, lighting, audio source and gameplay unchanged.
 

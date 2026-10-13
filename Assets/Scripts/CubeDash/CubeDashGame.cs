@@ -176,8 +176,9 @@ namespace CubeDash
                     ref laneVelocity, laneSmoothTime, laneChangeSpeed, dt);
                 float altitude = Mathf.MoveTowards(player.position.y, playerOrigin.y + (Flying ? flightAltitude : 0), dt * 9f);
                 player.position = new Vector3(x, altitude, playerOrigin.z);
+                // Road-space lean stays the same even when the authored cube face is turned around.
                 playerVisual.localRotation = Quaternion.Lerp(playerVisual.localRotation,
-                    playerRotation * Quaternion.Euler(0, laneVelocity * 0.16f, Mathf.Clamp(-laneVelocity * 0.65f, -12f, 12f)),
+                    Quaternion.Euler(0, laneVelocity * 0.16f, Mathf.Clamp(-laneVelocity * 0.65f, -12f, 12f)) * playerRotation,
                     1f - Mathf.Exp(-16f * dt));
                 float targetSpeed = Mathf.Lerp(startSpeed, maximumSpeed, Difficulty);
                 Speed = Mathf.MoveTowards(Speed, targetSpeed, acceleration * dt);
@@ -224,6 +225,7 @@ namespace CubeDash
 
         private void UpdatePlayerAnimation(float dt)
         {
+            if (cubeVisualPresentation != null) cubeVisualPresentation.TickBlink(dt);
             animationTime += dt;
             pickupAge += dt;
             absorptionPulse = Mathf.MoveTowards(absorptionPulse, 0, dt / pickupDuration);

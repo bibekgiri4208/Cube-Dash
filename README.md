@@ -33,6 +33,8 @@ The default player is **red**. Choose Red, Blue, or Green using **Player Cube Co
 The player and obstacle cubes use the saved palette materials; rewards always use gold coin materials. The best collection score
 is saved separately from the old distance record.
 
+The cube faces **forward down the road**, away from the Level camera, and its two eyes blink with a short close/reopen animation. Blinking freezes on pause and the eyes hide during vehicle presentation. Only the cube's visual child is turned; steering, colliders, vehicle orientations and the Main Menu mascot's facing stay unchanged.
+
 ### Testing cheat
 
 Press **I** to toggle invincibility. A persistent **CHEAT: INVINCIBILITY ACTIVE** HUD label shows while enabled.

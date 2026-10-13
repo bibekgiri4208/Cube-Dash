@@ -229,7 +229,11 @@ namespace CubeDash.Editor
         private static Text Label(string name, Transform parent, string text, Font font, int size, Color color, Vector2 position, Vector2 dimensions, TextAnchor alignment = TextAnchor.MiddleCenter)
         {
             var label = Rect(name, parent, position, dimensions).gameObject.AddComponent<MenuLabelText>(); label.text = text; label.font = font;
-            label.fontSize = size; label.color = color; label.alignment = alignment; label.raycastTarget = false; return label;
+            label.fontSize = size; label.color = color; label.alignment = alignment; label.raycastTarget = false;
+            // Retain editable helper copy, but keep Shop/Options free of instruction paragraphs.
+            if (name == "Description" || name == "Availability note" || name == "Settings note" ||
+                name == "Fullscreen explanation" || name == "Empty explanation") label.gameObject.SetActive(false);
+            return label;
         }
     }
 }

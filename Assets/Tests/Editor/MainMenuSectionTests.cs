@@ -94,6 +94,54 @@ namespace CubeDash.Tests
             finally { EditorSceneManager.ClosePreviewScene(scene); }
         }
 
+        [Test]
+        public void ShopAndOptionsHideHelperCopyButKeepFunctionalLabelsAndEmptyStatus()
+        {
+            var scene = EditorSceneManager.OpenPreviewScene("Assets/Scenes/Main Menu.unity");
+            try
+            {
+                var menu = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<MainMenuController>(true)).Single();
+                AssertHelperCopyHidden(menu);
+                Assert.That(menu.ShopPanel.transform.Find("Card/Heading").gameObject.activeSelf, Is.True);
+                Assert.That(menu.OptionsPanel.transform.Find("Card/Heading").gameObject.activeSelf, Is.True);
+                foreach (string rarity in new[] { "Common", "Rare", "Epic" })
+                {
+                    Transform section = menu.ShopPanel.transform.Find("Card/" + rarity + " Skins");
+                    Assert.That(section.Find("Rarity heading/Rarity label").gameObject.activeSelf, Is.True);
+                    Assert.That(section.Find("Empty state/Empty title").gameObject.activeSelf, Is.True);
+                }
+                foreach (string path in new[] { "Audio section/Volume heading", "Audio section/Music volume heading", "Display section/Fullscreen heading" })
+                    Assert.That(menu.OptionsPanel.transform.Find("Card/" + path).gameObject.activeSelf, Is.True);
+            }
+            finally { EditorSceneManager.ClosePreviewScene(scene); }
+        }
+
+        [Test]
+        public void NewlyAuthoredPanelsDoNotRestoreInstructions()
+        {
+            Scene scene = EditorSceneManager.NewPreviewScene();
+            try
+            {
+                var root = new GameObject("Menu authoring fixture"); SceneManager.MoveGameObjectToScene(root, scene);
+                var menu = root.AddComponent<MainMenuController>();
+                var canvas = new GameObject("Canvas", typeof(RectTransform), typeof(Canvas)); canvas.transform.SetParent(root.transform, false);
+                CubeDash.Editor.MainMenuSections.ApplyToScene(scene);
+                AssertHelperCopyHidden(menu);
+            }
+            finally { EditorSceneManager.ClosePreviewScene(scene); }
+        }
+
+        private static void AssertHelperCopyHidden(MainMenuController menu)
+        {
+            foreach (GameObject panel in new[] { menu.ShopPanel, menu.OptionsPanel })
+                Assert.That(panel.transform.Find("Card/Description").gameObject.activeSelf, Is.False);
+            Assert.That(menu.ShopPanel.transform.Find("Card/Availability note").gameObject.activeSelf, Is.False);
+            Assert.That(menu.OptionsPanel.transform.Find("Card/Settings note").gameObject.activeSelf, Is.False);
+            Assert.That(menu.OptionsPanel.transform.Find("Card/Display section/Fullscreen explanation").gameObject.activeSelf, Is.False);
+            foreach (string rarity in new[] { "Common", "Rare", "Epic" })
+                Assert.That(menu.ShopPanel.transform.Find("Card/" + rarity + " Skins/Empty state/Empty explanation").gameObject.activeSelf, Is.False);
+        }
+
         [UnityTest]
         public IEnumerator PanelsNavigateAndVolumeReadoutTracksTheSliderWithoutCreatingSkins()
         {
