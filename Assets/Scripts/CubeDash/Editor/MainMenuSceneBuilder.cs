@@ -79,6 +79,7 @@ namespace CubeDash.Editor
                 MainMenuSakuraBlossoms.ApplyToScene(scene);
             }
             MainMenuCameraMotion.ApplyToScene(scene);
+            if (AssetDatabase.LoadAssetAtPath<AudioClip>(MainMenuMusic.ClipPath) != null) MainMenuMusic.ApplyToScene(scene);
             AssetDatabase.SaveAssets();
             EditorSceneManager.MarkSceneDirty(scene);
             if (!EditorSceneManager.SaveScene(scene)) throw new IOException("Could not save Main Menu.");

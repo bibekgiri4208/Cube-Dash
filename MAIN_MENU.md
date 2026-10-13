@@ -5,7 +5,7 @@ Open `Assets/Scenes/Main Menu.unity` and press Play. It is the first enabled bui
 The reference-inspired scene contains editable 3D parking bays, weathered asphalt, concrete/graffiti wall, warm sconces, layered foliage, neighborhood buildings, overhead wires, a classic sedan, safety props, and a red cube with black eyes. Its low camera and left-hand cut-corner ribbons use the supplied image's composition. This is a recreation, not the image's original models or a pixel-identical reproduction.
 
 - **Shop:** empty **Common**, **Rare**, and **Epic** skin collections. No skins, purchase buttons or equipment actions are added yet.
-- **Options:** saved master volume with a live percentage readout, and a fullscreen toggle in separate Audio and Display sections.
+- **Options:** independent saved master/music volume sliders with live percentage readouts, and a fullscreen toggle in separate Audio and Display sections.
 - **Quit:** closes the application, or stops Play mode in the Editor.
 - Mouse, keyboard/UI navigation and gamepad are supported. Escape/back closes a panel.
 
@@ -71,7 +71,13 @@ Sway runs only in Play mode in a scene containing the menu controller, uses unsc
 
 Edit **Cube Dash Main Menu > Reference Menu Canvas > Shop - Skin Collections > Card** for the three rarity cards. Each has an explicitly empty state and an empty **Skin viewport > Skin slots** grid, with no invented skin products, prices or unlocks. Later, add actual skin UI to those grids and remove or hide the corresponding **Empty state**; no skin inventory, purchase system or equipment behavior is implemented yet.
 
-**Options - Audio and Display > Card** holds the rounded volume slider, live percentage badge and fullscreen checkbox. Volume remains clamped and saved through the existing preference. Back, Escape and gamepad Back close either panel; Options has an explicit keyboard/gamepad navigation loop through Back, volume and fullscreen. The full slider row is clickable and the modal backdrop blocks pointer input from reaching the main ribbons.
+**Options - Audio and Display > Card** holds rounded master/music volume sliders, live percentage badges and a fullscreen checkbox. Values remain clamped and saved through independent preferences. Back, Escape and gamepad Back close either panel; Options has an explicit keyboard/gamepad navigation loop through Back, master volume, music volume and fullscreen. Each full slider row is clickable and the modal backdrop blocks pointer input from reaching the main ribbons.
+
+### Main menu background music
+
+`Assets/Audio/Music/Main Menu Bg.mp3` loops on the menu-only **Menu Background Music** AudioSource. Playback starts after saved settings are restored, remains uninterrupted while Shop/Options are open or music is muted, and stops when Start loads gameplay. No persistent audio object or gameplay soundtrack changes are introduced.
+
+Options > Audio has separate **Master Volume** and **Music Volume** sliders. Master controls the AudioListener; Music controls only this AudioSource, with the independent `CubeDash.MusicVolume` preference. Both include live percentages and keyboard/gamepad navigation. The music setting does not change gameplay sound-effect volume. `Tools > Cube Dash > Add Main Menu Music and Volume Control` upgrades an older menu without rebuilding scenery or overwriting an existing music row/source. Full menu regeneration includes the track when present.
 
 ## Post-processing
 
@@ -90,6 +96,8 @@ The same optimization runs automatically on the transient Main Menu scene during
 `ArcadeButton` retains its existing feedback curve, but snaps the imperceptible final animation tail to the exact target scale and stops writing the UI transform while idle. It continues checking interactability and responds normally to pointer/keyboard/gamepad events.
 
 ## Validation
+
+Menu music validation passed **15 focused tests** in an isolated Unity project, covering the assigned looping 2D track, independent master/music controls, saved settings restored before playback, mute/clamping/readouts, pointer/navigation routing, idempotent upgrades, stopping/unloading music for gameplay, and the existing menu optimization/render comparison.
 
 Optimization validation in Unity 6000.4.1f1 passed all **7 optimization tests**, identifying **644** stationary renderers for batching while preserving foliage/hero animation, authored transforms/materials/lighting, camera overrides and gameplay isolation. A deterministic GPU comparison (same camera pose, AO noise and dithering samples) measured mean RGB difference below `0.000001` and maximum channel difference `1/255` after real static batching and skipping the opaque color copy. The wider menu/player regression run passed **53 of 54 tests**; the existing lighting-default test expects non-positive contrast while the saved menu profile uses `+5`. That profile was deliberately not retuned, preserving the current visuals. No target-device FPS improvement is claimed without profiling.
 

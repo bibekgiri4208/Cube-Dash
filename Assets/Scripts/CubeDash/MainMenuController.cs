@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace CubeDash
 {
-    /// <summary>Landing-screen navigation only. Environment, camera and UI are authored in the scene.</summary>
+    /// <summary>Landing-screen navigation and audio settings. Environment, camera and UI are authored in the scene.</summary>
     public sealed class MainMenuController : MonoBehaviour
     {
         [SerializeField] private string gameplayScene = "Level";
@@ -17,6 +17,9 @@ namespace CubeDash
         [SerializeField] private Button optionsClose = null;
         [SerializeField] private Slider volume = null;
         [SerializeField] private Text volumeReadout = null;
+        [SerializeField] private AudioSource music = null;
+        [SerializeField] private Slider musicVolume = null;
+        [SerializeField] private Text musicVolumeReadout = null;
         [SerializeField] private Toggle fullscreen = null;
         [SerializeField] private Renderer hero = null;
         private MaterialPropertyBlock appearance;
@@ -26,7 +29,9 @@ namespace CubeDash
         public GameObject ShopPanel => shopPanel;
         public GameObject OptionsPanel => optionsPanel;
         public Renderer Hero => hero;
+        public AudioSource Music => music;
         public const string VolumePreference = "CubeDash.MasterVolume";
+        public const string MusicVolumePreference = "CubeDash.MusicVolume";
 
         private void Awake()
         {
@@ -39,11 +44,13 @@ namespace CubeDash
             AudioListener.volume = savedVolume;
             if (volume != null) volume.SetValueWithoutNotify(savedVolume);
             RefreshVolumeReadout(savedVolume);
+            ApplyMusicVolume(Mathf.Clamp01(PlayerPrefs.GetFloat(MusicVolumePreference, 1)));
             if (fullscreen != null) fullscreen.SetIsOnWithoutNotify(Screen.fullScreen);
         }
 
         private void Start()
         {
+            if (music != null && music.clip != null) music.Play();
             if (EventSystem.current != null && startButton != null)
                 EventSystem.current.SetSelectedGameObject(startButton.gameObject);
         }
@@ -59,6 +66,7 @@ namespace CubeDash
             if (loading) return;
             loading = true;
             if (startButton != null) startButton.interactable = false;
+            if (music != null) music.Stop();
             SceneManager.LoadSceneAsync(gameplayScene);
         }
 
@@ -99,6 +107,20 @@ namespace CubeDash
         private void RefreshVolumeReadout(float value)
         {
             if (volumeReadout != null) volumeReadout.text = Mathf.RoundToInt(value * 100) + "%";
+        }
+
+        public void SetMusicVolume(float value)
+        {
+            float clamped = Mathf.Clamp01(value);
+            ApplyMusicVolume(clamped);
+            PlayerPrefs.SetFloat(MusicVolumePreference, clamped);
+        }
+
+        private void ApplyMusicVolume(float value)
+        {
+            if (music != null) music.volume = value;
+            if (musicVolume != null) musicVolume.SetValueWithoutNotify(value);
+            if (musicVolumeReadout != null) musicVolumeReadout.text = Mathf.RoundToInt(value * 100) + "%";
         }
 
         public void SetFullscreen(bool value) => Screen.fullScreen = value;

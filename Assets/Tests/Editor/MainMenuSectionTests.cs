@@ -130,7 +130,10 @@ namespace CubeDash.Tests
                 Assert.That(slider.value, Is.EqualTo(1)); Assert.That(readout.text, Is.EqualTo("100%"));
                 Assert.That(toggle.isOn, Is.EqualTo(Screen.fullScreen));
                 Button back = menu.OptionsPanel.GetComponentInChildren<Button>();
-                Assert.That(slider.navigation.selectOnDown, Is.SameAs(toggle));
+                Slider musicSlider = menu.OptionsPanel.GetComponentsInChildren<Slider>().Single(control => control.name == "Music volume slider");
+                AssertPointerRoutesTo(musicSlider, menu);
+                Assert.That(slider.navigation.selectOnDown, Is.SameAs(musicSlider));
+                Assert.That(musicSlider.navigation.selectOnDown, Is.SameAs(toggle));
                 Assert.That(toggle.navigation.selectOnDown, Is.SameAs(back)); Assert.That(back.navigation.selectOnDown, Is.SameAs(slider));
                 CaptureIfRequested(menu, "options");
                 back.onClick.Invoke(); Assert.That(menu.OptionsPanel.activeSelf, Is.False);
