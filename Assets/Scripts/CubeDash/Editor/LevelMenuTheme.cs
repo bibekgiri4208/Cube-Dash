@@ -73,7 +73,7 @@ namespace CubeDash.Editor
 
             Ribbon(safe.Find("Color Objective Panel"), false);
             Place(safe.Find("Color Objective Panel"), new Vector2(0.5f, 1), new Vector2(0.5f, 0.5f), new Vector2(0, -60), new Vector2(360, 72));
-            Label(safe.Find("Speed"), "STAGE 1  ·  0 m", 26, Ink, new Vector2(0.5f, 1), new Vector2(0.5f, 0.5f), new Vector2(0, -60), new Vector2(326, 56));
+            Label(safe.Find("Speed"), "0 m", 26, Ink, new Vector2(0.5f, 1), new Vector2(0.5f, 0.5f), new Vector2(0, -60), new Vector2(326, 56));
 
             Transform pause = safe.Find("Pause"); Ribbon(pause, true);
             Place(pause, new Vector2(0, 1), new Vector2(0, 1), new Vector2(24, -24), new Vector2(90, 72));

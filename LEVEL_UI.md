@@ -5,7 +5,7 @@ Open `Assets/Scenes/Level.unity` and press Play, or select Start in the Main Men
 ## Shared visual theme
 
 - Uses the same `MenuRibbonGraphic`, `MenuPanelGraphic`, Anton font, pink paper, red accent, cream labels and dark outlines as the Main Menu.
-- Points/best stay top-right, the pause icon stays top-left, and stage/distance stay top-centre (below the corner HUD on narrow layouts).
+- Points/best stay top-right, the pause icon stays top-left, and distance stays top-centre (below the corner HUD on narrow layouts). The counter shows only metres, such as **125 m**, with no stage text; gameplay progression is unchanged.
 - Pause: Resume Run, Restart, Quit. Game over: one score, Try Again, Quit. Button focus uses the same outline/scale feedback as menu ribbons.
 - Power-ups use separate compact pink cards stacked at the left safe-area edge, with red duration meters. Cheat messages keep their matching ribbon. Old instruction lines and geometric motifs remain editable but hidden.
 - All UI is saved under `Canvas/ Safe Area`; runtime does not generate UI objects or replace gameplay/scenery assets.

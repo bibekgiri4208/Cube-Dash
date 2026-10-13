@@ -33,6 +33,7 @@ namespace CubeDash.Tests
             {
                 var hud = Find<RunnerHud>(scene); var game = Find<CubeDashGame>(scene);
                 Transform safe = hud.transform.Find("Safe Area");
+                Assert.That(safe.Find("Speed").GetComponent<Text>().text, Is.EqualTo("0 m"));
                 Assert.That(hud.RibbonTheme && game.UsesStartCountdown, Is.True);
                 Assert.That(hud.CountdownOverlay, Is.Not.Null); Assert.That(hud.CountdownNumber.text, Is.EqualTo("3"));
                 Assert.That(safe.Find("Menu Overlay").gameObject.activeSelf, Is.False);
@@ -202,6 +203,28 @@ namespace CubeDash.Tests
             Capture(hud, "game-over"); Capture(hud, "game-over-portrait", 600, 1000);
             Assert.That(hud.GameOverScore.text, Is.EqualTo(game.Score.ToString()));
             AssertGlyphs(hud.GameOverScore);
+        }
+
+        [UnityTest]
+        public IEnumerator TopCounterShowsOnlyDistanceAcrossStageBoundariesPauseAndRestart()
+        {
+            yield return new EnterPlayMode();
+            yield return EditorSceneManager.LoadSceneAsyncInPlayMode(LevelMenuTheme.ScenePath, new LoadSceneParameters(LoadSceneMode.Single));
+            yield return null;
+            var game = Object.FindAnyObjectByType<CubeDashGame>(); var hud = Object.FindAnyObjectByType<RunnerHud>();
+            game.enabled = false; game.StartRun();
+            Text counter = hud.transform.Find("Safe Area/Speed").GetComponent<Text>();
+            foreach (float metres in new[] { 0f, 179.9f, 180f, 480f, 900f, 1500f })
+            {
+                typeof(CubeDashGame).GetProperty(nameof(CubeDashGame.Distance)).SetValue(game, metres);
+                hud.UpdateStats();
+                Assert.That(counter.text, Is.EqualTo(Mathf.FloorToInt(metres) + " m"));
+                Assert.That(counter.text, Does.Not.Contain("STAGE"));
+            }
+            Assert.That(game.Stage, Is.EqualTo(5), "Only the label changes; distance-based gameplay progression is preserved.");
+            game.TogglePause(); hud.UpdateStats(); Assert.That(counter.text, Is.EqualTo("1500 m"));
+            game.RequestRun(); hud.UpdateStats(); Assert.That(counter.text, Is.EqualTo("0 m"));
+            Assert.That(game.CountdownActive, Is.True);
         }
 
         private static T Find<T>(Scene scene) where T : Component => scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<T>(true)).Single();

@@ -26,7 +26,7 @@ Touch swipes and click-anywhere start/retry gestures are removed. The existing *
 retained for editing but hidden both in the saved scene and during Play. Desktop controls are shown instead,
 with prompts switching automatically when you use a keyboard/mouse or gamepad. Menu focus has a visible outline.
 
-Level's points/best, stage/distance, pause icon, pause menu, power-up/cheat indicators, countdown and game-over UI share the Main Menu's pink cut-corner panels, red/pink ribbons, dark outlines and Anton font. Pause offers **RESUME RUN**, **RESTART** and **QUIT**; game over keeps one score with **TRY AGAIN** and **QUIT**, without duplicate HUD stats. The current landscape remains visible behind the dimmed panels. See [LEVEL_UI.md](LEVEL_UI.md) for authoring and countdown behavior. Country Side retains its existing saved UI.
+Level's points/best, distance, pause icon, pause menu, power-up/cheat indicators, countdown and game-over UI share the Main Menu's pink cut-corner panels, red/pink ribbons, dark outlines and Anton font. The top counter shows distance in metres without stage text. Pause offers **RESUME RUN**, **RESTART** and **QUIT**; game over keeps one score with **TRY AGAIN** and **QUIT**, without duplicate HUD stats. The current landscape remains visible behind the dimmed panels. See [LEVEL_UI.md](LEVEL_UI.md) for authoring and countdown behavior. Country Side retains its existing saved UI.
 
 The default player is **red**. Choose Red, Blue, or Green using **Player Cube Color** on
 **Game Manager**. Gameplay uses explicit color identities rather than comparing shaded RGB values.

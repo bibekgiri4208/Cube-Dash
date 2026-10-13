@@ -307,7 +307,7 @@ namespace CubeDash
             if (shownMetres != metres)
             {
                 shownMetres = metres;
-                speed.text = "STAGE " + game.Stage + "  ·  " + metres + " m";
+                speed.text = ribbonTheme ? metres + " m" : "STAGE " + game.Stage + "  ·  " + metres + " m";
             }
             AnimateFeedback();
             UpdatePowerUpStatus();
