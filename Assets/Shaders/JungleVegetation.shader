@@ -8,6 +8,9 @@ Shader "CubeDash/Jungle Vegetation"
         _Cutoff ("Leaf cutout", Range(0, 1)) = 0.4
         _WindStrength ("Gentle wind", Range(0, 0.3)) = 0.08
         _Smoothness ("Smoothness", Range(0, 1)) = 0.08
+        _Foliage ("Defined two-sided leaf lighting", Float) = 1
+        _BushLighting ("Consistent bush leaf lighting", Float) = 0
+        _LeafLightGain ("Rainforest leaf light gain", Range(0.3, 1)) = 1
         _SceneryRise ("Scenery rise", Vector) = (0, 0, 80, 1.25)
         _SceneryStagger ("Scenery stagger", Float) = 0.55
     }
@@ -24,7 +27,7 @@ Shader "CubeDash/Jungle Vegetation"
             float4 _BaseMap_ST;
             half4 _BaseColor, _TopColor;
             float4 _SceneryRise;
-            float _Cutoff, _WindStrength, _Smoothness, _SceneryStagger;
+            float _Cutoff, _WindStrength, _Smoothness, _SceneryStagger, _Foliage, _BushLighting, _LeafLightGain;
         CBUFFER_END
         float _CubeDashEnvironmentTime;
         struct Attributes
@@ -128,13 +131,44 @@ Shader "CubeDash/Jungle Vegetation"
                 data.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
                 data.shadowMask = 1;
                 SurfaceData surface = (SurfaceData)0;
-                surface.albedo = tint * (0.72 + grain * 0.55) * lerp(0.92, 1.06, input.tint.y);
+                // Stronger texture contrast on leaves; bark and stone retain their existing finish.
+                half detail = _Foliage > 0.5 ? 0.50h + grain * 1.00h : 0.72h + grain * 0.55h;
+                if (_BushLighting > 0.5) detail = 0.78h + grain * 0.50h;
+                surface.albedo = tint * detail * lerp(0.92, 1.06, input.tint.y);
                 surface.specular = 0.04;
                 surface.smoothness = _Smoothness;
                 surface.normalTS = half3(0, 0, 1);
                 surface.occlusion = 1;
                 surface.alpha = 1;
-                half4 color = UniversalFragmentPBR(data, surface);
+                half4 color;
+                if (_Foliage > 0.5)
+                {
+                    // A tighter diffuse wrap restores crown/leaf definition. A modest green
+                    // ambient floor still prevents opaque-black reverse sides and interiors.
+                    Light sun = GetMainLight(data.shadowCoord);
+                    half wrapped = saturate(dot(data.normalWS, sun.direction) * 0.75h + 0.25h);
+                    half3 ambient = max(SampleSH(data.normalWS), half3(0.20h, 0.23h, 0.20h));
+                    half shadow = lerp(0.35h, 1.0h, sun.shadowAttenuation);
+                    half3 illumination = ambient * 0.75h + sun.color * (0.10h + wrapped * 0.85h) * shadow;
+                    if (_BushLighting > 0.5)
+                    {
+                        // Thin bush leaves transmit light from either side. Opposing card
+                        // normals must not alternate between pale green and almost black.
+                        half twoSided = abs(dot(data.normalWS, sun.direction));
+                        half3 bushAmbient = max(SampleSH(half3(0, 1, 0)), half3(0.20h, 0.23h, 0.20h));
+                        half bushShadow = lerp(0.65h, 1.0h, sun.shadowAttenuation);
+                        illumination = bushAmbient * 0.75h + sun.color * (0.30h + twoSided * 0.55h) * bushShadow;
+                    }
+                    #if defined(_SCREEN_SPACE_OCCLUSION)
+                        half minimumAO = _BushLighting > 0.5 ? 0.88h : 0.72h;
+                        illumination *= lerp(minimumAO, 1.0h, GetScreenSpaceAmbientOcclusion(data.normalizedScreenSpaceUV).indirectAmbientOcclusion);
+                    #endif
+                    // The jungle's strong sunlight must not wash deep greens into pale mint.
+                    // Apply this only to leaves: stone, bark, sky and gameplay colors stay intact.
+                    illumination = min(illumination, half3(1, 1, 1)) * _LeafLightGain;
+                    color = half4(surface.albedo * illumination, 1);
+                }
+                else color = UniversalFragmentPBR(data, surface);
                 half fog = ComputeFogFactorZ0ToFar(max(0, distance(input.world, _WorldSpaceCameraPos) - _ProjectionParams.y));
                 color.rgb = MixFog(color.rgb, fog);
                 return color;

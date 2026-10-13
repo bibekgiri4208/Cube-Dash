@@ -29,13 +29,16 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _BushLighting: 0
     - _Cutoff: 0.4
+    - _Foliage: 1
+    - _LeafLightGain: 0.76
     - _SceneryStagger: 0.55
     - _Smoothness: 0.08
     - _WindStrength: 0.08
     m_Colors:
-    - _BaseColor: {r: 0.11999995, g: 0.37999994, b: 0.21999997, a: 1}
+    - _BaseColor: {r: 0.12383997, g: 0.27359995, b: 0.18143997, a: 1}
     - _SceneryRise: {r: 0, g: 0, b: 80, a: 1.25}
-    - _TopColor: {r: 0.15999997, g: 0.43999997, b: 0.24999997, a: 1}
+    - _TopColor: {r: 0.15551998, g: 0.3168, b: 0.20735997, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

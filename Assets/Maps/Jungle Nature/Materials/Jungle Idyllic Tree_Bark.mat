@@ -30,6 +30,7 @@ Material:
     m_Ints: []
     m_Floats:
     - _Cutoff: 0
+    - _Foliage: 0
     - _SceneryStagger: 0.55
     - _Smoothness: 0.08
     - _WindStrength: 0

@@ -42,7 +42,7 @@ namespace CubeDash.Tests
                     Assert.That(scenery.Layouts.All(mesh => AssetDatabase.GetAssetPath(mesh).StartsWith(JungleNatureBuilder.ArtPath + "/Layouts/")), Is.True);
                     Assert.That(scenery.EntranceLayouts, Is.EqualTo(scenery.Layouts));
                     Assert.That(scenery.ExitLayouts, Is.EqualTo(scenery.Layouts));
-                    Assert.That(scenery.VarietyLayouts, Is.EqualTo(source.GetComponent<BiomeScenery>().VarietyLayouts));
+                    Assert.That(scenery.VarietyLayouts.All(mesh => AssetDatabase.GetAssetPath(mesh).StartsWith(JungleNatureBuilder.ArtPath)), Is.True);
                     var palette = jungle.transform.Find("Landscape Details").GetComponent<Renderer>().sharedMaterials;
                     Assert.That(palette.Take(15), Is.EqualTo(sourcePalette));
                     foreach (Material material in palette.Skip(15))
@@ -53,11 +53,23 @@ namespace CubeDash.Tests
                         Assert.That(material.FindPass("ShadowCaster"), Is.GreaterThanOrEqualTo(0));
                         Assert.That(material.FindPass("DepthOnly"), Is.GreaterThanOrEqualTo(0));
                         Assert.That(material.FindPass("DepthNormals"), Is.GreaterThanOrEqualTo(0));
-                        if (material.name.Contains("Bark")) continue;
-                        Color.RGBToHSV(material.GetColor("_BaseColor"), out float hue, out _, out float value);
-                        Color.RGBToHSV(sourcePalette[1].GetColor("_BaseColor"), out float oldHue, out _, out float oldValue);
+                        Assert.That(material.GetFloat("_BushLighting"), Is.EqualTo(material.name.Contains("Bush_") ? 1 : 0),
+                            "Only bushes use the corrected opposing-leaf lighting; trees, grass and rocks retain their existing finish.");
+                        if (material.name.Contains("Bark") || material.name.Contains("Rock") || material.name.Contains("Stone"))
+                        {
+                            Assert.That(material.GetFloat("_WindStrength"), Is.Zero);
+                            Assert.That(material.GetFloat("_Foliage"), Is.Zero);
+                            continue;
+                        }
+                        Assert.That(material.GetFloat("_Foliage"), Is.EqualTo(1), "Leaf cards must use wrapped, softly shadowed lighting.");
+                        Color.RGBToHSV(material.GetColor("_BaseColor"), out float hue, out float saturation, out float value);
+                        Color.RGBToHSV(sourcePalette[1].GetColor("_BaseColor"), out float oldHue, out float oldSaturation, out float oldValue);
                         Assert.That(hue, Is.EqualTo(oldHue).Within(0.005f));
-                        Assert.That(value, Is.InRange(oldValue, oldValue * 1.1f));
+                        float rainforestValue = oldValue * (material.name.Contains("Grass_") ? 0.58f : material.name.Contains("Bush_") ? 0.60f : 0.72f);
+                        Assert.That(value, Is.EqualTo(rainforestValue).Within(0.0001f), "Retain the deeper rainforest tone without bright/neon foliage.");
+                        Assert.That(material.GetFloat("_LeafLightGain"), Is.EqualTo(material.name.Contains("Grass_") ? 0.72f : 0.76f).Within(0.0001f),
+                            "Direct sun must not wash the rainforest foliage back into light green.");
+                        Assert.That(saturation, Is.LessThan(oldSaturation * 0.83f), "Keep the family green, but less saturated.");
                         Assert.That(material.GetFloat("_Smoothness"), Is.LessThan(0.15f));
                     }
                     foreach (string name in new[] { "River", "Landscape Ground" })
@@ -83,7 +95,9 @@ namespace CubeDash.Tests
                 Assert.That(mesh.vertexCount, Is.LessThan(250000), "Use the pack's middle LOD, not full-resolution trees in every section.");
                 for (int surface = 0; surface < 3; surface++) Assert.That(mesh.GetIndexCount(surface), Is.Zero);
                 Vector3[] vertices = mesh.vertices, oldVertices = originals[layout].vertices;
-                for (int surface = 3; surface < 15; surface++)
+                Assert.That(mesh.GetIndexCount(3), Is.Zero, "The old circular boulders are gone.");
+                Assert.That(mesh.GetIndexCount(13), Is.Zero, "No separate green caps on the rocks.");
+                for (int surface = 7; surface <= 7; surface++)
                 {
                     int[] saved = mesh.GetTriangles(surface), old = originals[layout].GetTriangles(surface);
                     Assert.That(saved.Length, Is.EqualTo(old.Length));
@@ -103,10 +117,24 @@ namespace CubeDash.Tests
                         Assert.That(wind[index].x, Is.InRange(0, 1));
                         feet[anchor] = feet.TryGetValue(anchor, out float minimum) ? Mathf.Min(minimum, vertices[index].y) : vertices[index].y;
                     }
-                Assert.That(feet.Count, Is.EqualTo(236), "246 plants; ten riverbank bushes share their grass-skirt anchors.");
+                Assert.That(feet.Count, Is.EqualTo(246), "246 plants and ten pack rocks; ten riverbank bushes share grass-skirt anchors.");
                 int[] terrain = mesh.GetTriangles(7);
                 foreach (var foot in feet)
                     Assert.That(foot.Value, Is.EqualTo(Ground(vertices, terrain, foot.Key.x, foot.Key.y) - 0.1f).Within(0.25f), "No floating trunks or grass on the hills.");
+            }
+        }
+
+        [Test]
+        public void BananaGeometryAndGreenMossCapsAreRemovedInEveryVarietyLayout()
+        {
+            for (int layout = 0; layout < 8; layout++)
+            {
+                Mesh mesh = AssetDatabase.LoadAssetAtPath<Mesh>(JungleNatureBuilder.ArtPath + "/Layouts/Jungle Understory " + (layout + 1) + ".asset");
+                Assert.That(mesh, Is.Not.Null); Assert.That(mesh.GetIndexCount(13), Is.Zero);
+                Vector2[] anchors = mesh.uv3;
+                foreach (int index in mesh.triangles)
+                    Assert.That(Mathf.Abs(anchors[index].x + 12.5f) < 0.01f && anchors[index].y > 24 && anchors[index].y < 30,
+                        Is.False, "Remove the entire banana plant, including its trunk and fruit.");
             }
         }
 
@@ -144,22 +172,92 @@ namespace CubeDash.Tests
             game.Track.Reset(7321, CubeColor.Red);
             foreach (var rise in game.Track.GetComponentsInChildren<SceneryRise>()) rise.Settle();
             var camera = game.GameCamera;
+            float fieldOfView = camera.fieldOfView;
             var canvas = Object.FindAnyObjectByType<Canvas>(); canvas.enabled = false;
             Capture(camera, "gameplay");
             Vector3 position = camera.transform.position; Quaternion rotation = camera.transform.rotation;
             camera.transform.position = new Vector3(-22, 3.5f, -6);
             camera.transform.LookAt(new Vector3(-29, 0, 45));
             Capture(camera, "riverbank");
+            FocusOnBush(game, camera);
+            Capture(camera, "bush-closeup");
+            camera.fieldOfView = fieldOfView;
             camera.transform.SetPositionAndRotation(position, rotation);
             for (int step = 0; step < 16; step++)
                 game.Track.Advance(42, 0, 0, LevelProgression.Difficulty((step + 1) * 42), Vector2.one * 0.45f,
                     0, false, false, true, false, out _, out _);
             foreach (var rise in game.Track.GetComponentsInChildren<SceneryRise>()) rise.Settle();
             Capture(camera, "curved-road");
-            canvas.enabled = true;
             var shader = AssetDatabase.LoadAssetAtPath<Shader>("Assets/Shaders/JungleVegetation.shader");
             Assert.That(ShaderUtil.ShaderHasError(shader), Is.False);
+            AssertBushLeafSidesMatch(shader);
+            canvas.enabled = true;
             yield return new ExitPlayMode();
+        }
+
+        private static void FocusOnBush(CubeDashGame game, Camera camera)
+        {
+            var segment = game.Track.Segments.OrderBy(item => Mathf.Abs(item.transform.position.z)).First();
+            Transform details = segment.Environment.Biomes[(int)EnvironmentBiome.Jungle].transform.Find("Landscape Details");
+            Mesh mesh = details.GetComponent<MeshFilter>().sharedMesh;
+            Material[] materials = details.GetComponent<Renderer>().sharedMaterials;
+            int surface = System.Array.FindIndex(materials, material => material.name == "Jungle Idyllic Bush_01");
+            Vector2[] anchors = mesh.uv3; Vector3[] vertices = mesh.vertices;
+            int[] indices = mesh.GetTriangles(surface).Distinct().ToArray();
+            Vector2 anchor = anchors[indices.OrderBy(index => (anchors[index] - new Vector2(-14, 10)).sqrMagnitude).First()];
+            var points = indices.Where(index => anchors[index] == anchor).Select(index => details.TransformPoint(vertices[index])).ToArray();
+            var bounds = new Bounds(points[0], Vector3.zero);
+            foreach (Vector3 point in points) bounds.Encapsulate(point);
+            camera.transform.position = bounds.center + new Vector3(3, 1.4f, -4.5f);
+            camera.transform.LookAt(bounds.center); camera.fieldOfView = 45;
+        }
+
+        private static void AssertBushLeafSidesMatch(Shader shader)
+        {
+            var material = new Material(shader);
+            material.SetColor("_BaseColor", new Color(0.15f, 0.32f, 0.21f));
+            material.SetColor("_TopColor", new Color(0.15f, 0.32f, 0.21f));
+            material.SetFloat("_BushLighting", 1); material.SetFloat("_WindStrength", 0);
+            var mesh = new Mesh();
+            mesh.vertices = new[] { new Vector3(-0.5f, -0.5f, 0), new Vector3(0.5f, -0.5f, 0), new Vector3(0.5f, 0.5f, 0), new Vector3(-0.5f, 0.5f, 0) };
+            mesh.triangles = new[] { 0, 2, 1, 0, 3, 2 };
+            mesh.normals = Enumerable.Repeat(Vector3.forward, 4).ToArray();
+            Mesh reverse = Object.Instantiate(mesh); reverse.normals = Enumerable.Repeat(Vector3.back, 4).ToArray();
+            var root = new GameObject("Temporary bush leaf-side lighting probe");
+            var camera = root.AddComponent<Camera>(); camera.orthographic = true; camera.orthographicSize = 1;
+            camera.cullingMask = 1 << 31; camera.clearFlags = CameraClearFlags.SolidColor;
+            camera.transform.position = new Vector3(0, 0, -10);
+            var target = new RenderTexture(256, 128, 24); var image = new Texture2D(256, 128, TextureFormat.RGB24, false);
+            Vector4 curve = Shader.GetGlobalVector("_CubeDashRoadCurve"); var active = RenderTexture.active;
+            bool async = ShaderUtil.allowAsyncCompilation;
+            try
+            {
+                Shader.SetGlobalVector("_CubeDashRoadCurve", Vector4.zero);
+                ShaderUtil.allowAsyncCompilation = false;
+                for (int side = 0; side < 2; side++)
+                {
+                    var leaf = new GameObject("Leaf side", typeof(MeshFilter), typeof(MeshRenderer));
+                    leaf.transform.SetParent(root.transform, false); leaf.layer = 31;
+                    leaf.transform.position = new Vector3(side == 0 ? -0.75f : 0.75f, 0, 0);
+                    leaf.GetComponent<MeshFilter>().sharedMesh = side == 0 ? mesh : reverse;
+                    leaf.GetComponent<Renderer>().sharedMaterial = material;
+                    leaf.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                }
+                camera.targetTexture = target;
+                for (int frame = 0; frame < 4; frame++) camera.Render();
+                RenderTexture.active = target; image.ReadPixels(new Rect(0, 0, 256, 128), 0, 0); image.Apply();
+                Color front = image.GetPixel(80, 64), back = image.GetPixel(176, 64);
+                Assert.That(front.g, Is.GreaterThan(0.08f), "Bush leaves must not render black.");
+                Assert.That(front.g, Is.GreaterThan(front.r));
+                Assert.That(back.g, Is.EqualTo(front.g).Within(0.025f), "Opposing leaf normals must not produce the pale-green/black checker pattern.");
+            }
+            finally
+            {
+                Shader.SetGlobalVector("_CubeDashRoadCurve", curve); RenderTexture.active = active;
+                ShaderUtil.allowAsyncCompilation = async;
+                Object.DestroyImmediate(root); Object.DestroyImmediate(target); Object.DestroyImmediate(image);
+                Object.DestroyImmediate(mesh); Object.DestroyImmediate(reverse); Object.DestroyImmediate(material);
+            }
         }
 
         [Test]

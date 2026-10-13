@@ -21,6 +21,7 @@ namespace CubeDash.Editor
         private static readonly string[] Bushes = { "Bush_01_01", "Bush_02_01", "Bush_03_01",
             "Bush_01_02", "Bush_02_02", "Bush_03_02" };
         private static readonly string[] Grasses = { "Grass_01", "Grass_02", "Grass_03" };
+        private static readonly string[] Rocks = { "Stone_Medium_01", "Stone_Medium_02", "Stone_Medium_03" };
 
         [MenuItem("Tools/Cube Dash/Beautify Jungle with Idyllic Nature")]
         public static void ApplyFromMenu()
@@ -29,6 +30,49 @@ namespace CubeDash.Editor
         }
 
         public static void ApplyFromCommandLine()
+            => Apply(false);
+
+        [MenuItem("Tools/Cube Dash/Refine Jungle Leaves Rocks and Understory")]
+        public static void RefineFromMenu()
+        {
+            if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) RefineFromCommandLine();
+        }
+
+        public static void RefineFromCommandLine() => Apply(true);
+
+        [MenuItem("Tools/Cube Dash/Tone Down Jungle Greens")]
+        public static void ToneDownFromCommandLine()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) throw new InvalidOperationException("Stop Play mode first.");
+            var source = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/CubeDash/Environments/Jungle.prefab");
+            Material[] original = source.transform.Find("Landscape Details").GetComponent<Renderer>().sharedMaterials;
+            var materials = AssetDatabase.FindAssets("t:Material", new[] { ArtPath + "/Materials" })
+                .Select(guid => AssetDatabase.LoadAssetAtPath<Material>(AssetDatabase.GUIDToAssetPath(guid)))
+                .Where(material => material.HasProperty("_Foliage") && material.GetFloat("_Foliage") > 0.5f).ToArray();
+            if (materials.Length != 7) throw new InvalidOperationException("Expected the seven saved Jungle leaf, bush and grass materials.");
+            foreach (Material material in materials)
+            {
+                bool grass = material.name.Contains("Grass_"), bush = material.name.Contains("Bush_");
+                material.SetColor("_BaseColor", FoliageTone(original[1].GetColor("_BaseColor"), grass, bush));
+                material.SetColor("_TopColor", FoliageTone(original[2].GetColor("_BaseColor"), grass, bush));
+                material.SetFloat("_LeafLightGain", grass ? 0.72f : 0.76f);
+                EditorUtility.SetDirty(material);
+            }
+            AssetDatabase.SaveAssets();
+            Debug.Log("Applied deep rainforest greens to seven Jungle foliage materials and reduced leaf light gain. Bushes/grass are visibly darker; tree highlights no longer wash pale. Scene, geometry, rocks and other maps unchanged.");
+        }
+
+        private static Color FoliageTone(Color color, bool grass, bool bush)
+        {
+            Color.RGBToHSV(color, out float hue, out float saturation, out float value);
+            float saturationScale = grass ? 0.76f : bush ? 0.78f : 0.80f;
+            float valueScale = grass ? 0.58f : bush ? 0.60f : 0.72f;
+            Color muted = Color.HSVToRGB(hue, saturation * saturationScale, value * valueScale);
+            muted.a = 1;
+            return muted;
+        }
+
+        private static void Apply(bool refine)
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode) throw new InvalidOperationException("Stop Play mode first.");
             for (int i = 0; i < SceneManager.sceneCount; i++)
@@ -42,26 +86,31 @@ namespace CubeDash.Editor
             if (roots.Any(root => root == null)) throw new InvalidOperationException("A saved jungle section is missing.");
             bool[] upgraded = roots.Select(root => root.GetComponent<BiomeScenery>().Layouts.All(mesh =>
                 AssetDatabase.GetAssetPath(mesh).StartsWith(ArtPath + "/", StringComparison.Ordinal))).ToArray();
-            if (upgraded.All(value => value))
+            if (upgraded.All(value => value) && !refine)
             {
                 Debug.Log("Idyllic jungle planting is already saved. Existing scene and planting edits were preserved.");
                 return;
             }
-            if (upgraded.Any(value => value) || AssetDatabase.IsValidFolder(ArtPath))
+            if (refine && !upgraded.All(value => value))
+                throw new InvalidOperationException("Refinement requires the saved Idyllic jungle layouts.");
+            if (!refine && (upgraded.Any(value => value) || AssetDatabase.IsValidFolder(ArtPath)))
                 throw new InvalidOperationException("Partial/existing jungle nature assets require inspection before reauthoring.");
             var source = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/CubeDash/Environments/Jungle.prefab");
             Mesh[] originals = source.GetComponent<BiomeScenery>().Layouts;
             Material[] originalPalette = source.transform.Find("Landscape Details").GetComponent<Renderer>().sharedMaterials;
             if (originals.Length != 8 || originalPalette.Length != 15)
                 throw new InvalidOperationException("Inspect the existing jungle layouts before changing their surfaces.");
-            var plants = Trees.Concat(Bushes).Concat(Grasses).Distinct().ToDictionary(name => name, LoadPlant);
+            var plants = Trees.Concat(Bushes).Concat(Grasses).Concat(Rocks).Distinct().ToDictionary(name => name, LoadPlant);
             Shader shader = AssetDatabase.LoadAssetAtPath<Shader>("Assets/Shaders/JungleVegetation.shader");
             if (shader == null) throw new InvalidOperationException("The jungle foliage shader is missing.");
             if (ShaderUtil.ShaderHasError(shader)) throw new InvalidOperationException("The jungle foliage shader must compile first: "
                 + string.Join("; ", ShaderUtil.GetShaderMessages(shader).Select(message => message.message + " at " + message.line)));
-            AssetDatabase.CreateFolder("Assets/Maps", "Jungle Nature");
-            AssetDatabase.CreateFolder(ArtPath, "Materials");
-            AssetDatabase.CreateFolder(ArtPath, "Layouts");
+            if (!refine)
+            {
+                AssetDatabase.CreateFolder("Assets/Maps", "Jungle Nature");
+                AssetDatabase.CreateFolder(ArtPath, "Materials");
+                AssetDatabase.CreateFolder(ArtPath, "Layouts");
+            }
             var palette = originalPalette.ToList();
             var surfaces = new Dictionary<Material, int>();
             foreach (Plant plant in plants.Values)
@@ -76,9 +125,8 @@ namespace CubeDash.Editor
             for (int layout = 0; layout < layouts.Length; layout++)
             {
                 var geometry = new PlantingMesh(palette.Count);
-                // Preserve the hills, moss and boulders, removing the old trees, round bushes and ferns.
-                for (int surface = 3; surface < originals[layout].subMeshCount; surface++)
-                    geometry.Add(originals[layout], surface, surface, Matrix4x4.identity, null, 0);
+                // Keep the actual hills; retire the round boulders and their separate green caps.
+                geometry.Add(originals[layout], 7, 7, Matrix4x4.identity, null, 0);
                 var random = new System.Random(61573 + layout * 139);
                 var terrain = new Terrain(originals[layout]);
                 int species = layout;
@@ -136,9 +184,33 @@ namespace CubeDash.Editor
                         Place(Grasses[(patch + bank + layout) % Grasses.Length], x, z, Range(random, 0.8f, 1.5f), 1.8f);
                         if (patch % 3 == 0) Place(Bushes[(patch + layout) % Bushes.Length], x, z, Range(random, 1.3f, 2), 2.4f);
                     }
+                // Irregular pack rocks use only the stone texture, never the pack's moss overlay.
+                for (int side = -1; side <= 1; side += 2)
+                    for (int rock = 0; rock < 5; rock++)
+                        Place(Rocks[(rock + layout) % Rocks.Length], side * Range(random, 15, 24),
+                            3 + rock * 8 + Range(random, -1.8f, 1.8f), Range(random, 1.8f, 3.3f), 4.8f);
                 layouts[layout] = geometry.Bake("Idyllic Jungle Layout " + (layout + 1));
-                AssetDatabase.CreateAsset(layouts[layout], ArtPath + "/Layouts/" + layouts[layout].name + ".asset");
+                layouts[layout] = Save(layouts[layout], ArtPath + "/Layouts/" + layouts[layout].name + ".asset");
             }
+            var varietyLayouts = source.GetComponent<BiomeScenery>().VarietyLayouts.Select((mesh, index) =>
+            {
+                Mesh clean = Object.Instantiate(mesh); clean.name = "Jungle Understory " + (index + 1);
+                Vector2[] anchors = mesh.uv3;
+                for (int surface = 0; surface < clean.subMeshCount; surface++)
+                {
+                    var triangles = new List<int>(); int[] original = mesh.GetTriangles(surface);
+                    if (surface != 13)
+                        for (int triangle = 0; triangle < original.Length; triangle += 3)
+                        {
+                            Vector2 anchor = anchors[original[triangle]];
+                            if (Mathf.Abs(anchor.x + 12.5f) < 0.01f && anchor.y > 24 && anchor.y < 30) continue;
+                            triangles.Add(original[triangle]); triangles.Add(original[triangle + 1]); triangles.Add(original[triangle + 2]);
+                        }
+                    clean.SetTriangles(triangles, surface, false);
+                }
+                clean.RecalculateBounds();
+                return Save(clean, ArtPath + "/Layouts/" + clean.name + ".asset");
+            }).ToArray();
             for (int i = 0; i < roots.Length; i++)
             {
                 var scenery = roots[i].GetComponent<BiomeScenery>();
@@ -149,16 +221,20 @@ namespace CubeDash.Editor
                     for (int layout = 0; layout < layouts.Length; layout++) array.GetArrayElementAtIndex(layout).objectReferenceValue = layouts[layout];
                 }
                 data.ApplyModifiedPropertiesWithoutUndo();
+                var varietyData = new SerializedObject(scenery); var variety = varietyData.FindProperty("varietyLayouts");
+                for (int layout = 0; layout < variety.arraySize; layout++) variety.GetArrayElementAtIndex(layout).objectReferenceValue = varietyLayouts[layout];
+                varietyData.ApplyModifiedPropertiesWithoutUndo();
                 var details = roots[i].transform.Find("Landscape Details");
                 details.GetComponent<Renderer>().sharedMaterials = palette.ToArray();
                 scenery.SelectLayout(i - 1, track.Environment.SegmentsPerBiome, true);
-                foreach (Component component in new Component[] { scenery, details.GetComponent<MeshFilter>(), details.GetComponent<Renderer>() })
+                var varietyFilter = roots[i].transform.Find("Landscape Variety").GetComponent<MeshFilter>();
+                foreach (Component component in new Component[] { scenery, details.GetComponent<MeshFilter>(), details.GetComponent<Renderer>(), varietyFilter })
                     if (PrefabUtility.IsPartOfPrefabInstance(component)) PrefabUtility.RecordPrefabInstancePropertyModifications(component);
             }
             AssetDatabase.SaveAssets();
             EditorSceneManager.MarkSceneDirty(scene);
             if (!EditorSceneManager.SaveScene(scene)) throw new InvalidOperationException("Could not save the jungle planting.");
-            Debug.Log("Saved eight Idyllic Jungle layouts: 20 broadleaf trees, 52 bushes and 174 grass clumps per section. Original jungle colors, river, hills, landmarks, lighting, road, UI and gameplay preserved; no new runtime objects or colliders.");
+            Debug.Log("Refined all eight jungle layouts: softly lit green foliage, ten angular Idyllic rocks per section, no moss caps or banana plant. Forest palette, river, hills, remaining landmarks and gameplay preserved.");
         }
 
         private static float Range(System.Random random, float min, float max) => min + (float)random.NextDouble() * (max - min);
@@ -190,21 +266,37 @@ namespace CubeDash.Editor
         {
             bool bark = source.name.IndexOf("Bark", StringComparison.OrdinalIgnoreCase) >= 0;
             bool grass = source.name.StartsWith("Grass", StringComparison.Ordinal);
+            bool rock = source.name.StartsWith("Rock", StringComparison.Ordinal) || source.name.StartsWith("Stone", StringComparison.Ordinal);
             var result = new Material(shader) { name = "Jungle Idyllic " + source.name, enableInstancing = true, doubleSidedGI = !bark };
             Texture texture = source.HasProperty("_Texture") ? source.GetTexture("_Texture") : null;
             if (texture == null && source.HasProperty("_Base_Map")) texture = source.GetTexture("_Base_Map");
             if (texture == null && source.HasProperty("_BaseMap")) texture = source.GetTexture("_BaseMap");
             if (texture == null) throw new InvalidOperationException("Missing Idyllic texture: " + source.name);
             result.SetTexture("_BaseMap", texture);
-            Color baseColor = original[bark ? 0 : 1].GetColor("_BaseColor");
-            Color topColor = bark ? baseColor * 1.08f : original[2].GetColor("_BaseColor");
-            if (grass) { baseColor *= 1.08f; topColor *= 1.08f; }
+            Color baseColor = original[rock ? 3 : bark ? 0 : 1].GetColor("_BaseColor");
+            Color topColor = bark || rock ? baseColor * 1.08f : original[2].GetColor("_BaseColor");
+            if (!bark && !rock)
+            {
+                bool bush = source.name.StartsWith("Bush", StringComparison.Ordinal);
+                baseColor = FoliageTone(baseColor, grass, bush);
+                topColor = FoliageTone(topColor, grass, bush);
+            }
             baseColor.a = topColor.a = 1;
             result.SetColor("_BaseColor", baseColor); result.SetColor("_TopColor", topColor);
-            result.SetFloat("_WindStrength", bark ? 0 : grass ? 0.12f : 0.08f);
-            result.SetFloat("_Cutoff", bark ? 0 : 0.4f); result.SetFloat("_Smoothness", 0.08f);
-            AssetDatabase.CreateAsset(result, ArtPath + "/Materials/" + result.name + ".mat");
-            return result;
+            result.SetFloat("_WindStrength", bark || rock ? 0 : grass ? 0.12f : 0.08f);
+            result.SetFloat("_Foliage", bark || rock ? 0 : 1);
+            result.SetFloat("_BushLighting", source.name.StartsWith("Bush", StringComparison.Ordinal) ? 1 : 0);
+            result.SetFloat("_LeafLightGain", bark || rock ? 1 : grass ? 0.72f : 0.76f);
+            result.SetFloat("_Cutoff", bark || rock ? 0 : 0.4f); result.SetFloat("_Smoothness", 0.08f);
+            return Save(result, ArtPath + "/Materials/" + result.name + ".mat");
+        }
+
+        private static T Save<T>(T asset, string path) where T : Object
+        {
+            T existing = AssetDatabase.LoadAssetAtPath<T>(path);
+            if (existing == null) { AssetDatabase.CreateAsset(asset, path); return asset; }
+            EditorUtility.CopySerialized(asset, existing); EditorUtility.SetDirty(existing); Object.DestroyImmediate(asset);
+            return existing;
         }
 
         private sealed class Terrain
