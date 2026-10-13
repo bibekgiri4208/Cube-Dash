@@ -179,13 +179,13 @@ Material:
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _BottomColor: {r: 0.86401826, g: 0.4198113, b: 1, a: 0}
-    - _Bottom_Color: {r: 1, g: 0.16509432, b: 0.9115982, a: 1}
+    - _Bottom_Color: {r: 1, g: 0.1462264, b: 0.9078084, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _Player_Position: {r: 0, g: 0, b: 0, a: 0}
     - _SpecColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
     - _TopColor: {r: 1, g: 0.4292453, b: 0.4292453, a: 0}
-    - _Top_Color: {r: 2.103273, g: 0.3869229, b: 1.6579586, a: 1}
+    - _Top_Color: {r: 2.5696163, g: 0.8363373, b: 2.1223187, a: 1}
     - _WindDirection: {r: 0.1, g: 0.1, b: 0, a: 0}
     - _Wind_Direction: {r: 0.1, g: 0.1, b: 0, a: 0}
   m_BuildTextureStacks: []

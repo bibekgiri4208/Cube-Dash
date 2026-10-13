@@ -33,7 +33,15 @@ Open the individual scene to edit its layout. **Tools > Cube Dash > Separate Lev
 
 **Tools > Cube Dash > Add Main Menu Map Selection** refreshes the saved card targets, PLAY badges and navigation without rebuilding the submenu. Navigation follows the displayed three-column desktop/two-column portrait grid. Back/Escape/gamepad Back restore Start focus; selecting a map stops menu music, and in-game Quit returns to Main Menu.
 
-## Validation
+## Jungle nature dressing
+
+`Jungle.unity` now uses five Idyllic Fantasy Nature broadleaf tree shapes, six bush shapes and three grass shapes in all eight pooled layouts. Each section has 20 trees, 52 shrubs and 174 grass clumps: broken roadside verges, clustered understory, hillside groves and planting on both riverbanks. The original deep-green jungle palette, hills, river, landmarks, lighting and sky remain intact; roads, guardrails, gameplay and HUD are unchanged.
+
+Scene-specific meshes and materials live under `Assets/Maps/Jungle Nature`. The pack's middle-LOD meshes are combined by material instead of adding hundreds of runtime GameObjects. Textured cutout foliage supports gentle wind, shadows, depth/ambient occlusion, road bending and the existing scenery-rise animation. Downloaded pack assets, the shared Jungle prefab, mixed-biome Level and other maps are untouched.
+
+**Tools > Cube Dash > Beautify Jungle with Idyllic Nature** (`JungleNatureBuilder.ApplyFromCommandLine`) authors a previously unmodified standalone Jungle; reapplying preserves saved planting edits. It refuses partial upgrades rather than overwriting them. `JungleNatureTests` checks the saved palette/textures, hill grounding, road/river clearance, retained terrain, pooled recycling, reapplication and rendered gameplay/river/curved-road views.
+
+## Original standalone-map validation
 
 Passed **98/98** map/environment/ambience/road/progression/HUD/menu/music regressions and **2/2** GPU integration checks in an isolated Unity 6000.4.1f1 project. Rendered previews of all five maps and landscape/portrait map selection were inspected.
 
