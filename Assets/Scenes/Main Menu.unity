@@ -3414,6 +3414,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 945415684}
   - {fileID: 1766139390}
   - {fileID: 1592363411}
   - {fileID: 355629834}
@@ -3442,16 +3443,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelGraphic
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0.96, b: 0.97, a: 1}
+  m_Color: {r: 1, g: 0.82, b: 0.84, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  cornerRadius: 22
-  borderWidth: 3
-  borderColor: {r: 0.19, g: 0.1, b: 0.15, a: 1}
+  cornerRadius: 0
+  borderWidth: 4
+  borderColor: {r: 0.018, g: 0.014, b: 0.025, a: 1}
+  cornerCut: 22
 --- !u!222 &47786829
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -4647,7 +4649,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 792, y: 14}
+  m_SizeDelta: {x: 792, y: 18}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &66787581
 MonoBehaviour:
@@ -4662,16 +4664,17 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelGraphic
   m_Material: {fileID: 0}
-  m_Color: {r: 0.87, g: 0.8, b: 0.83, a: 1}
+  m_Color: {r: 1, g: 0.82, b: 0.84, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  cornerRadius: 7
-  borderWidth: 0
-  borderColor: {r: 0.19, g: 0.1, b: 0.15, a: 1}
+  cornerRadius: 0
+  borderWidth: 2
+  borderColor: {r: 0.018, g: 0.014, b: 0.025, a: 1}
+  cornerCut: 0
 --- !u!222 &66787582
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -5609,7 +5612,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuLabelText
   m_Material: {fileID: 0}
-  m_Color: {r: 0.42, g: 0.33, b: 0.38, a: 1}
+  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -8027,9 +8030,9 @@ GameObject:
   m_Component:
   - component: {fileID: 121989788}
   - component: {fileID: 121989791}
-  - component: {fileID: 121989790}
   - component: {fileID: 121989792}
   - component: {fileID: 121989789}
+  - component: {fileID: 121989793}
   m_Layer: 0
   m_Name: BACK
   m_TagString: Untagged
@@ -8069,29 +8072,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50d5775893b24c17a4586c5a28504fa8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
---- !u!114 &121989790
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 121989787}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1a2353dc9d2d42a599940b1b13193285, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelGraphic
-  m_Material: {fileID: 0}
-  m_Color: {r: 0.94, g: 0.035, b: 0.14, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  cornerRadius: 12
-  borderWidth: 2
-  borderColor: {r: 0.39, g: 0.025, b: 0.1, a: 1}
 --- !u!222 &121989791
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -8119,7 +8099,7 @@ MonoBehaviour:
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
-  m_Transition: 1
+  m_Transition: 0
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
@@ -8140,7 +8120,7 @@ MonoBehaviour:
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 121989790}
+  m_TargetGraphic: {fileID: 121989793}
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
@@ -8156,6 +8136,27 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &121989793
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 121989787}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08de2d897f3c4fcd9ea6f24500cfe363, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: CubeDash::CubeDash.MenuRibbonGraphic
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  primary: 1
 --- !u!1001 &122251842
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -10826,16 +10827,17 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelGraphic
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0.88, b: 0.91, a: 1}
+  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  cornerRadius: 12
+  cornerRadius: 0
   borderWidth: 0
-  borderColor: {r: 0.19, g: 0.1, b: 0.15, a: 1}
+  borderColor: {r: 0.018, g: 0.014, b: 0.025, a: 1}
+  cornerCut: 6
 --- !u!222 &160931340
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -11099,16 +11101,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelGraphic
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0.99, b: 0.94, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  cornerRadius: 10
-  borderWidth: 2
-  borderColor: {r: 0.94, g: 0.035, b: 0.14, a: 1}
+  cornerRadius: 0
+  borderWidth: 3
+  borderColor: {r: 0.018, g: 0.014, b: 0.025, a: 1}
+  cornerCut: 4
 --- !u!222 &167438576
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -12067,7 +12070,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuLabelText
   m_Material: {fileID: 0}
-  m_Color: {r: 0.19, g: 0.1, b: 0.15, a: 1}
+  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -13314,7 +13317,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -24, y: 14}
+  m_SizeDelta: {x: -4, y: 14}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &208249042
 GameObject:
@@ -14907,16 +14910,17 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelGraphic
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0.99, b: 0.94, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  cornerRadius: 10
-  borderWidth: 2
-  borderColor: {r: 0.94, g: 0.035, b: 0.14, a: 1}
+  cornerRadius: 0
+  borderWidth: 3
+  borderColor: {r: 0.018, g: 0.014, b: 0.025, a: 1}
+  cornerCut: 4
 --- !u!222 &228631827
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -16128,7 +16132,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuLabelText
   m_Material: {fileID: 0}
-  m_Color: {r: 0.42, g: 0.33, b: 0.38, a: 1}
+  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -16550,7 +16554,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: -5, y: 2}
   m_SizeDelta: {x: 174, y: 52}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &253520363
@@ -16566,7 +16570,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuLabelText
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0.99, b: 0.94, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -18074,7 +18078,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuLabelText
   m_Material: {fileID: 0}
-  m_Color: {r: 0.42, g: 0.33, b: 0.38, a: 1}
+  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -23101,7 +23105,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -30, y: 195}
+  m_AnchoredPosition: {x: -30, y: 176}
   m_SizeDelta: {x: 820, y: 40}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &355629835
@@ -23117,7 +23121,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuLabelText
   m_Material: {fileID: 0}
-  m_Color: {r: 0.42, g: 0.33, b: 0.38, a: 1}
+  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -23866,7 +23870,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuLabelText
   m_Material: {fileID: 0}
-  m_Color: {r: 0.19, g: 0.1, b: 0.15, a: 1}
+  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -26594,7 +26598,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuLabelText
   m_Material: {fileID: 0}
-  m_Color: {r: 0.19, g: 0.1, b: 0.15, a: 1}
+  m_Color: {r: 1, g: 0.99, b: 0.94, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -29258,7 +29262,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -24, y: 14}
+  m_SizeDelta: {x: -4, y: 14}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &447720679
 GameObject:
@@ -29931,16 +29935,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelGraphic
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0.91, b: 0.92, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  cornerRadius: 16
-  borderWidth: 2
-  borderColor: {r: 0.18, g: 0.46, b: 0.82, a: 1}
+  cornerRadius: 0
+  borderWidth: 3
+  borderColor: {r: 0.018, g: 0.014, b: 0.025, a: 1}
+  cornerCut: 12
 --- !u!222 &457600787
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -30970,16 +30975,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelGraphic
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0.91, b: 0.92, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  cornerRadius: 16
-  borderWidth: 2
-  borderColor: {r: 0.61, g: 0.27, b: 0.78, a: 1}
+  cornerRadius: 0
+  borderWidth: 3
+  borderColor: {r: 0.018, g: 0.014, b: 0.025, a: 1}
+  cornerCut: 12
 --- !u!222 &474915045
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -31494,7 +31500,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuLabelText
   m_Material: {fileID: 0}
-  m_Color: {r: 0.19, g: 0.1, b: 0.15, a: 1}
+  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -32177,16 +32183,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelGraphic
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0.91, b: 0.92, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  cornerRadius: 16
-  borderWidth: 1
-  borderColor: {r: 0.88, g: 0.79, b: 0.83, a: 1}
+  cornerRadius: 0
+  borderWidth: 3
+  borderColor: {r: 0.018, g: 0.014, b: 0.025, a: 1}
+  cornerCut: 12
 --- !u!222 &492837158
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -39041,7 +39048,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuLabelText
   m_Material: {fileID: 0}
-  m_Color: {r: 0.42, g: 0.33, b: 0.38, a: 1}
+  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -46882,7 +46889,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuLabelText
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -50337,7 +50344,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuLabelText
   m_Material: {fileID: 0}
-  m_Color: {r: 0.19, g: 0.1, b: 0.15, a: 1}
+  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -51768,16 +51775,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelGraphic
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0.91, b: 0.92, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  cornerRadius: 16
-  borderWidth: 2
-  borderColor: {r: 0.48, g: 0.51, b: 0.56, a: 1}
+  cornerRadius: 0
+  borderWidth: 3
+  borderColor: {r: 0.018, g: 0.014, b: 0.025, a: 1}
+  cornerCut: 12
 --- !u!222 &811651256
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -59770,8 +59778,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 8, y: -10}
-  m_SizeDelta: {x: 1010, y: 660}
+  m_AnchoredPosition: {x: 8, y: -9}
+  m_SizeDelta: {x: 1000, y: 650}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &935199930
 MonoBehaviour:
@@ -59786,16 +59794,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelGraphic
   m_Material: {fileID: 0}
-  m_Color: {r: 0.035, g: 0.012, b: 0.025, a: 0.28}
+  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  cornerRadius: 24
+  cornerRadius: 0
   borderWidth: 0
-  borderColor: {r: 0.19, g: 0.1, b: 0.15, a: 1}
+  borderColor: {r: 0.018, g: 0.014, b: 0.025, a: 1}
+  cornerCut: 22
 --- !u!222 &935199931
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -60933,7 +60942,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuLabelText
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -61040,6 +61049,72 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8435212467881505545, guid: 1adcc5245ab04874dada24afd400e2b1, type: 3}
   m_PrefabInstance: {fileID: 945169796}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &945415683
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 945415684}
+  - component: {fileID: 945415686}
+  - component: {fileID: 945415685}
+  m_Layer: 0
+  m_Name: Ribbon header
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &945415684
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 945415683}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 47786827}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 247}
+  m_SizeDelta: {x: 952, y: 104}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &945415685
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 945415683}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08de2d897f3c4fcd9ea6f24500cfe363, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: CubeDash::CubeDash.MenuRibbonGraphic
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  primary: 0
+--- !u!222 &945415686
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 945415683}
+  m_CullTransparentMesh: 1
 --- !u!1001 &945738657
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -64679,7 +64754,7 @@ GameObject:
   m_Component:
   - component: {fileID: 992667706}
   - component: {fileID: 992667708}
-  - component: {fileID: 992667707}
+  - component: {fileID: 992667709}
   m_Layer: 0
   m_Name: Rarity heading
   m_TagString: Untagged
@@ -64704,32 +64779,9 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 126}
-  m_SizeDelta: {x: 288, y: 48}
+  m_AnchoredPosition: {x: 0, y: 123}
+  m_SizeDelta: {x: 294, y: 58}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &992667707
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 992667705}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1a2353dc9d2d42a599940b1b13193285, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelGraphic
-  m_Material: {fileID: 0}
-  m_Color: {r: 0.61, g: 0.27, b: 0.78, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  cornerRadius: 10
-  borderWidth: 0
-  borderColor: {r: 0.61, g: 0.27, b: 0.78, a: 1}
 --- !u!222 &992667708
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -64738,6 +64790,27 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 992667705}
   m_CullTransparentMesh: 1
+--- !u!114 &992667709
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 992667705}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08de2d897f3c4fcd9ea6f24500cfe363, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CubeDash::CubeDash.MenuRibbonGraphic
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  primary: 0
 --- !u!1 &994406481
 GameObject:
   m_ObjectHideFlags: 0
@@ -66140,16 +66213,17 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelGraphic
   m_Material: {fileID: 0}
-  m_Color: {r: 0.94, g: 0.035, b: 0.14, a: 1}
+  m_Color: {r: 0.95, g: 0.02, b: 0.11, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  cornerRadius: 7
+  cornerRadius: 0
   borderWidth: 0
-  borderColor: {r: 0.19, g: 0.1, b: 0.15, a: 1}
+  borderColor: {r: 0.018, g: 0.014, b: 0.025, a: 1}
+  cornerCut: 0
 --- !u!222 &1021164655
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -67097,7 +67171,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuGlyphGraphic
   m_Material: {fileID: 0}
-  m_Color: {r: 0.19, g: 0.1, b: 0.15, a: 1}
+  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -72464,7 +72538,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1132682621}
   - component: {fileID: 1132682623}
-  - component: {fileID: 1132682622}
+  - component: {fileID: 1132682624}
   m_Layer: 0
   m_Name: Rarity heading
   m_TagString: Untagged
@@ -72489,32 +72563,9 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 126}
-  m_SizeDelta: {x: 288, y: 48}
+  m_AnchoredPosition: {x: 0, y: 123}
+  m_SizeDelta: {x: 294, y: 58}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1132682622
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1132682620}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1a2353dc9d2d42a599940b1b13193285, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelGraphic
-  m_Material: {fileID: 0}
-  m_Color: {r: 0.18, g: 0.46, b: 0.82, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  cornerRadius: 10
-  borderWidth: 0
-  borderColor: {r: 0.18, g: 0.46, b: 0.82, a: 1}
 --- !u!222 &1132682623
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -72523,6 +72574,27 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1132682620}
   m_CullTransparentMesh: 1
+--- !u!114 &1132682624
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1132682620}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08de2d897f3c4fcd9ea6f24500cfe363, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CubeDash::CubeDash.MenuRibbonGraphic
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  primary: 0
 --- !u!1001 &1136593599
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -72809,7 +72881,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 792, y: 14}
+  m_SizeDelta: {x: 792, y: 18}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1145935454
 MonoBehaviour:
@@ -72824,16 +72896,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelGraphic
   m_Material: {fileID: 0}
-  m_Color: {r: 0.87, g: 0.8, b: 0.83, a: 1}
+  m_Color: {r: 1, g: 0.82, b: 0.84, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  cornerRadius: 7
-  borderWidth: 0
-  borderColor: {r: 0.19, g: 0.1, b: 0.15, a: 1}
+  cornerRadius: 0
+  borderWidth: 2
+  borderColor: {r: 0.018, g: 0.014, b: 0.025, a: 1}
+  cornerCut: 0
 --- !u!222 &1145935455
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -75031,6 +75104,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1875580140}
   - {fileID: 1028486819}
   - {fileID: 186575373}
   - {fileID: 1515905662}
@@ -75060,16 +75134,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelGraphic
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0.96, b: 0.97, a: 1}
+  m_Color: {r: 1, g: 0.82, b: 0.84, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  cornerRadius: 22
-  borderWidth: 3
-  borderColor: {r: 0.19, g: 0.1, b: 0.15, a: 1}
+  cornerRadius: 0
+  borderWidth: 4
+  borderColor: {r: 0.018, g: 0.014, b: 0.025, a: 1}
+  cornerCut: 22
 --- !u!222 &1187549940
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -76541,7 +76616,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuLabelText
   m_Material: {fileID: 0}
-  m_Color: {r: 0.19, g: 0.1, b: 0.15, a: 1}
+  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -78430,7 +78505,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 163}
+  m_AnchoredPosition: {x: 0, y: 153}
   m_SizeDelta: {x: 880, y: 2}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1242840189
@@ -78446,7 +78521,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelGraphic
   m_Material: {fileID: 0}
-  m_Color: {r: 0.86, g: 0.73, b: 0.78, a: 1}
+  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -78455,7 +78530,8 @@ MonoBehaviour:
       m_Calls: []
   cornerRadius: 0
   borderWidth: 0
-  borderColor: {r: 0.19, g: 0.1, b: 0.15, a: 1}
+  borderColor: {r: 0.018, g: 0.014, b: 0.025, a: 1}
+  cornerCut: 0
 --- !u!222 &1242840190
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -79993,8 +80069,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 8, y: -10}
-  m_SizeDelta: {x: 1170, y: 660}
+  m_AnchoredPosition: {x: 8, y: -9}
+  m_SizeDelta: {x: 1160, y: 650}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1259129185
 MonoBehaviour:
@@ -80009,16 +80085,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelGraphic
   m_Material: {fileID: 0}
-  m_Color: {r: 0.035, g: 0.012, b: 0.025, a: 0.28}
+  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  cornerRadius: 24
+  cornerRadius: 0
   borderWidth: 0
-  borderColor: {r: 0.19, g: 0.1, b: 0.15, a: 1}
+  borderColor: {r: 0.018, g: 0.014, b: 0.025, a: 1}
+  cornerCut: 22
 --- !u!222 &1259129186
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -83221,7 +83298,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuLabelText
   m_Material: {fileID: 0}
-  m_Color: {r: 0.42, g: 0.33, b: 0.38, a: 1}
+  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -87758,7 +87835,7 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuLabelText
   m_Material: {fileID: 0}
-  m_Color: {r: 0.19, g: 0.1, b: 0.15, a: 1}
+  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -92251,16 +92328,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelGraphic
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0.96, b: 0.97, a: 1}
+  m_Color: {r: 1, g: 0.82, b: 0.84, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  cornerRadius: 12
-  borderWidth: 2
-  borderColor: {r: 0.19, g: 0.1, b: 0.15, a: 1}
+  cornerRadius: 0
+  borderWidth: 3
+  borderColor: {r: 0.018, g: 0.014, b: 0.025, a: 1}
+  cornerCut: 5
 --- !u!1 &1455200636
 GameObject:
   m_ObjectHideFlags: 0
@@ -95665,7 +95743,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -110, y: 195}
+  m_AnchoredPosition: {x: -110, y: 176}
   m_SizeDelta: {x: 820, y: 40}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1515905663
@@ -95681,7 +95759,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuLabelText
   m_Material: {fileID: 0}
-  m_Color: {r: 0.42, g: 0.33, b: 0.38, a: 1}
+  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -99832,7 +99910,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuLabelText
   m_Material: {fileID: 0}
-  m_Color: {r: 0.19, g: 0.1, b: 0.15, a: 1}
+  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -100335,7 +100413,7 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuLabelText
   m_Material: {fileID: 0}
-  m_Color: {r: 0.19, g: 0.1, b: 0.15, a: 1}
+  m_Color: {r: 1, g: 0.99, b: 0.94, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -101245,7 +101323,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuLabelText
   m_Material: {fileID: 0}
-  m_Color: {r: 0.19, g: 0.1, b: 0.15, a: 1}
+  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -101816,16 +101894,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelGraphic
   m_Material: {fileID: 0}
-  m_Color: {r: 0.94, g: 0.035, b: 0.14, a: 1}
+  m_Color: {r: 0.95, g: 0.02, b: 0.11, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  cornerRadius: 7
+  cornerRadius: 0
   borderWidth: 0
-  borderColor: {r: 0.19, g: 0.1, b: 0.15, a: 1}
+  borderColor: {r: 0.018, g: 0.014, b: 0.025, a: 1}
+  cornerCut: 0
 --- !u!222 &1627514394
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -102216,7 +102295,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: -5, y: 2}
   m_SizeDelta: {x: 174, y: 52}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1636863117
@@ -102232,7 +102311,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuLabelText
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0.99, b: 0.94, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -104693,9 +104772,9 @@ GameObject:
   m_Component:
   - component: {fileID: 1666041171}
   - component: {fileID: 1666041174}
-  - component: {fileID: 1666041173}
   - component: {fileID: 1666041175}
   - component: {fileID: 1666041172}
+  - component: {fileID: 1666041176}
   m_Layer: 0
   m_Name: BACK
   m_TagString: Untagged
@@ -104735,29 +104814,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50d5775893b24c17a4586c5a28504fa8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
---- !u!114 &1666041173
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1666041170}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1a2353dc9d2d42a599940b1b13193285, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelGraphic
-  m_Material: {fileID: 0}
-  m_Color: {r: 0.94, g: 0.035, b: 0.14, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  cornerRadius: 12
-  borderWidth: 2
-  borderColor: {r: 0.39, g: 0.025, b: 0.1, a: 1}
 --- !u!222 &1666041174
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -104785,7 +104841,7 @@ MonoBehaviour:
     m_SelectOnDown: {fileID: 1985480941}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
-  m_Transition: 1
+  m_Transition: 0
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
@@ -104806,7 +104862,7 @@ MonoBehaviour:
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 1666041173}
+  m_TargetGraphic: {fileID: 1666041176}
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
@@ -104822,6 +104878,27 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &1666041176
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1666041170}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08de2d897f3c4fcd9ea6f24500cfe363, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: CubeDash::CubeDash.MenuRibbonGraphic
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  primary: 1
 --- !u!1 &1667492771
 GameObject:
   m_ObjectHideFlags: 0
@@ -109780,7 +109857,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuGlyphGraphic
   m_Material: {fileID: 0}
-  m_Color: {r: 0.19, g: 0.1, b: 0.15, a: 1}
+  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -110122,16 +110199,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelGraphic
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0.91, b: 0.92, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  cornerRadius: 16
-  borderWidth: 1
-  borderColor: {r: 0.88, g: 0.79, b: 0.83, a: 1}
+  cornerRadius: 0
+  borderWidth: 3
+  borderColor: {r: 0.018, g: 0.014, b: 0.025, a: 1}
+  cornerCut: 12
 --- !u!222 &1769720849
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -116945,6 +117023,72 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1874504881}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1875580139
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1875580140}
+  - component: {fileID: 1875580142}
+  - component: {fileID: 1875580141}
+  m_Layer: 0
+  m_Name: Ribbon header
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1875580140
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1875580139}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1187549938}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 247}
+  m_SizeDelta: {x: 1112, y: 104}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1875580141
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1875580139}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08de2d897f3c4fcd9ea6f24500cfe363, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: CubeDash::CubeDash.MenuRibbonGraphic
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  primary: 0
+--- !u!222 &1875580142
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1875580139}
+  m_CullTransparentMesh: 1
 --- !u!1 &1877056977
 GameObject:
   m_ObjectHideFlags: 0
@@ -119644,7 +119788,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuLabelText
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -119863,7 +120007,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1923380781}
   - component: {fileID: 1923380783}
-  - component: {fileID: 1923380782}
+  - component: {fileID: 1923380784}
   m_Layer: 0
   m_Name: Rarity heading
   m_TagString: Untagged
@@ -119888,32 +120032,9 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 126}
-  m_SizeDelta: {x: 288, y: 48}
+  m_AnchoredPosition: {x: 0, y: 123}
+  m_SizeDelta: {x: 294, y: 58}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1923380782
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1923380780}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1a2353dc9d2d42a599940b1b13193285, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelGraphic
-  m_Material: {fileID: 0}
-  m_Color: {r: 0.48, g: 0.51, b: 0.56, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  cornerRadius: 10
-  borderWidth: 0
-  borderColor: {r: 0.48, g: 0.51, b: 0.56, a: 1}
 --- !u!222 &1923380783
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -119922,6 +120043,27 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1923380780}
   m_CullTransparentMesh: 1
+--- !u!114 &1923380784
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1923380780}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08de2d897f3c4fcd9ea6f24500cfe363, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CubeDash::CubeDash.MenuRibbonGraphic
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  primary: 0
 --- !u!1 &1923580370
 GameObject:
   m_ObjectHideFlags: 0
@@ -122655,7 +122797,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 163}
+  m_AnchoredPosition: {x: 0, y: 153}
   m_SizeDelta: {x: 1040, y: 2}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1985066489
@@ -122671,7 +122813,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelGraphic
   m_Material: {fileID: 0}
-  m_Color: {r: 0.86, g: 0.73, b: 0.78, a: 1}
+  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -122680,7 +122822,8 @@ MonoBehaviour:
       m_Calls: []
   cornerRadius: 0
   borderWidth: 0
-  borderColor: {r: 0.19, g: 0.1, b: 0.15, a: 1}
+  borderColor: {r: 0.018, g: 0.014, b: 0.025, a: 1}
+  cornerCut: 0
 --- !u!222 &1985066490
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -123825,16 +123968,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelGraphic
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0.88, b: 0.91, a: 1}
+  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  cornerRadius: 12
+  cornerRadius: 0
   borderWidth: 0
-  borderColor: {r: 0.19, g: 0.1, b: 0.15, a: 1}
+  borderColor: {r: 0.018, g: 0.014, b: 0.025, a: 1}
+  cornerCut: 6
 --- !u!222 &1996824474
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -130882,7 +131026,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuLabelText
   m_Material: {fileID: 0}
-  m_Color: {r: 0.42, g: 0.33, b: 0.38, a: 1}
+  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

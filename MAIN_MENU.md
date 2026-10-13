@@ -67,11 +67,13 @@ Sway runs only in Play mode in a scene containing the menu controller, uses unsc
 
 ### Shop and Options sections
 
-`Tools > Cube Dash > Improve Main Menu Shop and Options` authors only the two modal panels, using smooth rounded cards, sharper text, section icons and consistent Back buttons. Start still loads `Level` directly and Quit keeps its existing behavior. The previous color-preview shop and options panel are retained as inactive backups. Re-running the tool preserves already-authored sections and manual edits; full menu regeneration includes the new panels.
+`Tools > Cube Dash > Improve Main Menu Shop and Options` authors only the two modal panels. The saved panels match the main buttons with pink cut-corner cards, heavy near-black outlines and offset shadows, ribbon headers/rarity labels, Anton headings, and red primary-ribbon Back buttons. Start still loads `Level` directly and Quit keeps its existing behavior. The previous color-preview shop and options panel are retained as inactive backups. Re-running the section tool preserves already-authored sections and manual edits; full menu regeneration includes the themed panels.
+
+`Tools > Cube Dash > Match Shop and Options to Menu Ribbons` applies the visual theme in place with Undo, without rebuilding scenery, replacing controls, changing callbacks/navigation/preferences/music, or deleting skin-grid content. Reapplying does not duplicate decorations. Rarity emblems keep their distinct colors.
 
 Edit **Cube Dash Main Menu > Reference Menu Canvas > Shop - Skin Collections > Card** for the three rarity cards. Each has an explicitly empty state and an empty **Skin viewport > Skin slots** grid, with no invented skin products, prices or unlocks. Later, add actual skin UI to those grids and remove or hide the corresponding **Empty state**; no skin inventory, purchase system or equipment behavior is implemented yet.
 
-**Options - Audio and Display > Card** holds rounded master/music volume sliders, live percentage badges and a fullscreen checkbox. Values remain clamped and saved through independent preferences. Back, Escape and gamepad Back close either panel; Options has an explicit keyboard/gamepad navigation loop through Back, master volume, music volume and fullscreen. Each full slider row is clickable and the modal backdrop blocks pointer input from reaching the main ribbons.
+**Options - Audio and Display > Card** holds outlined master/music volume sliders, dark live percentage badges and a cut-corner fullscreen checkbox. Square fill caps span the entire inner track width, removing the pale leading gap at partial/full volume; the unfilled rail at partial volume is intentional. Values remain clamped and saved through independent preferences. Back, Escape and gamepad Back close either panel; Options has an explicit keyboard/gamepad navigation loop through Back, master volume, music volume and fullscreen. Each full slider row is clickable and the modal backdrop blocks pointer input from reaching the main ribbons.
 
 ### Main menu background music
 
@@ -96,6 +98,8 @@ The same optimization runs automatically on the transient Main Menu scene during
 `ArcadeButton` retains its existing feedback curve, but snaps the imperceptible final animation tail to the exact target scale and stops writing the UI transform while idle. It continues checking interactability and responds normally to pointer/keyboard/gamepad events.
 
 ## Validation
+
+Ribbon-theme/slider validation passed **17 focused tests** in an isolated Unity project. Coverage includes both saved panel themes, live fill-edge alignment at 0/1/42/100 percent on both sliders, unchanged controls/navigation/music preferences, preserved skin-grid contents, repeatable upgrades, and existing menu optimization/render checks. Shop/Options render previews were inspected; scene-document comparison confirms all changed source objects belong to those two panels, leaving the main ribbons, environment, camera, lighting, audio source and gameplay unchanged.
 
 Menu music validation passed **15 focused tests** in an isolated Unity project, covering the assigned looping 2D track, independent master/music controls, saved settings restored before playback, mute/clamping/readouts, pointer/navigation routing, idempotent upgrades, stopping/unloading music for gameplay, and the existing menu optimization/render comparison.
 

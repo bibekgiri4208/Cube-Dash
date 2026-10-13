@@ -147,6 +147,88 @@ namespace CubeDash.Tests
             }
         }
 
+        [Test]
+        public void ShopAndOptionsUseTheMainMenuRibbonTheme()
+        {
+            var scene = EditorSceneManager.OpenPreviewScene("Assets/Scenes/Main Menu.unity");
+            try
+            {
+                var menu = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<MainMenuController>(true)).Single();
+                foreach (GameObject panel in new[] { menu.ShopPanel, menu.OptionsPanel })
+                {
+                    Transform card = panel.transform.Find("Card");
+                    var face = card.GetComponent<MenuPanelGraphic>();
+                    Assert.That(face.CornerRadius, Is.Zero);
+                    Assert.That(face.CornerCut, Is.EqualTo(22));
+                    Assert.That(face.BorderWidth, Is.EqualTo(4));
+                    Assert.That(face.color, Is.EqualTo(new Color(1, 0.82f, 0.84f)));
+                    Assert.That(card.Find("Ribbon header").GetComponent<MenuRibbonGraphic>().Primary, Is.False);
+                    Assert.That(card.Find("Ribbon header").GetComponent<MenuRibbonGraphic>().raycastTarget, Is.False);
+                    var back = card.GetComponentInChildren<Button>(true);
+                    Assert.That(back.targetGraphic, Is.SameAs(back.GetComponent<MenuRibbonGraphic>()));
+                    Assert.That(back.GetComponent<MenuRibbonGraphic>().Primary, Is.True);
+                    Assert.That(back.transition, Is.EqualTo(Selectable.Transition.None));
+                }
+                foreach (string rarity in new[] { "Common", "Rare", "Epic" })
+                    Assert.That(menu.ShopPanel.transform.Find("Card/" + rarity + " Skins/Rarity heading").GetComponent<MenuRibbonGraphic>(), Is.Not.Null);
+            }
+            finally { EditorSceneManager.ClosePreviewScene(scene); }
+        }
+
+        [UnityTest]
+        public IEnumerator SliderFillMeetsBothInnerTrackEdgesWithoutAnUnfilledLeadingGap()
+        {
+            // Preview scenes do not initialize Slider's cached fill-container layout; check the live UI.
+            yield return new EnterPlayMode();
+            yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/Main Menu.unity", new LoadSceneParameters(LoadSceneMode.Single));
+            yield return null;
+            var menu = Object.FindAnyObjectByType<MainMenuController>();
+            try
+            {
+                menu.OpenOptions(); yield return null;
+                Canvas.ForceUpdateCanvases();
+                foreach (Slider slider in menu.OptionsPanel.GetComponentsInChildren<Slider>(true))
+                {
+                    var rail = slider.transform.Find("Track").GetComponent<MenuPanelGraphic>();
+                    var fill = slider.fillRect.GetComponent<MenuPanelGraphic>();
+                    Assert.That(fill.CornerRadius, Is.Zero, "Square fill caps avoid a pale sliver at the starting edge.");
+                    foreach (float value in new[] { 0f, 0.01f, 0.42f, 1f })
+                    {
+                        slider.SetValueWithoutNotify(value);
+                        var corners = new Vector3[4]; slider.fillRect.GetWorldCorners(corners);
+                        float left = rail.rectTransform.InverseTransformPoint(corners[0]).x;
+                        float right = rail.rectTransform.InverseTransformPoint(corners[2]).x;
+                        float innerWidth = rail.rectTransform.rect.width - rail.BorderWidth * 2;
+                        Assert.That(left, Is.EqualTo(rail.rectTransform.rect.xMin + rail.BorderWidth).Within(0.01f));
+                        Assert.That(right - left, Is.EqualTo(innerWidth * value).Within(0.01f));
+                    }
+                }
+            }
+            finally { menu.ClosePanels(); }
+        }
+
+        [Test]
+        public void ReapplyingRibbonThemeDoesNotReplaceControlsOrCollectionContents()
+        {
+            var scene = EditorSceneManager.OpenPreviewScene("Assets/Scenes/Main Menu.unity");
+            try
+            {
+                var menu = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<MainMenuController>(true)).Single();
+                var controls = menu.OptionsPanel.GetComponentsInChildren<Selectable>(true);
+                Transform slots = menu.ShopPanel.transform.Find("Card/Common Skins/Skin viewport/Skin slots");
+                var item = new GameObject("Authored skin content"); item.transform.SetParent(slots, false);
+                var heading = menu.ShopPanel.transform.Find("Card/Heading").GetComponent<Text>(); heading.text = "MY SHOP";
+                int count = menu.GetComponentsInChildren<Transform>(true).Length;
+                CubeDash.Editor.MainMenuPanelTheme.ApplyToScene(scene);
+                CubeDash.Editor.MainMenuPanelTheme.ApplyToScene(scene);
+                CollectionAssert.AreEqual(controls, menu.OptionsPanel.GetComponentsInChildren<Selectable>(true));
+                Assert.That(menu.GetComponentsInChildren<Transform>(true).Length, Is.EqualTo(count));
+                Assert.That(heading.text, Is.EqualTo("MY SHOP"));
+                Assert.That(slots.GetChild(0), Is.SameAs(item.transform));
+            }
+            finally { EditorSceneManager.ClosePreviewScene(scene); }
+        }
+
         private static void AssertHeadingRenders(GameObject panel)
         {
             var heading = panel.transform.Find("Card/Heading").GetComponent<MenuLabelText>();
