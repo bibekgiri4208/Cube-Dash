@@ -401,7 +401,8 @@ namespace CubeDash
         private void ConfigureEnvironment(TrackSegment segment, int sectionIndex)
         {
             if (environment != null && segment.Environment != null)
-                segment.Environment.Configure(sectionIndex, environment.SegmentsPerBiome);
+                segment.Environment.Configure(sectionIndex, environment.SegmentsPerBiome,
+                    environment.HasFixedBiome ? environment.FixedBiome : (EnvironmentBiome?)null);
         }
 
         private void PlacePowerUp(TrackSegment segment, int row, bool visible, int openMask)

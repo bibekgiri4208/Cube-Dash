@@ -19,27 +19,27 @@ namespace CubeDash
                     backdrop.SetEdges(biome.activeSelf && rear, biome.activeSelf && front);
         }
 
-        public void Configure(int sectionIndex, int segmentsPerBiome)
+        public void Configure(int sectionIndex, int segmentsPerBiome, EnvironmentBiome? fixedBiome = null)
         {
             SectionIndex = sectionIndex;
-            CurrentBiome = BiomeRules.AtDistance(sectionIndex * RunnerRules.SegmentLength, segmentsPerBiome);
+            CurrentBiome = fixedBiome ?? BiomeRules.AtDistance(sectionIndex * RunnerRules.SegmentLength, segmentsPerBiome);
             for (int i = 0; i < biomes.Length; i++)
             {
                 if (biomes[i] == null) continue;
                 bool active = i == (int)CurrentBiome;
                 biomes[i].SetActive(active);
-                if (active && biomes[i].TryGetComponent(out BiomeScenery scenery)) scenery.SelectLayout(sectionIndex, segmentsPerBiome);
-                if (active && biomes[i].TryGetComponent(out CityFlyover flyover)) flyover.Configure(sectionIndex, segmentsPerBiome);
+                if (active && biomes[i].TryGetComponent(out BiomeScenery scenery)) scenery.SelectLayout(sectionIndex, segmentsPerBiome, fixedBiome.HasValue);
+                if (active && biomes[i].TryGetComponent(out CityFlyover flyover)) flyover.Configure(sectionIndex, segmentsPerBiome, fixedBiome.HasValue);
                 if (active && biomes[i].TryGetComponent(out CoastalTransition coast))
                 {
                     Transform cityGround = biomes[0] != null ? biomes[0].transform.Find("City Ground") : null;
                     Renderer ground = cityGround != null ? cityGround.GetComponent<Renderer>() : null;
                     Color tint = ground != null ? ground.sharedMaterial.GetColor("_BaseColor") : new Color(0.5f, 0.61f, 0.6f);
-                    coast.Configure(sectionIndex, segmentsPerBiome, tint);
+                    coast.Configure(sectionIndex, segmentsPerBiome, tint, fixedBiome.HasValue);
                 }
             }
             if (boundaryBlend == null) boundaryBlend = GetComponent<BiomeBoundaryBlend>();
-            if (boundaryBlend != null) boundaryBlend.Configure(sectionIndex, segmentsPerBiome, CurrentBiome);
+            if (boundaryBlend != null) boundaryBlend.Configure(sectionIndex, segmentsPerBiome, CurrentBiome, fixedBiome.HasValue);
         }
     }
 }

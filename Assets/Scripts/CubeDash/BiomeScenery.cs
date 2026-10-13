@@ -16,19 +16,19 @@ namespace CubeDash
         public Mesh[] ExitLayouts => exitLayouts;
         public Mesh[] VarietyLayouts => varietyLayouts;
 
-        public Mesh DetailLayout(int sectionIndex, int segmentsPerBiome = 8)
+        public Mesh DetailLayout(int sectionIndex, int segmentsPerBiome = 8, bool continuous = false)
         {
             int count = Mathf.Max(2, segmentsPerBiome);
             int within = ((sectionIndex % count) + count) % count;
-            Mesh[] source = within == 0 && entranceLayouts.Length > 0 ? entranceLayouts
+            Mesh[] source = continuous ? layouts : within == 0 && entranceLayouts.Length > 0 ? entranceLayouts
                 : within == count - 1 && exitLayouts.Length > 0 ? exitLayouts : layouts;
             return source.Length > 0 ? source[BiomeRules.Variation(sectionIndex, source.Length)] : null;
         }
 
-        public void SelectLayout(int sectionIndex, int segmentsPerBiome = 8)
+        public void SelectLayout(int sectionIndex, int segmentsPerBiome = 8, bool continuous = false)
         {
             if (details != null && layouts.Length > 0)
-                details.sharedMesh = DetailLayout(sectionIndex, segmentsPerBiome);
+                details.sharedMesh = DetailLayout(sectionIndex, segmentsPerBiome, continuous);
             if (variety != null && varietyLayouts.Length > 0)
                 variety.sharedMesh = varietyLayouts[BiomeRules.Variation(sectionIndex, varietyLayouts.Length)];
         }

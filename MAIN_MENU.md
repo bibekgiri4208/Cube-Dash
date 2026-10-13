@@ -1,6 +1,6 @@
 # Main menu
 
-Open `Assets/Scenes/Main Menu.unity` and press Play. It is the first enabled build scene; **Start** opens the themed map-selection submenu. **City** loads `Level` and **Country Side** loads its countryside scene.
+Open `Assets/Scenes/Main Menu.unity` and press Play. It is the first enabled build scene; **Start** opens the themed map-selection submenu. All six cards load their own scenes: City, Jungle, Mountain, Desert, Beach and Country Side.
 
 The reference-inspired scene contains editable 3D parking bays, weathered asphalt, concrete/graffiti wall, warm sconces, layered foliage, neighborhood buildings, overhead wires, a classic sedan, safety props, and a red cube with black eyes. Its low camera and left-hand cut-corner ribbons use the supplied image's composition. This is a recreation, not the image's original models or a pixel-identical reproduction.
 
@@ -26,11 +26,11 @@ Edit `MainMenuEntrance` on **Reference Menu Canvas > Left menu ribbons** and `Me
 
 Start opens **Start - Map Selection**, with six illustrated cards: **City, Jungle, Mountain, Desert, Beach and Country Side**. The saved submenu shares the Main Menu's pink cut-corner panels, dark outlines, red badges/Back ribbon, Anton font, hover/focus/click feedback and reversible panel transition. It uses three columns on wide canvases and two on narrower layouts.
 
-City and Country Side are playable and load their existing enabled scenes. Jungle, Mountain, Desert and Beach are explicitly **COMING SOON**, with disabled controls; no nonexistent scenes or substitute maps are loaded. Their illustrations are original vector artwork, not screenshots of playable levels.
+All six maps are playable and display **PLAY**. The five standalone scenes reuse the corresponding scenery from Level, with identical roads, gameplay progression and themed HUD. Each stays on its chosen biome as the track recycles; the original mixed-biome `Level` remains intact. Country Side is unchanged. Illustrations are original vector artwork, not screenshots of playable levels. See [MAPS.md](MAPS.md).
 
-Opening map selection keeps menu music playing and focuses City. Keyboard/gamepad navigation cycles the available cards and Back, skipping unfinished maps. Back, Escape and gamepad Back close it and restore Start focus. Music stops only when a playable map is selected. In-game Quit returns to the menu, where Start reopens map selection.
+Opening map selection keeps menu music playing and focuses City. Keyboard/gamepad directional navigation follows the three-column desktop or two-column narrow grid and reaches every card and Back. Back, Escape and gamepad Back close it and restore Start focus. Music stops only when a map is selected. In-game Quit returns to the menu, where Start reopens map selection.
 
-Edit **Cube Dash Main Menu > Reference Menu Canvas > Start - Map Selection > Card**. Each map button has a saved `StartMap(string)` scene argument; future maps can be enabled and given real build-scene targets/navigation when authored. **Tools > Cube Dash > Add Main Menu Map Selection** upgrades an existing menu without rebuilding artwork or gameplay; repeated application preserves manual edits. Full menu regeneration includes the submenu. `MenuMapLayout` lays out saved cards and `MapPreviewGraphic` draws their illustrations; runtime creates no UI objects.
+Edit **Cube Dash Main Menu > Reference Menu Canvas > Start - Map Selection > Card**. Each map button has a saved `StartMap(string)` argument matching its scene name. **Tools > Cube Dash > Add Main Menu Map Selection** upgrades an existing menu without rebuilding artwork or gameplay; repeated application refreshes scene targets, availability badges and navigation while preserving layout, timing and extra callbacks. Full menu regeneration includes the submenu. `MenuMapLayout` lays out saved cards and responsive navigation, and `MapPreviewGraphic` draws their illustrations; runtime creates no UI objects.
 
 ## Player preview and idle
 
@@ -128,7 +128,7 @@ The same optimization runs automatically on the transient Main Menu scene during
 
 ## Validation
 
-Map selection passed **45/45** menu/map/navigation/audio/Level regressions and **4/4** GPU UI/routing checks. Landscape/portrait previews show all six illustrated cards and legible availability labels. Coverage includes City/Country Side scene loads, Start opening without stopping music, unavailable-map guards, keyboard/gamepad Back, playable-only navigation, opener focus, return/reselection, safe reapplication and preserved menu animations/settings. The scene audit found only the new Canvas panel plus its Canvas-child/controller references (2 updated documents, 172 added, none removed). Existing camera, artwork, gameplay scenes/prefabs and build settings were unchanged; transferred scene/scripts were hash-verified against the isolated validation project.
+The initial map-selection implementation, before standalone maps were separated, passed **45/45** menu/map/navigation/audio/Level regressions and **4/4** GPU UI/routing checks. Landscape/portrait previews showed all six illustrated cards and legible availability labels. Coverage included City/Country Side scene loads, Start opening without stopping music, unavailable-map guards, keyboard/gamepad Back, playable-only navigation, opener focus, return/reselection, safe reapplication and preserved menu animations/settings. That scene audit found only the new Canvas panel plus its Canvas-child/controller references (2 updated documents, 172 added, none removed). Existing camera, artwork, gameplay scenes/prefabs and build settings were unchanged at that step. See [MAPS.md](MAPS.md) for standalone-map validation.
 
 Visible-stagger/Game Over return follow-up passed **34/34** UI/navigation/music regressions and a **GPU startup-render check**. The cold-frame fixture injects multi-second deltas and verifies that they cannot skip the stagger; Game Over Quit stays in Play mode, unloads gameplay, restarts menu music/focus and replays the entrance. Early/middle/settled previews were inspected to confirm visibly sequential buttons.
 

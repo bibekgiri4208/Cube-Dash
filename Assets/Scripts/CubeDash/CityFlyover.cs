@@ -10,12 +10,12 @@ namespace CubeDash
         [SerializeField] private Mesh[] profiles = new Mesh[0];
         public Mesh[] Profiles => profiles;
 
-        public void Configure(int sectionIndex, int segmentsPerBiome)
+        public void Configure(int sectionIndex, int segmentsPerBiome, bool continuous = false)
         {
             if (deck == null || profiles.Length != 3) return;
             int count = Mathf.Max(2, segmentsPerBiome);
             int within = ((sectionIndex % count) + count) % count;
-            deck.sharedMesh = profiles[within == 0 ? 1 : within == count - 1 ? 2 : 0];
+            deck.sharedMesh = profiles[continuous ? 0 : within == 0 ? 1 : within == count - 1 ? 2 : 0];
         }
     }
 }

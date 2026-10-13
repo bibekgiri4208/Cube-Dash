@@ -1,6 +1,6 @@
 # Level UI
 
-Open `Assets/Scenes/Level.unity` and press Play, or select **Start > City** in the Main Menu. The old start-game card is no longer shown. A saved, central red ribbon counts **3, 2, 1**, then gameplay starts automatically.
+Open `Assets/Scenes/Level.unity` and press Play, or select **Start > City/Jungle/Mountain/Desert/Beach** in the Main Menu to run a standalone map. All five separate scenes preserve Level's UI and gameplay progression. The old start-game card is no longer shown. A saved, central red ribbon counts **3, 2, 1**, then gameplay starts automatically.
 
 ## Shared visual theme
 

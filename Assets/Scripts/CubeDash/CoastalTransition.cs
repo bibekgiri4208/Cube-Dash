@@ -15,12 +15,12 @@ namespace CubeDash
         public bool IsEntrance { get; private set; }
         public bool IsExit { get; private set; }
 
-        public void Configure(int sectionIndex, int segmentsPerBiome, Color nextLandColor)
+        public void Configure(int sectionIndex, int segmentsPerBiome, Color nextLandColor, bool continuous = false)
         {
             int length = Mathf.Max(2, segmentsPerBiome);
             int within = ((sectionIndex % length) + length) % length;
-            IsEntrance = within == 0;
-            IsExit = within == length - 1;
+            IsEntrance = !continuous && within == 0;
+            IsExit = !continuous && within == length - 1;
             if (block == null) block = new MaterialPropertyBlock();
             foreach (Renderer surface in waterSurfaces)
             {

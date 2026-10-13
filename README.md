@@ -3,11 +3,13 @@
 Open **`Assets/Scenes/Level.unity`**. The player, colored cubes, dynamic landscapes, track, Canvas,
 trail, lighting, and original **Main Camera** are real saved scene/prefab objects, visible before Play.
 
-The separate playable **`Assets/Scenes/Country Side.unity`** uses the same runner controls, coins, hazards, power-ups, HUD, pause and retry, with looping Japanese farmhouses, sakura/flower fields, rice paddies and distant hills. Open it and press Play to run, or choose **Main Menu > Start > Country Side**. **City** selects the original Level. The map submenu also shows Jungle, Mountain, Desert and Beach as Coming Soon until those scenes exist. See [COUNTRY_SIDE.md](COUNTRY_SIDE.md) for editing details.
+**Main Menu > Start** offers six playable maps. **City, Jungle, Mountain, Desert and Beach** have separate scenes using Level's existing scenery, roads, progression and themed UI, and each stays in its own environment. The original mixed-biome Level remains unchanged. See [MAPS.md](MAPS.md).
+
+The separate playable **`Assets/Scenes/Country Side.unity`** uses the same runner controls, coins, hazards, power-ups, HUD, pause and retry, with looping Japanese farmhouses, sakura/flower fields, rice paddies and distant hills. Open it and press Play to run, or choose **Main Menu > Start > Country Side**. See [COUNTRY_SIDE.md](COUNTRY_SIDE.md) for editing details.
 
 ## Play
 
-- **Level:** press Play (or choose **Start > City** from the Main Menu); an automatic **3, 2, 1** countdown replaces the old start screen. Retries/restarts use the same countdown. Country Side retains its existing Space/Enter, gamepad A/Cross or START RUN entry.
+- **Level and all five standalone maps:** press Play or choose a map from the Main Menu; an automatic **3, 2, 1** countdown replaces the old start screen. Retries/restarts use the same countdown. Country Side retains its existing Space/Enter, gamepad A/Cross or START RUN entry.
 - Move with **A/D**, **Left/Right**, gamepad **left stick**, or **D-pad left/right**.
 - While running, **double-press Enter** (or numpad Enter) to toggle **Supercar ↔ Cube**.
   Two distinct presses within **0.35 seconds** count; holding the key does not toggle repeatedly.
@@ -181,7 +183,7 @@ freezes the same reveal clock; pooling remains fixed, with no decorative collide
 reconnects reveal references, preserving the highway, terrain/water, transitions, palettes, audio and gameplay.
 The saved Level inherits the assets automatically; no setup command is needed.
 
-The run travels through **City → Jungle → Mountains → Desert → Beach**, then loops. Each region
+In the original `Level` scene, the run travels through **City → Jungle → Mountains → Desert → Beach**, then loops. Standalone maps keep one region while retaining the same distance-based difficulty. Each region
 lasts **336 metres** (eight track sections), so scenery changes with distance, not frame rate or score.
 New landscapes approach naturally along the road; existing visible sections never suddenly swap.
 Sky, fog, sunlight and ambient colors blend across each boundary, without environment-name text

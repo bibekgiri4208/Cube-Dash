@@ -202,9 +202,9 @@ namespace CubeDash.Tests
             menu.MapPanel.transform.Find("Card/City").GetComponent<Button>().onClick.Invoke();
             Assert.That(menu.Loading, Is.True);
             float deadline = Time.realtimeSinceStartup + 30;
-            while (SceneManager.GetActiveScene().name != "Level" && Time.realtimeSinceStartup < deadline) yield return null;
+            while (SceneManager.GetActiveScene().name != "City" && Time.realtimeSinceStartup < deadline) yield return null;
             yield return null;
-            Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("Level"));
+            Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("City"));
             Assert.That(Object.FindAnyObjectByType<CubeDashGame>(), Is.Not.Null);
             Assert.That(Object.FindAnyObjectByType<MainMenuController>(), Is.Null);
         }

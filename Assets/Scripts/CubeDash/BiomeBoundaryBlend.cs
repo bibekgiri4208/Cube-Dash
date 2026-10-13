@@ -25,13 +25,13 @@ namespace CubeDash
         public bool Exit { get; private set; }
         public Region[] Regions => regions;
 
-        public void Configure(int sectionIndex, int segmentsPerBiome, EnvironmentBiome biome)
+        public void Configure(int sectionIndex, int segmentsPerBiome, EnvironmentBiome biome, bool continuous = false)
         {
             int count = Mathf.Max(2, segmentsPerBiome);
             int within = ((sectionIndex % count) + count) % count;
             // Initial City has no preceding Beach; later cycles do.
-            Entrance = sectionIndex > 0 && within == 0;
-            Exit = sectionIndex >= 0 && within == count - 1;
+            Entrance = !continuous && sectionIndex > 0 && within == 0;
+            Exit = !continuous && sectionIndex >= 0 && within == count - 1;
             for (int i = 0; i < cityBuildings.Length && i < cityBuildingScales.Length; i++)
             {
                 Transform building = cityBuildings[i];

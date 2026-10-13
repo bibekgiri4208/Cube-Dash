@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace CubeDash
 {
@@ -38,6 +39,35 @@ namespace CubeDash
             }
             back.anchoredPosition = new Vector2(width * 0.5f - 140 * fit, -height * 0.5f + 70 * fit);
             back.sizeDelta = new Vector2(200 * fit, 58 * fit);
+            ConfigureNavigation(columns);
+        }
+        public void ConfigureNavigation(int columns)
+        {
+            var buttons = new Button[maps.Length];
+            for (int i = 0; i < buttons.Length; i++) buttons[i] = maps[i].GetComponent<Button>();
+            var backButton = back.GetComponent<Button>();
+            Button first = null, last = null;
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                if (!buttons[i].interactable) { buttons[i].navigation = new Navigation { mode = Navigation.Mode.None }; continue; }
+                if (first == null) first = buttons[i]; last = buttons[i];
+                buttons[i].navigation = new Navigation
+                {
+                    mode = Navigation.Mode.Explicit,
+                    selectOnUp = Neighbor(buttons, i, -columns, backButton),
+                    selectOnDown = Neighbor(buttons, i, columns, backButton),
+                    selectOnLeft = Neighbor(buttons, i, -1, backButton),
+                    selectOnRight = Neighbor(buttons, i, 1, backButton)
+                };
+            }
+            backButton.navigation = new Navigation { mode = Navigation.Mode.Explicit, selectOnUp = last,
+                selectOnDown = first, selectOnLeft = last, selectOnRight = first };
+        }
+        private static Button Neighbor(Button[] buttons, int index, int step, Button fallback)
+        {
+            for (int i = index + step; i >= 0 && i < buttons.Length; i += step)
+                if (buttons[i].interactable) return buttons[i];
+            return fallback;
         }
     }
 }

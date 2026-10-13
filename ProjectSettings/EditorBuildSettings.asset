@@ -14,5 +14,20 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Country Side.unity
     guid: 7c5df91fe690b844fbe03b51fa4a5fa7
+  - enabled: 1
+    path: Assets/Scenes/City.unity
+    guid: 4e7633e63adf3384b865af161554694c
+  - enabled: 1
+    path: Assets/Scenes/Jungle.unity
+    guid: 757b54bb5dfb6c14386b22a383abf709
+  - enabled: 1
+    path: Assets/Scenes/Mountain.unity
+    guid: 184952071d5219345be37a30d06db956
+  - enabled: 1
+    path: Assets/Scenes/Desert.unity
+    guid: 978a4fa6754ce3741a7a3af455f2675b
+  - enabled: 1
+    path: Assets/Scenes/Beach.unity
+    guid: 817ff29b71d706347968e0fc406bf28c
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

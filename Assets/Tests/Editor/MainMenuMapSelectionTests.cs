@@ -36,7 +36,7 @@ namespace CubeDash.Tests
                 for (int i = 0; i < MainMenuMapSelection.MapNames.Length; i++)
                 {
                     Transform tile = card.Find(MainMenuMapSelection.MapNames[i]); var button = tile.GetComponent<Button>();
-                    bool ready = i == 0 || i == 5;
+                    bool ready = true;
                     Assert.That(button.interactable, Is.EqualTo(ready));
                     Assert.That(tile.Find("Map illustration").GetComponent<MapPreviewGraphic>().Kind, Is.EqualTo((MapPreviewGraphic.Map)i));
                     Assert.That(tile.Find("Map illustration").GetComponent<CanvasRenderer>(), Is.Not.Null);
@@ -45,7 +45,7 @@ namespace CubeDash.Tests
                     Assert.That(button.onClick.GetPersistentMethodName(0), Is.EqualTo(nameof(MainMenuController.StartMap)));
                     var data = new SerializedObject(button);
                     string target = data.FindProperty("m_OnClick.m_PersistentCalls.m_Calls").GetArrayElementAtIndex(0).FindPropertyRelative("m_Arguments.m_StringArgument").stringValue;
-                    Assert.That(target, Is.EqualTo(i == 0 ? "Level" : i == 5 ? "Country Side" : ""));
+                    Assert.That(target, Is.EqualTo(MainMenuMapSelection.MapNames[i]));
                     Assert.That(button.GetComponent<ArcadeButton>().LivelyFeedback, Is.True);
                 }
                 Text title = card.Find("Heading").GetComponent<Text>(); title.text = "MY MAPS";
@@ -68,8 +68,8 @@ namespace CubeDash.Tests
             ExecuteEvents.Execute(start.gameObject, new BaseEventData(EventSystem.current), ExecuteEvents.submitHandler);
             Assert.That(menu.CurrentPanel, Is.SameAs(menu.MapPanel)); Assert.That(menu.Loading, Is.False);
             Assert.That(menu.Music.isPlaying, Is.True); Assert.That(EventSystem.current.currentSelectedGameObject.name, Is.EqualTo("City"));
-            for (int i = 1; i < 5; i++) menu.MapPanel.transform.Find("Card/" + MainMenuMapSelection.MapNames[i]).GetComponent<Button>().onClick.Invoke();
-            Assert.That(menu.Loading, Is.False, "Unfinished map callbacks must not load a missing or unrelated scene.");
+            menu.StartMap("");
+            Assert.That(menu.Loading, Is.False, "An empty map target must not load a missing scene.");
             Assert.That(menu.Music.isPlaying, Is.True);
             menu.MapPanel.transform.Find("Card/BACK").GetComponent<Button>().onClick.Invoke();
             Assert.That(EventSystem.current.currentSelectedGameObject, Is.SameAs(start.gameObject));
@@ -88,6 +88,33 @@ namespace CubeDash.Tests
             finally { InputSystem.RemoveDevice(keyboard); InputSystem.settings.backgroundBehavior = oldBackground; InputSystem.settings.editorInputBehaviorInPlayMode = oldFocus; }
         }
 
+        [Test]
+        public void NavigationFollowsDesktopAndPortraitGridAndReachesAllSixMapsAndBack()
+        {
+            var scene = EditorSceneManager.OpenPreviewScene(MainMenuSceneBuilder.ScenePath);
+            try
+            {
+                var menu = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<MainMenuController>(true)).Single();
+                var layout = menu.MapPanel.GetComponent<MenuMapLayout>();
+                var buttons = MainMenuMapSelection.MapNames.Select(name => menu.MapPanel.transform.Find("Card/" + name).GetComponent<Button>()).ToArray();
+                Button back = menu.MapPanel.transform.Find("Card/BACK").GetComponent<Button>();
+                foreach (int columns in new[] { 3, 2 })
+                {
+                    layout.ConfigureNavigation(columns);
+                    for (int i = 0; i < buttons.Length; i++)
+                    {
+                        Navigation navigation = buttons[i].navigation;
+                        Assert.That(navigation.selectOnDown, Is.SameAs(i + columns < buttons.Length ? buttons[i + columns] : back));
+                        Assert.That(navigation.selectOnUp, Is.SameAs(i - columns >= 0 ? buttons[i - columns] : back));
+                        Assert.That(navigation.selectOnRight, Is.SameAs(i + 1 < buttons.Length ? buttons[i + 1] : back));
+                    }
+                    Assert.That(back.navigation.selectOnDown, Is.SameAs(buttons[0]));
+                    Assert.That(back.navigation.selectOnUp, Is.SameAs(buttons[5]));
+                }
+            }
+            finally { EditorSceneManager.ClosePreviewScene(scene); }
+        }
+
         [UnityTest]
         public IEnumerator GamepadNavigatesOnlyPlayableCardsAndBackRestoresStart()
         {
@@ -102,9 +129,14 @@ namespace CubeDash.Tests
             try
             {
                 InputSystem.QueueStateEvent(pad, new GamepadState().WithButton(GamepadButton.DpadDown)); yield return null; yield return null;
-                Assert.That(EventSystem.current.currentSelectedGameObject.name, Is.EqualTo("Country Side"));
+                string belowCity = menu.MapPanel.transform.Find("Card/City").GetComponent<Button>().navigation.selectOnDown.name;
+                Assert.That(EventSystem.current.currentSelectedGameObject.name, Is.EqualTo(belowCity));
                 InputSystem.QueueStateEvent(pad, new GamepadState()); yield return null;
-                InputSystem.QueueStateEvent(pad, new GamepadState().WithButton(GamepadButton.DpadDown)); yield return null; yield return null;
+                for (int i = 0; i < 3 && EventSystem.current.currentSelectedGameObject.name != "BACK"; i++)
+                {
+                    InputSystem.QueueStateEvent(pad, new GamepadState().WithButton(GamepadButton.DpadDown)); yield return null; yield return null;
+                    InputSystem.QueueStateEvent(pad, new GamepadState()); yield return null;
+                }
                 Assert.That(EventSystem.current.currentSelectedGameObject.name, Is.EqualTo("BACK"));
                 InputSystem.QueueStateEvent(pad, new GamepadState()); yield return null;
                 InputSystem.QueueStateEvent(pad, new GamepadState().WithButton(GamepadButton.East)); yield return null; yield return null;
@@ -122,7 +154,7 @@ namespace CubeDash.Tests
             yield return null;
             var menu = Object.FindAnyObjectByType<MainMenuController>(); menu.StartGame();
             Button country = menu.MapPanel.transform.Find("Card/Country Side").GetComponent<Button>();
-            Assert.That(menu.MapPanel.transform.Find("Card/City").GetComponent<Button>().navigation.selectOnDown, Is.SameAs(country));
+            Assert.That(menu.MapPanel.GetComponentsInChildren<Button>(true).All(button => button.interactable), Is.True);
             EventSystem.current.SetSelectedGameObject(country.gameObject);
             ExecuteEvents.Execute(country.gameObject, new BaseEventData(EventSystem.current), ExecuteEvents.submitHandler);
             Assert.That(menu.Loading, Is.True); Assert.That(menu.Music.isPlaying, Is.False);
@@ -138,9 +170,9 @@ namespace CubeDash.Tests
             menu = Object.FindAnyObjectByType<MainMenuController>(); Assert.That(menu, Is.Not.Null);
             menu.StartGame(); menu.MapPanel.transform.Find("Card/City").GetComponent<Button>().onClick.Invoke();
             deadline = Time.realtimeSinceStartup + 25;
-            while (SceneManager.GetActiveScene().name != "Level" && Time.realtimeSinceStartup < deadline) yield return null;
+            while (SceneManager.GetActiveScene().name != "City" && Time.realtimeSinceStartup < deadline) yield return null;
             yield return null;
-            Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("Level"));
+            Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("City"));
             Assert.That(Object.FindAnyObjectByType<CubeDashGame>().CountdownActive, Is.True);
         }
 

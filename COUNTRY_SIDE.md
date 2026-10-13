@@ -1,6 +1,6 @@
 # Japanese Country Side
 
-Open **`Assets/Scenes/Country Side.unity`**, press **Play**, then **Space/Enter**, gamepad **A / Cross**, or **START RUN**. You can also select **Start > Country Side** in the Main Menu. Country Side is a playable endless runner using Level's existing player, HUD, controls, encounter generation, scoring, power-ups, vehicle presentations, sounds, pause, game over and retry. It is included as an enabled build scene. The original Level remains available as **Start > City**.
+Open **`Assets/Scenes/Country Side.unity`**, press **Play**, then **Space/Enter**, gamepad **A / Cross**, or **START RUN**. You can also select **Start > Country Side** in the Main Menu. Country Side is a playable endless runner using Level's existing player, HUD, controls, encounter generation, scoring, power-ups, vehicle presentations, sounds, pause, game over and retry. It is included as an enabled build scene. **Start > City** loads the standalone City scene; the original mixed-biome Level remains available directly in the Editor.
 
 ## Spring valley design
 

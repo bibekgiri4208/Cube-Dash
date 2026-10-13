@@ -911,12 +911,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
   m_Navigation:
-    m_Mode: 0
+    m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
-    m_SelectOnDown: {fileID: 0}
-    m_SelectOnLeft: {fileID: 0}
-    m_SelectOnRight: {fileID: 0}
+    m_SelectOnUp: {fileID: 1524170824}
+    m_SelectOnDown: {fileID: 1719005151}
+    m_SelectOnLeft: {fileID: 2130579289}
+    m_SelectOnRight: {fileID: 2041074207}
   m_Transition: 0
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
@@ -937,7 +937,7 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 0
+  m_Interactable: 1
   m_TargetGraphic: {fileID: 7207211}
   m_OnClick:
     m_PersistentCalls:
@@ -951,7 +951,7 @@ MonoBehaviour:
           m_ObjectArgumentAssemblyTypeName: 
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: Beach
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &7207211
@@ -35974,7 +35974,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelGraphic
   m_Material: {fileID: 0}
-  m_Color: {r: 0.72, g: 0.65, b: 0.69, a: 1}
+  m_Color: {r: 0.95, g: 0.02, b: 0.11, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -45235,12 +45235,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
   m_Navigation:
-    m_Mode: 0
+    m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
-    m_SelectOnDown: {fileID: 0}
-    m_SelectOnLeft: {fileID: 0}
-    m_SelectOnRight: {fileID: 0}
+    m_SelectOnUp: {fileID: 1719005151}
+    m_SelectOnDown: {fileID: 2041074207}
+    m_SelectOnLeft: {fileID: 1524170824}
+    m_SelectOnRight: {fileID: 2130579289}
   m_Transition: 0
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
@@ -45261,7 +45261,7 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 0
+  m_Interactable: 1
   m_TargetGraphic: {fileID: 718521767}
   m_OnClick:
     m_PersistentCalls:
@@ -45275,7 +45275,7 @@ MonoBehaviour:
           m_ObjectArgumentAssemblyTypeName: 
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: Mountain
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &718521767
@@ -51114,9 +51114,9 @@ MonoBehaviour:
     m_Mode: 4
     m_WrapAround: 0
     m_SelectOnUp: {fileID: 1719005151}
-    m_SelectOnDown: {fileID: 2041074207}
-    m_SelectOnLeft: {fileID: 2041074207}
-    m_SelectOnRight: {fileID: 2041074207}
+    m_SelectOnDown: {fileID: 2130579289}
+    m_SelectOnLeft: {fileID: 1719005151}
+    m_SelectOnRight: {fileID: 1524170824}
   m_Transition: 0
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
@@ -51151,7 +51151,7 @@ MonoBehaviour:
           m_ObjectArgumentAssemblyTypeName: 
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: Level
+          m_StringArgument: City
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!1 &798577298
@@ -54951,7 +54951,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuLabelText
   m_Material: {fileID: 0}
-  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
+  m_Color: {r: 1, g: 0.99, b: 0.94, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -54971,7 +54971,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: COMING SOON
+  m_Text: PLAY
 --- !u!222 &851580020
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -64753,7 +64753,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelGraphic
   m_Material: {fileID: 0}
-  m_Color: {r: 0.72, g: 0.65, b: 0.69, a: 1}
+  m_Color: {r: 0.95, g: 0.02, b: 0.11, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -70074,7 +70074,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuLabelText
   m_Material: {fileID: 0}
-  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
+  m_Color: {r: 1, g: 0.99, b: 0.94, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -70094,7 +70094,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: COMING SOON
+  m_Text: PLAY
 --- !u!222 &1065143546
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -72676,7 +72676,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelGraphic
   m_Material: {fileID: 0}
-  m_Color: {r: 0.72, g: 0.65, b: 0.69, a: 1}
+  m_Color: {r: 0.95, g: 0.02, b: 0.11, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -97136,12 +97136,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
   m_Navigation:
-    m_Mode: 0
+    m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
-    m_SelectOnDown: {fileID: 0}
-    m_SelectOnLeft: {fileID: 0}
-    m_SelectOnRight: {fileID: 0}
+    m_SelectOnUp: {fileID: 1719005151}
+    m_SelectOnDown: {fileID: 7207210}
+    m_SelectOnLeft: {fileID: 797774338}
+    m_SelectOnRight: {fileID: 718521766}
   m_Transition: 0
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
@@ -97162,7 +97162,7 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 0
+  m_Interactable: 1
   m_TargetGraphic: {fileID: 1524170825}
   m_OnClick:
     m_PersistentCalls:
@@ -97176,7 +97176,7 @@ MonoBehaviour:
           m_ObjectArgumentAssemblyTypeName: 
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: Jungle
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &1524170825
@@ -108742,7 +108742,7 @@ MonoBehaviour:
     m_WrapAround: 0
     m_SelectOnUp: {fileID: 2041074207}
     m_SelectOnDown: {fileID: 797774338}
-    m_SelectOnLeft: {fileID: 797774338}
+    m_SelectOnLeft: {fileID: 2041074207}
     m_SelectOnRight: {fileID: 797774338}
   m_Transition: 0
   m_Colors:
@@ -110302,7 +110302,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelGraphic
   m_Material: {fileID: 0}
-  m_Color: {r: 0.72, g: 0.65, b: 0.69, a: 1}
+  m_Color: {r: 0.95, g: 0.02, b: 0.11, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -117972,7 +117972,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuLabelText
   m_Material: {fileID: 0}
-  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
+  m_Color: {r: 1, g: 0.99, b: 0.94, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -117992,7 +117992,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: COMING SOON
+  m_Text: PLAY
 --- !u!222 &1868449583
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -126369,7 +126369,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.MenuLabelText
   m_Material: {fileID: 0}
-  m_Color: {r: 0.018, g: 0.014, b: 0.025, a: 1}
+  m_Color: {r: 1, g: 0.99, b: 0.94, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -126389,7 +126389,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: COMING SOON
+  m_Text: PLAY
 --- !u!222 &2010522413
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -128176,10 +128176,10 @@ MonoBehaviour:
   m_Navigation:
     m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 797774338}
+    m_SelectOnUp: {fileID: 718521766}
     m_SelectOnDown: {fileID: 1719005151}
-    m_SelectOnLeft: {fileID: 797774338}
-    m_SelectOnRight: {fileID: 797774338}
+    m_SelectOnLeft: {fileID: 7207210}
+    m_SelectOnRight: {fileID: 1719005151}
   m_Transition: 0
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
@@ -134207,12 +134207,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
   m_Navigation:
-    m_Mode: 0
+    m_Mode: 4
     m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
-    m_SelectOnDown: {fileID: 0}
-    m_SelectOnLeft: {fileID: 0}
-    m_SelectOnRight: {fileID: 0}
+    m_SelectOnUp: {fileID: 797774338}
+    m_SelectOnDown: {fileID: 1719005151}
+    m_SelectOnLeft: {fileID: 718521766}
+    m_SelectOnRight: {fileID: 7207210}
   m_Transition: 0
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
@@ -134233,7 +134233,7 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 0
+  m_Interactable: 1
   m_TargetGraphic: {fileID: 2130579290}
   m_OnClick:
     m_PersistentCalls:
@@ -134247,7 +134247,7 @@ MonoBehaviour:
           m_ObjectArgumentAssemblyTypeName: 
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: Desert
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &2130579290

@@ -19,6 +19,11 @@ namespace CubeDash
         [SerializeField] private Light sunlight = null;
         [SerializeField] private Light skyFill = null;
         [SerializeField] private Atmosphere[] atmospheres = new Atmosphere[BiomeRules.Count];
+        [Header("Standalone map (off in the original Level)")]
+        [SerializeField] private bool useFixedBiome = false;
+        [SerializeField] private EnvironmentBiome fixedBiome = EnvironmentBiome.City;
+        public bool HasFixedBiome => useFixedBiome;
+        public EnvironmentBiome FixedBiome => fixedBiome;
         private Material originalSky, runtimeSky;
         private Color originalFog, originalAmbientSky, originalEquator, originalGround;
         private float animationTime;
@@ -26,6 +31,13 @@ namespace CubeDash
         public float TransitionDistance => transitionDistance;
         public float BiomeLength => BiomeRules.Length(segmentsPerBiome);
         public EnvironmentBiome CurrentBiome { get; private set; }
+
+        public EnvironmentBiome BiomeAtDistance(float distance) => useFixedBiome ? fixedBiome : BiomeRules.AtDistance(distance, segmentsPerBiome);
+        public void BlendAtDistance(float distance, out EnvironmentBiome previous, out EnvironmentBiome next, out float blend)
+        {
+            if (useFixedBiome) { previous = next = fixedBiome; blend = 0; return; }
+            BiomeRules.BlendAtDistance(distance, segmentsPerBiome, transitionDistance, out previous, out next, out blend);
+        }
 
         private void EnsureSky()
         {
@@ -53,12 +65,11 @@ namespace CubeDash
             EnsureSky();
             animationTime += Mathf.Max(0, deltaTime);
             Shader.SetGlobalFloat("_CubeDashEnvironmentTime", animationTime);
-            CurrentBiome = BiomeRules.AtDistance(distance, segmentsPerBiome);
+            CurrentBiome = BiomeAtDistance(distance);
             if (atmospheres == null || atmospheres.Length != BiomeRules.Count) return;
 
             // Blend across a boundary, rather than suddenly replacing the whole background.
-            BiomeRules.BlendAtDistance(distance, segmentsPerBiome, transitionDistance,
-                out EnvironmentBiome previous, out EnvironmentBiome next, out float blend);
+            BlendAtDistance(distance, out EnvironmentBiome previous, out EnvironmentBiome next, out float blend);
             Atmosphere a = atmospheres[(int)previous], b = atmospheres[(int)next];
             Color horizon = Color.Lerp(a.Horizon, b.Horizon, blend);
             RenderSettings.fogColor = horizon;

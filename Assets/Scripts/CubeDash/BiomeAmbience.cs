@@ -39,8 +39,7 @@ namespace CubeDash
             runGain = Mathf.MoveTowards(runGain, running ? 1 : 0,
                 Mathf.Max(0, dt) / Mathf.Max(0.05f, running ? fadeInSeconds : fadeOutSeconds));
             float envelope = Mathf.SmoothStep(0, 1, runGain);
-            BiomeRules.BlendAtDistance(distance, environment.SegmentsPerBiome, environment.TransitionDistance,
-                out EnvironmentBiome previous, out EnvironmentBiome next, out float blend);
+            environment.BlendAtDistance(distance, out EnvironmentBiome previous, out EnvironmentBiome next, out float blend);
             for (int i = 0; i < BiomeRules.Count; i++)
             {
                 AudioSource source = Source((EnvironmentBiome)i);

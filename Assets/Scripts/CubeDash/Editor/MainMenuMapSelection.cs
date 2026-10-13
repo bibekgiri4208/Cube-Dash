@@ -32,7 +32,7 @@ namespace CubeDash.Editor
         public static void ApplyToScene(Scene scene)
         {
             var menu = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<MainMenuController>(true)).Single();
-            if (menu.MapPanel != null) { Debug.Log("Existing map selection and manual edits were preserved."); return; }
+            if (menu.MapPanel != null) { UpdateMapTargets(menu); Debug.Log("Updated map targets; existing layout and manual edits preserved."); return; }
             var canvas = menu.GetComponentInChildren<Canvas>(true).transform;
             if (canvas.Find(PanelName) != null) throw new InvalidOperationException("An unassigned map panel requires inspection before replacing it.");
             Font font = AssetDatabase.LoadAssetAtPath<Font>("Assets/MainMenu/Fonts/Anton-Regular.ttf");
@@ -89,9 +89,38 @@ namespace CubeDash.Editor
             layoutData.ApplyModifiedPropertiesWithoutUndo();
             var settings = new SerializedObject(menu); settings.FindProperty("mapPanel").objectReferenceValue = panel.gameObject;
             settings.FindProperty("firstMap").objectReferenceValue = maps[0]; settings.ApplyModifiedPropertiesWithoutUndo();
+            UpdateMapTargets(menu);
             panel.gameObject.SetActive(false);
             MainMenuUiAnimations.ApplyToScene(scene);
             EditorSceneManager.MarkSceneDirty(scene);
+        }
+        private static void UpdateMapTargets(MainMenuController menu)
+        {
+            var card = menu.MapPanel.transform.Find("Card");
+            foreach (string name in MapNames)
+            {
+                var tile = card.Find(name); var button = tile.GetComponent<Button>();
+                bool ready = AssetDatabase.LoadAssetAtPath<SceneAsset>("Assets/Scenes/" + name + ".unity") != null;
+                string target = ready ? name : name == "City" ? "Level" : "";
+                ready |= name == "City";
+                button.interactable = ready;
+                var data = new SerializedObject(button); var calls = data.FindProperty("m_OnClick.m_PersistentCalls.m_Calls");
+                // Update only this map's existing loading callback, retaining any extra user-authored listeners.
+                for (int i = 0; i < calls.arraySize; i++)
+                {
+                    var call = calls.GetArrayElementAtIndex(i);
+                    if (call.FindPropertyRelative("m_Target").objectReferenceValue == menu &&
+                        call.FindPropertyRelative("m_MethodName").stringValue == nameof(MainMenuController.StartMap))
+                        call.FindPropertyRelative("m_Arguments.m_StringArgument").stringValue = target;
+                }
+                data.ApplyModifiedPropertiesWithoutUndo();
+                var badge = tile.Find("Availability badge");
+                badge.GetComponent<MenuPanelGraphic>().color = ready ? LevelMenuTheme.Accent : new Color(0.72f, 0.65f, 0.69f);
+                var label = badge.Find("Availability").GetComponent<Text>();
+                label.text = ready ? "PLAY" : "COMING SOON"; label.color = ready ? LevelMenuTheme.Cream : LevelMenuTheme.Ink;
+            }
+            menu.MapPanel.GetComponent<MenuMapLayout>().ConfigureNavigation(3);
+            EditorSceneManager.MarkSceneDirty(menu.gameObject.scene);
         }
         private static Navigation Nav(Selectable up, Selectable down, Selectable side) => new Navigation { mode = Navigation.Mode.Explicit, selectOnUp = up, selectOnDown = down, selectOnLeft = side, selectOnRight = side };
         private static RectTransform Rect(string name, Transform parent, Vector2 position, Vector2 size)
