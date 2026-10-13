@@ -3,6 +3,8 @@
 Open **`Assets/Scenes/Level.unity`**. The player, colored cubes, dynamic landscapes, track, Canvas,
 trail, lighting, and original **Main Camera** are real saved scene/prefab objects, visible before Play.
 
+The separate playable **`Assets/Scenes/Country Side.unity`** uses the same runner controls, coins, hazards, power-ups, HUD, pause and retry, with looping Japanese farmhouses, sakura/flower fields, rice paddies and distant hills. Open it and press Play to run. See [COUNTRY_SIDE.md](COUNTRY_SIDE.md) for editing details. The original Level and menu destination remain unchanged.
+
 ## Play
 
 - Desktop-first: press **Play**, then **Space/Enter**, gamepad **A / Cross**, or click **START RUN**.
