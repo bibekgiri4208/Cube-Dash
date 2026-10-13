@@ -72,8 +72,8 @@ namespace CubeDash.Editor
             Label(safe.Find("Pickup Feedback"), "+1", 28, Accent, new Vector2(1, 1), new Vector2(1, 0.5f), new Vector2(-286, -82), new Vector2(64, 50), TextAnchor.MiddleRight);
 
             Ribbon(safe.Find("Color Objective Panel"), false);
-            Place(safe.Find("Color Objective Panel"), new Vector2(0.5f, 1), new Vector2(0.5f, 0.5f), new Vector2(0, -60), new Vector2(360, 72));
-            Label(safe.Find("Speed"), "0 m", 26, Ink, new Vector2(0.5f, 1), new Vector2(0.5f, 0.5f), new Vector2(0, -60), new Vector2(326, 56));
+            Place(safe.Find("Color Objective Panel"), new Vector2(0.5f, 1), new Vector2(0.5f, 0.5f), new Vector2(0, -60), new Vector2(180, 72));
+            Label(safe.Find("Speed"), "0 m", 26, Ink, new Vector2(0.5f, 1), new Vector2(0.5f, 0.5f), new Vector2(0, -60), new Vector2(146, 56));
 
             Transform pause = safe.Find("Pause"); Ribbon(pause, true);
             Place(pause, new Vector2(0, 1), new Vector2(0, 1), new Vector2(24, -24), new Vector2(90, 72));

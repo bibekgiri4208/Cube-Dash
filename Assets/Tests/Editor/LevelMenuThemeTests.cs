@@ -34,6 +34,8 @@ namespace CubeDash.Tests
                 var hud = Find<RunnerHud>(scene); var game = Find<CubeDashGame>(scene);
                 Transform safe = hud.transform.Find("Safe Area");
                 Assert.That(safe.Find("Speed").GetComponent<Text>().text, Is.EqualTo("0 m"));
+                Assert.That(safe.Find("Color Objective Panel").GetComponent<RectTransform>().sizeDelta, Is.EqualTo(new Vector2(180, 72)));
+                Assert.That(safe.Find("Speed").GetComponent<RectTransform>().sizeDelta, Is.EqualTo(new Vector2(146, 56)));
                 Assert.That(hud.RibbonTheme && game.UsesStartCountdown, Is.True);
                 Assert.That(hud.CountdownOverlay, Is.Not.Null); Assert.That(hud.CountdownNumber.text, Is.EqualTo("3"));
                 Assert.That(safe.Find("Menu Overlay").gameObject.activeSelf, Is.False);
@@ -203,6 +205,53 @@ namespace CubeDash.Tests
             Capture(hud, "game-over"); Capture(hud, "game-over-portrait", 600, 1000);
             Assert.That(hud.GameOverScore.text, Is.EqualTo(game.Score.ToString()));
             AssertGlyphs(hud.GameOverScore);
+        }
+
+        [UnityTest]
+        public IEnumerator PauseQuitReturnsToMainMenuWithoutLeavingPlayModeAndStartCanLoadLevelAgain()
+        {
+            yield return new EnterPlayMode();
+            yield return EditorSceneManager.LoadSceneAsyncInPlayMode(LevelMenuTheme.ScenePath, new LoadSceneParameters(LoadSceneMode.Single));
+            yield return null;
+            var game = Object.FindAnyObjectByType<CubeDashGame>(); var hud = Object.FindAnyObjectByType<RunnerHud>();
+            game.StartRun(); game.TogglePause();
+            Button quit = hud.transform.Find("Safe Area/Menu Overlay/Menu Card/Quit").GetComponent<Button>();
+            Assert.That(quit.gameObject.activeInHierarchy, Is.True);
+            quit.onClick.Invoke(); quit.onClick.Invoke();
+            float deadline = Time.realtimeSinceStartup + 20;
+            while (SceneManager.GetActiveScene().name != "Main Menu" && Time.realtimeSinceStartup < deadline) yield return null;
+            yield return null;
+            Assert.That(Application.isPlaying, Is.True);
+            Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("Main Menu"));
+            Assert.That(Object.FindAnyObjectByType<CubeDashGame>(), Is.Null);
+            var menu = Object.FindAnyObjectByType<MainMenuController>();
+            Assert.That(menu, Is.Not.Null); Assert.That(menu.OptionsPanel.activeSelf || menu.ShopPanel.activeSelf, Is.False);
+            Assert.That(menu.Music.isPlaying, Is.True);
+            Assert.That(EventSystem.current.currentSelectedGameObject.GetComponent<Button>(), Is.Not.Null);
+            menu.StartGame();
+            deadline = Time.realtimeSinceStartup + 20;
+            while (SceneManager.GetActiveScene().name != "Level" && Time.realtimeSinceStartup < deadline) yield return null;
+            yield return null;
+            Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("Level"));
+            Assert.That(Object.FindAnyObjectByType<CubeDashGame>().CountdownActive, Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator QuitDuringPausedCountdownReturnsToMainMenuThroughControllerConfirmation()
+        {
+            yield return new EnterPlayMode();
+            yield return EditorSceneManager.LoadSceneAsyncInPlayMode(LevelMenuTheme.ScenePath, new LoadSceneParameters(LoadSceneMode.Single));
+            yield return null;
+            var game = Object.FindAnyObjectByType<CubeDashGame>(); var hud = Object.FindAnyObjectByType<RunnerHud>();
+            Assert.That(game.CountdownActive, Is.True); game.TogglePause();
+            var quit = hud.transform.Find("Safe Area/Menu Overlay/Menu Card/Quit").gameObject;
+            hud.SetInputMode(true); EventSystem.current.SetSelectedGameObject(quit); hud.ConfirmSelection();
+            float deadline = Time.realtimeSinceStartup + 20;
+            while (SceneManager.GetActiveScene().name != "Main Menu" && Time.realtimeSinceStartup < deadline) yield return null;
+            yield return null;
+            Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("Main Menu"));
+            Assert.That(Application.isPlaying, Is.True);
+            Assert.That(Object.FindAnyObjectByType<RunnerHud>(), Is.Null);
         }
 
         [UnityTest]

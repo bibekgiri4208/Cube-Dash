@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace CubeDash
@@ -69,6 +70,7 @@ namespace CubeDash
         private Button primaryButton;
         private Button retryButton;
         private Button quitButton;
+        private bool returningToMenu;
         public bool UsingGamepad { get; private set; }
 
         public void Initialize(CubeDashGame controller)
@@ -162,9 +164,16 @@ namespace CubeDash
             else game.RequestRun();
         }
 
-        /// <summary>Stops the run in the editor, or closes the built player.</summary>
+        /// <summary>Pause Quit returns to the landing scene; game-over Quit retains its exit behavior.</summary>
         public void QuitGame()
         {
+            if (returningToMenu) return;
+            if (game != null && game.State == CubeDashGame.RunState.Paused)
+            {
+                returningToMenu = true;
+                SceneManager.LoadSceneAsync("Main Menu", LoadSceneMode.Single);
+                return;
+            }
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
 #else
