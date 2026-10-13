@@ -100,6 +100,7 @@ namespace CubeDash
         private float doublePointsTimer;
         private float flightTimer;
         private float landingShieldTimer;
+        private float timedShieldDuration;
         private float truckTimer;
         private float magnetTimer;
         private readonly DoublePressInput supercarEnter = new DoublePressInput();
@@ -110,17 +111,22 @@ namespace CubeDash
         public PlayerSupercar SupercarPresentation => supercarPresentation;
         public bool MagnetActive => magnetTimer > 0;
         public float MagnetRemaining => magnetTimer;
+        public float MagnetDuration => Mathf.Max(0.1f, magnetDuration);
         public float CollectionPulse => absorptionPulse;
         public float CollectionAge => pickupAge;
         public int Shields => shields;
         public bool DoublePointsActive => doublePointsTimer > 0;
         public float DoublePointsRemaining => doublePointsTimer;
+        public float DoublePointsDuration => Mathf.Max(0, doublePointsDuration);
         public bool Flying => flightTimer > 0;
         public float FlightRemaining => flightTimer;
+        public float FlightDuration => Mathf.Max(0.1f, flightDuration);
         public float LandingShieldRemaining => landingShieldTimer;
+        public float TimedShieldDuration => timedShieldDuration;
         public PlayerFlight FlightPresentation => flightPresentation;
         public bool Trucking => truckTimer > 0;
         public float TruckRemaining => truckTimer;
+        public float TruckDuration => Mathf.Max(0.1f, truckDuration);
         public PlayerTruck TruckPresentation => truckPresentation;
         public Transform Player => player;
         public Camera GameCamera => gameCamera;
@@ -433,6 +439,7 @@ namespace CubeDash
             shields = 0;
             doublePointsTimer = 0;
             flightTimer = landingShieldTimer = 0;
+            timedShieldDuration = 0;
             truckTimer = 0;
             magnetTimer = 0;
             SupercarEnabled = false; supercarEnter.Reset();
@@ -488,6 +495,7 @@ namespace CubeDash
             if (InvincibilityEnabled) return;
             bool wasFlying = Flying;
             flightTimer = landingShieldTimer = 0;
+            timedShieldDuration = 0;
             truckTimer = 0;
             magnetTimer = 0;
             SupercarEnabled = false; supercarEnter.Reset();
@@ -520,6 +528,7 @@ namespace CubeDash
                     if (Trucking) return;
                     flightTimer = Mathf.Max(0.1f, flightDuration);
                     landingShieldTimer = 0;
+                    timedShieldDuration = 0;
                     SetFlightPresentation(true);
                     break;
                 case PowerUpType.Truck:
@@ -528,6 +537,7 @@ namespace CubeDash
                     player.position = new Vector3(player.position.x, playerOrigin.y, playerOrigin.z);
                     truckTimer = Mathf.Max(0.1f, truckDuration);
                     landingShieldTimer = 0;
+                    timedShieldDuration = 0;
                     SetTruckPresentation(true);
                     break;
             }
@@ -548,6 +558,7 @@ namespace CubeDash
             flightTimer = Mathf.Max(0, flightTimer - dt);
             if (Flying) return;
             landingShieldTimer = landingShieldDuration;
+            timedShieldDuration = landingShieldDuration;
             SetFlightPresentation(false);
             hud.NotifyLandingShield();
         }
@@ -564,6 +575,7 @@ namespace CubeDash
             truckTimer = Mathf.Max(0, truckTimer - dt);
             if (Trucking) return;
             landingShieldTimer = truckShieldDuration;
+            timedShieldDuration = truckShieldDuration;
             SetTruckPresentation(false);
             hud.NotifyTruckShield();
         }

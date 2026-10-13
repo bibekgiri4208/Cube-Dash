@@ -43,6 +43,7 @@ namespace CubeDash.Editor
             RunnerHud hud = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<RunnerHud>(true)).Single();
             if (hud.RibbonTheme)
             {
+                LevelPowerUpBars.ApplyToScene(scene);
                 Debug.Log("Level already uses the Main Menu theme; existing UI edits were preserved."); return;
             }
             var game = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<CubeDashGame>(true)).Single();
@@ -140,6 +141,7 @@ namespace CubeDash.Editor
             settings.ApplyModifiedPropertiesWithoutUndo();
             var gameSettings = new SerializedObject(game); gameSettings.FindProperty("useStartCountdown").boolValue = true;
             gameSettings.ApplyModifiedPropertiesWithoutUndo();
+            LevelPowerUpBars.ApplyToScene(scene);
             EditorSceneManager.MarkSceneDirty(scene);
             Debug.Log("Level now uses Main Menu ribbons, typography and colors, with automatic 3/2/1 entry and countdown retries. Gameplay/world/prefabs preserved.");
         }

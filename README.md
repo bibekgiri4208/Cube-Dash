@@ -44,6 +44,8 @@ The saved indicator is under **Canvas > Safe Area > Cheat Status**; **Tools > Cu
 
 ## Power-ups
 
+In **Level**, active power-ups appear as separate compact cards stacked on the **left**. Each timed effect has its own red duration meter and remaining seconds, matching the Main Menu palette/font; the one-hit shield shows a charge instead of a timer. See [LEVEL_UI.md](LEVEL_UI.md#power-up-duration-cards).
+
 - **Shield:** a solid cyan shield pickup with silver emblem; absorbs one obstacle contact.
 - **Double Points:** a gold extruded **2×** pickup; doubles coin scoring for seven seconds.
 - **Magnet:** a red horseshoe magnet with silver tips; pulls nearby coins from all three lanes
@@ -372,8 +374,8 @@ The tail is a longer, soft-edged luminous ribbon, tapered and faded from head to
 pieces sample the actual driven path by distance, connect through lane changes, and lengthen with
 speed. Pickup light ripples from head to tip, freezing when paused and clearing on restart.
 It uses a fixed-size history and the existing twelve meshes, with no runtime object churn.
-The HUD uses rounded navy panels, clear coral actions, responsive placement, animated menu entry,
-and hover/press feedback. The current environment remains visible around the menu cards.
+Level's HUD uses the Main Menu's pink cut-corner panels, red actions, compact left-hand power-up duration cards,
+responsive placement, animated menu entry, and hover/press feedback. The current environment remains visible around the menu cards.
 
 ## Edit
 
@@ -386,8 +388,8 @@ and hover/press feedback. The current environment remains visible around the men
   (podium bases, banded shafts, stepped crowns, roof plant, masts and shared baked facade details). Sixteen towers are placed
   per segment across four depth rows per side, ending in a taller skyline row on the plaza slab.
 - **Player Trail** contains twelve saved ribbon meshes animated by `CubeWake`; length is configurable.
-- **Canvas** contains editable UI and persistent button events. The start overlay is transparent
-  so the scene remains visible. **City Atmosphere** holds the bloom/color-grading profile.
+- **Canvas** contains editable UI and persistent button events. Level uses a central countdown instead of a start card;
+  `Safe Area/Power-Up Bars` contains the compact duration cards. **City Atmosphere** holds the bloom/color-grading profile.
 - Palette assets: **`Assets/Material/CubeDashRed.mat`**, **`CubeDashBlue.mat`**, **`CubeDashGreen.mat`**.
 - Sky: **`Assets/Material/CubeDashHorizon.mat`**. Atmospheric profile:
   **`Assets/Settings/CubeDashVisuals.asset`**; bloom uses a 1.12 HDR threshold and restrained intensity.
@@ -399,9 +401,8 @@ and hover/press feedback. The current environment remains visible around the men
   The older **Apply Clean Color-Match Style** command intentionally restores the matte/no-bloom look.
 - **Tools > Cube Dash > Apply Desktop and Gamepad Controls** updates only the desktop UI/input presentation.
   The retained mobile rendering preset is an optional lightweight preset, not a mobile build target.
-- **Tools > Cube Dash > Refine HUD Layout** re-applies the current UI layout: score in the top-right,
-  icon-only pause button in the top-left, bottom instruction and eyebrow hidden, a simplified start
-  card (controls move into its footer), and a **QUIT** button under **TRY AGAIN** on Game Over.
+- **Tools > Cube Dash > Match Level UI to Main Menu** applies Level's themed UI/countdown; **Add Left Power-Up Duration Bars** upgrades its power-up indicators.
+  Both preserve existing themed edits on reapplication. **Refine HUD Layout** remains a legacy layout tool and leaves themed Level UI alone.
 - Speed and acceleration are on **Game Manager**. Lane spacing and the three palette material
   references are on **Track**. Use a nonzero **Fixed Seed** for reproducible generation.
 

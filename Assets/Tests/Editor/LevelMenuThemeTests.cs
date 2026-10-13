@@ -182,7 +182,8 @@ namespace CubeDash.Tests
             Step(game, 1); hud.UpdateStats(); Capture(hud, "running");
             typeof(CubeDashGame).GetMethod("ApplyPowerUp", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(game, new object[] { PowerUpType.Magnet });
             game.ToggleInvincibility(); hud.UpdateStats(); Capture(hud, "powerups-cheat");
-            Assert.That(hud.transform.Find("Safe Area/Power-Up Ribbon").gameObject.activeSelf, Is.True);
+            Assert.That(hud.transform.Find("Safe Area/Power-Up Ribbon").gameObject.activeSelf, Is.False);
+            Assert.That(hud.PowerUpBars.Stack.gameObject.activeSelf, Is.True);
             Assert.That(hud.transform.Find("Safe Area/Cheat Ribbon").gameObject.activeSelf, Is.True);
             game.ToggleInvincibility();
             game.TogglePause();

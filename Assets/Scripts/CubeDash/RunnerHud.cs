@@ -34,6 +34,8 @@ namespace CubeDash
         [SerializeField] private Text countdownNumber = null;
         [SerializeField] private RectTransform powerUpRibbon = null;
         [SerializeField] private RectTransform cheatRibbon = null;
+        [SerializeField] private RunnerPowerUpBars powerUpBars = null;
+        public RunnerPowerUpBars PowerUpBars => powerUpBars;
         public bool RibbonTheme => ribbonTheme;
         public GameObject CountdownOverlay => countdownOverlay;
         public Text CountdownNumber => countdownNumber;
@@ -72,6 +74,7 @@ namespace CubeDash
         public void Initialize(CubeDashGame controller)
         {
             game = controller;
+            if (powerUpBars != null) powerUpBars.Initialize(controller);
             if (!ribbonTheme) speed.color = new Color(1f, 0.78f, 0.25f);
             scoreColor = distance.color;
             if (collectionFeedback != null) feedbackOrigin = collectionFeedback.rectTransform.anchoredPosition;
@@ -290,6 +293,7 @@ namespace CubeDash
             if (menuHint != null) menuHint.gameObject.SetActive(!ribbonTheme && state == CubeDashGame.RunState.Ready);
             RefreshInputPrompts();
             RefreshCheatStatus();
+            if (powerUpBars != null) powerUpBars.Refresh();
             if (!running) FocusPrimary();
         }
 
@@ -356,6 +360,13 @@ namespace CubeDash
 
         private void UpdatePowerUpStatus()
         {
+            if (powerUpBars != null)
+            {
+                if (powerUpStatus != null) powerUpStatus.gameObject.SetActive(false);
+                if (powerUpRibbon != null) powerUpRibbon.gameObject.SetActive(false);
+                powerUpBars.Refresh();
+                return;
+            }
             if (powerUpStatus == null) return;
             if (powerUpMessageTimer > 0) powerUpMessageTimer = Mathf.Max(0, powerUpMessageTimer - Time.unscaledDeltaTime);
             if (game.State != CubeDashGame.RunState.Running)
