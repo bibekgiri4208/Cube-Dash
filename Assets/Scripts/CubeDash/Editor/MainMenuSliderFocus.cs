@@ -8,12 +8,13 @@ using UnityEngine.UI;
 
 namespace CubeDash.Editor
 {
-    /// <summary>Adds selection feedback only; existing volume controls, geometry and callbacks stay intact.</summary>
+    /// <summary>Adds selection feedback only; existing options controls, geometry and callbacks stay intact.</summary>
     public static class MainMenuSliderFocus
     {
         public const string FrameName = "Slider focus frame";
+        public const string FullscreenFrameName = "Fullscreen focus frame";
 
-        [MenuItem("Tools/Cube Dash/Add Options Slider Focus Feedback")]
+        [MenuItem("Tools/Cube Dash/Add Options Focus Feedback")]
         public static void ApplyFromMenu()
         {
             if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) ApplyFromCommandLine();
@@ -62,7 +63,42 @@ namespace CubeDash.Editor
                     serialized.ApplyModifiedPropertiesWithoutUndo();
                 }
             }
+            AddFullscreenFocus(menu);
             EditorSceneManager.MarkSceneDirty(scene);
+        }
+
+        private static void AddFullscreenFocus(MainMenuController menu)
+        {
+            Transform checkbox = menu.OptionsPanel.transform.Find("Card/Display section/Fullscreen checkbox");
+            if (checkbox == null) return;
+            var toggle = checkbox.GetComponentInParent<Toggle>(true);
+            if (toggle == null) return;
+            Transform existing = toggle.transform.Find(FullscreenFrameName);
+            Graphic frame = existing != null ? existing.GetComponent<Graphic>() : null;
+            if (existing != null && frame == null) throw new InvalidOperationException("A user object uses the fullscreen focus-frame name.");
+            if (frame == null)
+            {
+                var go = new GameObject(FullscreenFrameName, typeof(RectTransform));
+                go.transform.SetParent(toggle.transform, false); go.transform.SetAsFirstSibling();
+                Undo.RegisterCreatedObjectUndo(go, "Add fullscreen focus feedback");
+                var rect = go.GetComponent<RectTransform>(); var box = checkbox.GetComponent<RectTransform>();
+                rect.anchorMin = box.anchorMin; rect.anchorMax = box.anchorMax; rect.pivot = box.pivot;
+                rect.anchoredPosition = box.anchoredPosition; rect.sizeDelta = box.sizeDelta + new Vector2(16, 16);
+                var graphic = Undo.AddComponent<MenuPanelGraphic>(go);
+                graphic.color = new Color(1, 0.99f, 0.94f);
+                graphic.CornerRadius = 0; graphic.CornerCut = 8;
+                graphic.BorderWidth = 3; graphic.BorderColor = new Color(0.95f, 0.02f, 0.11f);
+                graphic.raycastTarget = false; graphic.enabled = false; frame = graphic;
+            }
+            var feedback = toggle.GetComponent<MenuToggleFocus>();
+            if (feedback == null) feedback = Undo.AddComponent<MenuToggleFocus>(toggle.gameObject);
+            var serialized = new SerializedObject(feedback);
+            if (serialized.FindProperty("focusFrame").objectReferenceValue == null)
+            {
+                Undo.RecordObject(feedback, "Wire fullscreen focus frame");
+                serialized.FindProperty("focusFrame").objectReferenceValue = frame;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+            }
         }
     }
 }

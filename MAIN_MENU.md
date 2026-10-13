@@ -10,6 +10,7 @@ The reference-inspired scene contains editable 3D parking bays, weathered asphal
 - Mouse, keyboard/UI navigation and gamepad are supported. Escape/back closes a panel.
 - Closing Shop or Options returns focus to its main-menu ribbon, not Start. Back, Escape and gamepad Back behave the same; Back/Escape with no panel open leaves the current selection unchanged.
 - Master and Music Volume show a cream-and-red focus frame when selected with a gamepad, keyboard or pointer. Up/down changes the selected control; left/right adjusts its volume. The frame clears when focus moves away or Options closes, without resizing the slider.
+- The Fullscreen checkbox uses the same focus frame, whether checked or unchecked. Gamepad confirm/keyboard submit toggles the tick; moving to Back or closing Options clears its focus frame. Its display-mode callback and checkbox/tick graphics are unchanged.
 
 ## Player preview and idle
 
@@ -106,6 +107,8 @@ The same optimization runs automatically on the transient Main Menu scene during
 `ArcadeButton` retains its existing feedback curve, but snaps the imperceptible final animation tail to the exact target scale and stops writing the UI transform while idle. It continues checking interactability and responds normally to pointer/keyboard/gamepad events.
 
 ## Validation
+
+Fullscreen feedback validation passed **19 fullscreen/slider/menu/music tests** and **3 rendered fullscreen checks**. Gamepad focus stays visible with the tick both on and off, submit toggles it once, and moving away, disabling the control or closing/reopening Options clears focus correctly. Checked/unchecked previews were inspected; the saved scene adds only the focus frame/component, preserving checkbox/tick geometry, display callback, navigation and artwork. The submit fixture verifies UI behavior without changing the test machine's display mode.
 
 Slider feedback validation passed **16 slider/menu/music tests**, covering gamepad selection and volume adjustment, pointer selection, disabled controls, panel reopening, saved wiring and safe reapplication. Rendered focus previews were checked for both volume rows. The saved scene adds only two focus frames and their feedback components; track/fill/handle geometry, audio callbacks, navigation and background artwork are unchanged. Feedback is also retained when regenerating or reapplying the menu sections, music controls or panel theme.
 
