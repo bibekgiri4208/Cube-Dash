@@ -81,7 +81,17 @@ The menu uses bright, airy arcade daylight: neutral tonemapping, lifted exposure
 
 `Tools > Cube Dash > Tune Main Menu Post Processing` reapplies the menu profile defaults **without rebuilding or saving the scene**, then selects the profile for editing. Use this rather than the scene builder when only adjusting post-processing.
 
+## Quality-preserving optimization
+
+`Tools > Cube Dash > Optimize Main Menu Without Quality Changes` marks eligible stationary diorama renderers **Batching Static**, keeping their meshes, materials, transforms, lighting and shadows unchanged. It excludes disabled backups, scripted/animated objects and their children, LOD vegetation, property-block renderers and unfamiliar shaders. Existing static flags are preserved. Source prefabs, imported foliage, shared pipelines and `Level` are not edited. Save scene edits and stop Play mode first; the command supports Undo and is safe to repeat.
+
+The same optimization runs automatically on the transient Main Menu scene during player builds, without saving over the source scene. During builds only, if the known menu renderer and shader sources/dependencies pass the scene-color audit, the menu camera's inherited **Opaque Texture** setting is overridden to **Off** to skip an unused color copy. Explicit author overrides, new scene-color shaders, extra cameras or custom renderer features prevent this opt-out. The Editor command leaves the source camera setting untouched, so future shader edits cannot inherit a permanently disabled buffer. Depth textures, ambient occlusion, bloom, depth of field, anti-aliasing, resolution, LOD thresholds, foliage wind and camera sway are not reduced. GPU Resident Drawer/foliage instancing remain unchanged pending target-device profiling.
+
+`ArcadeButton` retains its existing feedback curve, but snaps the imperceptible final animation tail to the exact target scale and stops writing the UI transform while idle. It continues checking interactability and responds normally to pointer/keyboard/gamepad events.
+
 ## Validation
+
+Optimization validation in Unity 6000.4.1f1 passed all **7 optimization tests**, identifying **644** stationary renderers for batching while preserving foliage/hero animation, authored transforms/materials/lighting, camera overrides and gameplay isolation. A deterministic GPU comparison (same camera pose, AO noise and dithering samples) measured mean RGB difference below `0.000001` and maximum channel difference `1/255` after real static batching and skipping the opaque color copy. The wider menu/player regression run passed **53 of 54 tests**; the existing lighting-default test expects non-positive contrast while the saved menu profile uses `+5`. That profile was deliberately not retuned, preserving the current visuals. No target-device FPS improvement is claimed without profiling.
 
 Shop/Options validation passed **45 focused tests** in the temporary Unity project, including empty rarity grids, persistent button/control wiring, recoverable old panels, idempotent panel upgrades, visible headings, slider dimensions, pointer routing, live/clamped/saved volume, navigation and existing UI/camera/player/foliage regressions. The scene comparison changes only the menu controller's panel/control references, adds two canvas children and renames the two inactive backups. All existing objects are retained; environment, main ribbons, camera, lighting, sakura assets and gameplay are preserved.
 

@@ -24,8 +24,13 @@ namespace CubeDash
         private void Update()
         {
             float scale = button.IsInteractable() ? (pressed ? 0.95f : selected ? 1.05f : hovered ? 1.035f : 1f) : 1f;
-            transform.localScale = Vector3.Lerp(transform.localScale, Vector3.one * scale,
-                1 - Mathf.Exp(-22f * Time.unscaledDeltaTime));
+            Vector3 target = Vector3.one * scale;
+            Vector3 current = transform.localScale;
+            // Keep polling interactability, but don't dirty the Canvas once feedback has settled.
+            if (current.Equals(target)) return;
+            Vector3 next = Vector3.Lerp(current, target, 1 - Mathf.Exp(-22f * Time.unscaledDeltaTime));
+            if ((next - target).sqrMagnitude <= 0.0000000001f) next = target;
+            if (!current.Equals(next)) transform.localScale = next;
         }
         private void OnDisable()
         {
