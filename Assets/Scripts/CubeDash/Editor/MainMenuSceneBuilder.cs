@@ -81,6 +81,7 @@ namespace CubeDash.Editor
             MainMenuCameraMotion.ApplyToScene(scene);
             if (AssetDatabase.LoadAssetAtPath<AudioClip>(MainMenuMusic.ClipPath) != null) MainMenuMusic.ApplyToScene(scene);
             MainMenuPanelTheme.ApplyToScene(scene);
+            MainMenuMapSelection.ApplyToScene(scene);
             MainMenuUiAnimations.ApplyToScene(scene);
             AssetDatabase.SaveAssets();
             EditorSceneManager.MarkSceneDirty(scene);

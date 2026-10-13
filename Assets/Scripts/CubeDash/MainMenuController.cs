@@ -15,6 +15,9 @@ namespace CubeDash
         [SerializeField] private GameObject optionsPanel = null;
         [SerializeField] private Button shopClose = null;
         [SerializeField] private Button optionsClose = null;
+        [Header("Map selection")]
+        [SerializeField] private GameObject mapPanel = null;
+        [SerializeField] private Button firstMap = null;
         [SerializeField] private Slider volume = null;
         [SerializeField] private Text volumeReadout = null;
         [SerializeField] private AudioSource music = null;
@@ -31,6 +34,7 @@ namespace CubeDash
         public string GameplayScene => gameplayScene;
         public GameObject ShopPanel => shopPanel;
         public GameObject OptionsPanel => optionsPanel;
+        public GameObject MapPanel => mapPanel;
         public Renderer Hero => hero;
         public AudioSource Music => music;
         public const string VolumePreference = "CubeDash.MasterVolume";
@@ -43,6 +47,7 @@ namespace CubeDash
             appearance = new MaterialPropertyBlock();
             if (shopPanel != null) shopPanel.SetActive(false);
             if (optionsPanel != null) optionsPanel.SetActive(false);
+            if (mapPanel != null) mapPanel.SetActive(false);
             float savedVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(VolumePreference, 1));
             AudioListener.volume = savedVolume;
             if (volume != null) volume.SetValueWithoutNotify(savedVolume);
@@ -66,12 +71,24 @@ namespace CubeDash
 
         public void StartGame()
         {
-            if (loading) return;
+            if (mapPanel != null) OpenPanel(mapPanel, firstMap, nameof(StartGame));
+            else StartMap(gameplayScene); // Older, not-yet-upgraded menu scenes remain usable.
+        }
+
+        public void StartMap(string sceneName)
+        {
+            if (loading || string.IsNullOrWhiteSpace(sceneName)) return;
+            if (!Application.CanStreamedLevelBeLoaded(sceneName))
+            {
+                Debug.LogWarning("This map is not yet available: " + sceneName);
+                return;
+            }
             GetComponentInChildren<MainMenuEntrance>()?.Complete();
             loading = true;
             if (startButton != null) startButton.interactable = false;
+            if (mapPanel != null) mapPanel.GetComponent<CanvasGroup>().interactable = false;
             if (music != null) music.Stop();
-            SceneManager.LoadSceneAsync(gameplayScene);
+            SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
         }
 
         public void OpenShop()
@@ -125,6 +142,7 @@ namespace CubeDash
         {
             if (shopPanel != except) ClosePanel(shopPanel);
             if (optionsPanel != except) ClosePanel(optionsPanel);
+            if (mapPanel != except) ClosePanel(mapPanel);
         }
 
         private static void ClosePanel(GameObject panel)

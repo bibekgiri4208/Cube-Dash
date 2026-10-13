@@ -46,7 +46,7 @@ namespace CubeDash.Tests
                 Assert.That(mascot.Eyes.Length, Is.EqualTo(2));
                 Assert.That(mascot.transform.childCount, Is.EqualTo(2), "Both eyes deform with the player mesh.");
                 Assert.That(controller.GetComponentsInChildren<MeshRenderer>(true).Length, Is.GreaterThan(200));
-                var ribbons = controller.GetComponentsInChildren<MenuRibbonGraphic>(true);
+                var ribbons = controller.GetComponentInChildren<Canvas>(true).transform.Find("Left menu ribbons").GetComponentsInChildren<MenuRibbonGraphic>(true);
                 Assert.That(ribbons.Length, Is.EqualTo(4));
                 CollectionAssert.AreEquivalent(new[] { "START", "SHOP", "OPTIONS", "QUIT" }, ribbons.Select(ribbon => ribbon.name));
                 foreach (var ribbon in ribbons)
@@ -197,6 +197,9 @@ namespace CubeDash.Tests
             yield return MainMenuSectionTests.WaitForPanelClosed(menu.OptionsPanel);
             Assert.That(menu.OptionsPanel.activeSelf, Is.False);
             ribbons.Single(ribbon => ribbon.name == "START").GetComponent<Button>().onClick.Invoke();
+            Assert.That(menu.Loading, Is.False);
+            Assert.That(menu.CurrentPanel, Is.SameAs(menu.MapPanel));
+            menu.MapPanel.transform.Find("Card/City").GetComponent<Button>().onClick.Invoke();
             Assert.That(menu.Loading, Is.True);
             float deadline = Time.realtimeSinceStartup + 30;
             while (SceneManager.GetActiveScene().name != "Level" && Time.realtimeSinceStartup < deadline) yield return null;

@@ -48,8 +48,9 @@ namespace CubeDash.Editor
                 }
                 data.ApplyModifiedPropertiesWithoutUndo();
             }
-            foreach (GameObject panel in new[] { menu.ShopPanel, menu.OptionsPanel })
+            foreach (GameObject panel in new[] { menu.ShopPanel, menu.OptionsPanel, menu.MapPanel })
             {
+                if (panel == null) continue;
                 if (panel.GetComponent<MenuPanelMotion>() == null)
                 {
                     if (panel.GetComponent<CanvasGroup>() == null) Undo.AddComponent<CanvasGroup>(panel);

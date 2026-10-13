@@ -229,6 +229,8 @@ namespace CubeDash.Tests
             Assert.That(menu.Music.isPlaying, Is.True);
             Assert.That(EventSystem.current.currentSelectedGameObject.GetComponent<Button>(), Is.Not.Null);
             menu.StartGame();
+            Assert.That(menu.CurrentPanel, Is.SameAs(menu.MapPanel));
+            menu.MapPanel.transform.Find("Card/City").GetComponent<Button>().onClick.Invoke();
             deadline = Time.realtimeSinceStartup + 20;
             while (SceneManager.GetActiveScene().name != "Level" && Time.realtimeSinceStartup < deadline) yield return null;
             yield return null;

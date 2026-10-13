@@ -1,6 +1,6 @@
 # Level UI
 
-Open `Assets/Scenes/Level.unity` and press Play, or select Start in the Main Menu. The old start-game card is no longer shown. A saved, central red ribbon counts **3, 2, 1**, then gameplay starts automatically.
+Open `Assets/Scenes/Level.unity` and press Play, or select **Start > City** in the Main Menu. The old start-game card is no longer shown. A saved, central red ribbon counts **3, 2, 1**, then gameplay starts automatically.
 
 ## Shared visual theme
 

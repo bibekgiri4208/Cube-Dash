@@ -113,7 +113,8 @@ namespace CubeDash.Tests
                 menu = Object.FindAnyObjectByType<MainMenuController>();
                 Assert.That(menu.Music.volume, Is.EqualTo(0.23f).Within(0.001f));
                 AudioSource source = menu.Music;
-                menu.StartGame(); Assert.That(source.isPlaying, Is.False);
+                menu.StartGame(); Assert.That(source.isPlaying, Is.True, "Map selection keeps menu music playing.");
+                menu.StartMap(menu.GameplayScene); Assert.That(source.isPlaying, Is.False);
                 deadline = Time.realtimeSinceStartup + 30;
                 while (SceneManager.GetActiveScene().name != "Level" && Time.realtimeSinceStartup < deadline) yield return null;
                 Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("Level"));

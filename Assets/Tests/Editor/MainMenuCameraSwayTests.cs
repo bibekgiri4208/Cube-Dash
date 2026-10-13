@@ -85,7 +85,7 @@ namespace CubeDash.Tests
                 Assert.That(Vector3.Distance(camera.transform.localPosition, position), Is.LessThan(0.00001f));
             }
             finally { Time.timeScale = oldTimeScale; if (sway != null) sway.enabled = false; }
-            Object.FindAnyObjectByType<MainMenuController>().StartGame();
+            var menu = Object.FindAnyObjectByType<MainMenuController>(); menu.StartMap(menu.GameplayScene);
             float loadDeadline = Time.realtimeSinceStartup + 30;
             while (SceneManager.GetActiveScene().name != "Level" && Time.realtimeSinceStartup < loadDeadline) yield return null;
             yield return null;

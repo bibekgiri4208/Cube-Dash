@@ -1,6 +1,6 @@
 # Main menu
 
-Open `Assets/Scenes/Main Menu.unity` and press Play. It is the first enabled build scene; **Start** loads the existing `Level` scene.
+Open `Assets/Scenes/Main Menu.unity` and press Play. It is the first enabled build scene; **Start** opens the themed map-selection submenu. **City** loads `Level` and **Country Side** loads its countryside scene.
 
 The reference-inspired scene contains editable 3D parking bays, weathered asphalt, concrete/graffiti wall, warm sconces, layered foliage, neighborhood buildings, overhead wires, a classic sedan, safety props, and a red cube with black eyes. Its low camera and left-hand cut-corner ribbons use the supplied image's composition. This is a recreation, not the image's original models or a pixel-identical reproduction.
 
@@ -20,7 +20,17 @@ The reference-inspired scene contains editable 3D parking bays, weathered asphal
 - Main-menu ribbons and Back buttons have a slightly stronger hover/focus lift, a directional press squash, and a short damped release/submit bounce. Feedback never invokes button actions itself; pointer and keyboard/gamepad submit still execute callbacks once.
 - Motion uses unscaled time, restores authored poses on disable and stops writing settled button transforms. Entrance position and button feedback scale are independent. Gameplay buttons retain their existing feedback curve.
 
-Edit `MainMenuEntrance` on **Reference Menu Canvas > Left menu ribbons** and `MenuPanelMotion` on the two panel roots to adjust timing. **Tools > Cube Dash > Animate Main Menu UI** (`MainMenuUiAnimations.ApplyFromCommandLine`) adds saved components without rebuilding scenery, changing control layouts/callbacks or generating runtime UI. Reapplication preserves custom timing; full menu regeneration includes the animations.
+Edit `MainMenuEntrance` on **Reference Menu Canvas > Left menu ribbons** and `MenuPanelMotion` on the submenu roots to adjust timing. **Tools > Cube Dash > Animate Main Menu UI** (`MainMenuUiAnimations.ApplyFromCommandLine`) adds saved components without rebuilding scenery, changing control layouts/callbacks or generating runtime UI. Reapplication preserves custom timing; full menu regeneration includes the animations.
+
+## Map selection
+
+Start opens **Start - Map Selection**, with six illustrated cards: **City, Jungle, Mountain, Desert, Beach and Country Side**. The saved submenu shares the Main Menu's pink cut-corner panels, dark outlines, red badges/Back ribbon, Anton font, hover/focus/click feedback and reversible panel transition. It uses three columns on wide canvases and two on narrower layouts.
+
+City and Country Side are playable and load their existing enabled scenes. Jungle, Mountain, Desert and Beach are explicitly **COMING SOON**, with disabled controls; no nonexistent scenes or substitute maps are loaded. Their illustrations are original vector artwork, not screenshots of playable levels.
+
+Opening map selection keeps menu music playing and focuses City. Keyboard/gamepad navigation cycles the available cards and Back, skipping unfinished maps. Back, Escape and gamepad Back close it and restore Start focus. Music stops only when a playable map is selected. In-game Quit returns to the menu, where Start reopens map selection.
+
+Edit **Cube Dash Main Menu > Reference Menu Canvas > Start - Map Selection > Card**. Each map button has a saved `StartMap(string)` scene argument; future maps can be enabled and given real build-scene targets/navigation when authored. **Tools > Cube Dash > Add Main Menu Map Selection** upgrades an existing menu without rebuilding artwork or gameplay; repeated application preserves manual edits. Full menu regeneration includes the submenu. `MenuMapLayout` lays out saved cards and `MapPreviewGraphic` draws their illustrations; runtime creates no UI objects.
 
 ## Player preview and idle
 
@@ -84,7 +94,7 @@ Sway runs only in Play mode in a scene containing the menu controller, uses unsc
 
 ### Shop and Options sections
 
-`Tools > Cube Dash > Improve Main Menu Shop and Options` authors only the two modal panels. The saved panels match the main buttons with pink cut-corner cards, heavy near-black outlines and offset shadows, ribbon headers/rarity labels, Anton headings, and red primary-ribbon Back buttons. Start still loads `Level` directly and Quit keeps its existing behavior. The previous color-preview shop and options panel are retained as inactive backups. Re-running the section tool preserves already-authored sections and manual edits; full menu regeneration includes the themed panels.
+`Tools > Cube Dash > Improve Main Menu Shop and Options` authors only those two modal panels. The saved panels match the main buttons with pink cut-corner cards, heavy near-black outlines and offset shadows, ribbon headers/rarity labels, Anton headings, and red primary-ribbon Back buttons. Start opens map selection and main-menu Quit keeps its existing behavior. The previous color-preview shop and options panel are retained as inactive backups. Re-running the section tool preserves already-authored sections and manual edits; full menu regeneration includes the themed panels.
 
 `Tools > Cube Dash > Match Shop and Options to Menu Ribbons` applies the visual theme in place with Undo, without rebuilding scenery, replacing controls, changing callbacks/navigation/preferences/music, or deleting skin-grid content. Reapplying does not duplicate decorations. Rarity emblems keep their distinct colors.
 
@@ -96,7 +106,7 @@ Edit **Cube Dash Main Menu > Reference Menu Canvas > Shop - Skin Collections > C
 
 ### Main menu background music
 
-`Assets/Audio/Music/Main Menu Bg.mp3` loops on the menu-only **Menu Background Music** AudioSource. Playback starts after saved settings are restored, remains uninterrupted while Shop/Options are open or music is muted, and stops when Start loads gameplay. No persistent audio object or gameplay soundtrack changes are introduced.
+`Assets/Audio/Music/Main Menu Bg.mp3` loops on the menu-only **Menu Background Music** AudioSource. Playback starts after saved settings are restored, remains uninterrupted while map selection/Shop/Options are open or music is muted, and stops when a playable map loads. No persistent audio object or gameplay soundtrack changes are introduced.
 
 Options > Audio has separate **Master Volume** and **Music Volume** sliders. Master controls the AudioListener; Music controls only this AudioSource, with the independent `CubeDash.MusicVolume` preference. Both include live percentages and keyboard/gamepad navigation. The music setting does not change gameplay sound-effect volume. `Tools > Cube Dash > Add Main Menu Music and Volume Control` upgrades an older menu without rebuilding scenery or overwriting an existing music row/source. Full menu regeneration includes the track when present.
 
@@ -117,6 +127,8 @@ The same optimization runs automatically on the transient Main Menu scene during
 `ArcadeButton` snaps the imperceptible final animation tail to the exact target scale and stops writing the UI transform while idle. It continues checking interactability and responds normally to pointer/keyboard/gamepad events. The Main Menu opts into the richer feedback above; Level/Country Side retain their existing curve.
 
 ## Validation
+
+Map selection passed **45/45** menu/map/navigation/audio/Level regressions and **4/4** GPU UI/routing checks. Landscape/portrait previews show all six illustrated cards and legible availability labels. Coverage includes City/Country Side scene loads, Start opening without stopping music, unavailable-map guards, keyboard/gamepad Back, playable-only navigation, opener focus, return/reselection, safe reapplication and preserved menu animations/settings. The scene audit found only the new Canvas panel plus its Canvas-child/controller references (2 updated documents, 172 added, none removed). Existing camera, artwork, gameplay scenes/prefabs and build settings were unchanged; transferred scene/scripts were hash-verified against the isolated validation project.
 
 Visible-stagger/Game Over return follow-up passed **34/34** UI/navigation/music regressions and a **GPU startup-render check**. The cold-frame fixture injects multi-second deltas and verifies that they cannot skip the stagger; Game Over Quit stays in Play mode, unloads gameplay, restarts menu music/focus and replays the entrance. Early/middle/settled previews were inspected to confirm visibly sequential buttons.
 
