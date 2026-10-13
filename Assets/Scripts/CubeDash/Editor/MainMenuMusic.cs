@@ -90,6 +90,7 @@ namespace CubeDash.Editor
             }
             Undo.RecordObject(menu, "Wire menu music settings");
             serialized.ApplyModifiedPropertiesWithoutUndo();
+            MainMenuSliderFocus.ApplyToScene(scene);
             EditorSceneManager.MarkSceneDirty(scene);
         }
 

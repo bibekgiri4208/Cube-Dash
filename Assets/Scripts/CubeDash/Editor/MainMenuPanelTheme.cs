@@ -39,6 +39,7 @@ namespace CubeDash.Editor
             var menu = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<MainMenuController>(true)).Single();
             ThemePanel(menu.ShopPanel);
             ThemePanel(menu.OptionsPanel);
+            MainMenuSliderFocus.ApplyToScene(scene);
             EditorSceneManager.MarkSceneDirty(scene);
         }
 

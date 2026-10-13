@@ -93,6 +93,7 @@ namespace CubeDash.Editor
                 Set(menu, "volume", slider); Set(menu, "volumeReadout", value); Set(menu, "fullscreen", toggle);
                 options.gameObject.SetActive(false); changed = true;
             }
+            MainMenuSliderFocus.ApplyToScene(scene);
             if (changed) EditorSceneManager.MarkSceneDirty(scene);
             Debug.Log(changed ? "Authored empty Common, Rare and Epic skin collections and polished Audio/Display options. Previous panels retained inactive; world, camera, main ribbons and gameplay preserved."
                 : "Menu sections are already authored. Existing panel and collection edits were preserved.");

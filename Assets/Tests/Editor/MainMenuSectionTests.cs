@@ -7,6 +7,8 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
@@ -160,7 +162,7 @@ namespace CubeDash.Tests
                 AssertPointerRoutesTo(menu.ShopPanel.GetComponentInChildren<Button>(), menu);
                 CaptureIfRequested(menu, "shop");
                 menu.ShopPanel.GetComponentInChildren<Button>().onClick.Invoke();
-                Assert.That(menu.ShopPanel.activeSelf, Is.False); Assert.That(EventSystem.current.currentSelectedGameObject.name, Is.EqualTo("START"));
+                Assert.That(menu.ShopPanel.activeSelf, Is.False); Assert.That(EventSystem.current.currentSelectedGameObject.name, Is.EqualTo("SHOP"));
                 menu.OpenOptions(); yield return null;
                 AssertHeadingRenders(menu.OptionsPanel);
                 Slider slider = menu.OptionsPanel.GetComponentInChildren<Slider>();
@@ -185,7 +187,7 @@ namespace CubeDash.Tests
                 Assert.That(toggle.navigation.selectOnDown, Is.SameAs(back)); Assert.That(back.navigation.selectOnDown, Is.SameAs(slider));
                 CaptureIfRequested(menu, "options");
                 back.onClick.Invoke(); Assert.That(menu.OptionsPanel.activeSelf, Is.False);
-                Assert.That(EventSystem.current.currentSelectedGameObject.name, Is.EqualTo("START"));
+                Assert.That(EventSystem.current.currentSelectedGameObject.name, Is.EqualTo("OPTIONS"));
             }
             finally
             {
@@ -221,6 +223,65 @@ namespace CubeDash.Tests
                     Assert.That(menu.ShopPanel.transform.Find("Card/" + rarity + " Skins/Rarity heading").GetComponent<MenuRibbonGraphic>(), Is.Not.Null);
             }
             finally { EditorSceneManager.ClosePreviewScene(scene); }
+        }
+
+        [UnityTest]
+        public IEnumerator ClosingPanelsRestoresTheirOpenerForPointerSubmitEscapeAndGamepadBack()
+        {
+            yield return new EnterPlayMode();
+            yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/Main Menu.unity", new LoadSceneParameters(LoadSceneMode.Single));
+            yield return null;
+            var menu = Object.FindAnyObjectByType<MainMenuController>();
+            Button shop = menu.GetComponentsInChildren<Button>(true).Single(button => button.name == "SHOP");
+            Button options = menu.GetComponentsInChildren<Button>(true).Single(button => button.name == "OPTIONS");
+            var background = InputSystem.settings.backgroundBehavior;
+            var focus = InputSystem.settings.editorInputBehaviorInPlayMode;
+            InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+            InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+            var keyboard = InputSystem.AddDevice<Keyboard>("MenuReturnKeyboard");
+            var pad = InputSystem.AddDevice<Gamepad>("MenuReturnGamepad");
+            try
+            {
+                var pointer = new PointerEventData(EventSystem.current) { button = PointerEventData.InputButton.Left };
+                ExecuteEvents.Execute(shop.gameObject, pointer, ExecuteEvents.pointerDownHandler);
+                ExecuteEvents.Execute(shop.gameObject, pointer, ExecuteEvents.pointerClickHandler);
+                Assert.That(menu.ShopPanel.activeSelf, Is.True);
+                menu.ShopPanel.GetComponentInChildren<Button>().onClick.Invoke();
+                Assert.That(EventSystem.current.currentSelectedGameObject, Is.SameAs(shop.gameObject));
+                menu.ClosePanels();
+                Assert.That(EventSystem.current.currentSelectedGameObject, Is.SameAs(shop.gameObject), "Closing nothing must not jump to Start.");
+
+                EventSystem.current.SetSelectedGameObject(options.gameObject);
+                ExecuteEvents.Execute(options.gameObject, new BaseEventData(EventSystem.current), ExecuteEvents.submitHandler);
+                Assert.That(menu.OptionsPanel.activeSelf, Is.True);
+                EventSystem.current.SetSelectedGameObject(menu.OptionsPanel.GetComponentInChildren<Slider>().gameObject);
+                keyboard.MakeCurrent();
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Escape)); yield return null; yield return null;
+                Assert.That(menu.OptionsPanel.activeSelf, Is.False);
+                Assert.That(EventSystem.current.currentSelectedGameObject, Is.SameAs(options.gameObject));
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState()); yield return null;
+
+                menu.OpenShop();
+                menu.OpenOptions();
+                Assert.That(menu.ShopPanel.activeSelf, Is.False);
+                Assert.That(menu.OptionsPanel.activeSelf, Is.True);
+                InputSystem.QueueStateEvent(pad, new GamepadState().WithButton(GamepadButton.East)); yield return null;
+                Assert.That(menu.OptionsPanel.activeSelf, Is.False);
+                Assert.That(EventSystem.current.currentSelectedGameObject, Is.SameAs(options.gameObject));
+                InputSystem.QueueStateEvent(pad, new GamepadState()); yield return null;
+
+                menu.OpenShop();
+                InputSystem.QueueStateEvent(pad, new GamepadState().WithButton(GamepadButton.East)); yield return null;
+                Assert.That(menu.ShopPanel.activeSelf, Is.False);
+                Assert.That(EventSystem.current.currentSelectedGameObject, Is.SameAs(shop.gameObject));
+            }
+            finally
+            {
+                menu.ClosePanels();
+                InputSystem.RemoveDevice(keyboard); InputSystem.RemoveDevice(pad);
+                InputSystem.settings.backgroundBehavior = background;
+                InputSystem.settings.editorInputBehaviorInPlayMode = focus;
+            }
         }
 
         [UnityTest]

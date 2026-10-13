@@ -23,6 +23,7 @@ namespace CubeDash
         [SerializeField] private Toggle fullscreen = null;
         [SerializeField] private Renderer hero = null;
         private MaterialPropertyBlock appearance;
+        private Button panelReturnButton;
         private bool loading;
         public bool Loading => loading;
         public string GameplayScene => gameplayScene;
@@ -72,23 +73,50 @@ namespace CubeDash
 
         public void OpenShop()
         {
-            ClosePanels();
-            if (shopPanel != null) shopPanel.SetActive(true);
-            Focus(shopClose);
+            OpenPanel(shopPanel, shopClose, nameof(OpenShop));
         }
 
         public void OpenOptions()
         {
-            ClosePanels();
-            if (optionsPanel != null) optionsPanel.SetActive(true);
-            Focus(optionsClose);
+            OpenPanel(optionsPanel, optionsClose, nameof(OpenOptions));
+        }
+
+        private void OpenPanel(GameObject panel, Button close, string action)
+        {
+            if (panel == null) return;
+            // Pointer clicks, submit, and direct calls all return to the button for this panel.
+            Button selected = EventSystem.current != null && EventSystem.current.currentSelectedGameObject != null
+                ? EventSystem.current.currentSelectedGameObject.GetComponent<Button>() : null;
+            panelReturnButton = OpensPanel(selected, action) ? selected : null;
+            if (panelReturnButton == null)
+                foreach (Button button in GetComponentsInChildren<Button>(true))
+                    if (OpensPanel(button, action)) { panelReturnButton = button; break; }
+            HidePanels();
+            panel.SetActive(true);
+            Focus(close);
+        }
+
+        private bool OpensPanel(Button button, string action)
+        {
+            if (button == null || !button.isActiveAndEnabled || !button.IsInteractable()) return false;
+            for (int i = 0; i < button.onClick.GetPersistentEventCount(); i++)
+                if (button.onClick.GetPersistentTarget(i) == this && button.onClick.GetPersistentMethodName(i) == action) return true;
+            return false;
         }
 
         public void ClosePanels()
         {
+            if ((shopPanel == null || !shopPanel.activeSelf) && (optionsPanel == null || !optionsPanel.activeSelf)) return;
+            HidePanels();
+            Focus(panelReturnButton != null && panelReturnButton.isActiveAndEnabled && panelReturnButton.IsInteractable()
+                ? panelReturnButton : startButton);
+            panelReturnButton = null;
+        }
+
+        private void HidePanels()
+        {
             if (shopPanel != null) shopPanel.SetActive(false);
             if (optionsPanel != null) optionsPanel.SetActive(false);
-            Focus(startButton);
         }
 
         private static void Focus(Button button)

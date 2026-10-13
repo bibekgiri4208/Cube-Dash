@@ -8,6 +8,8 @@ The reference-inspired scene contains editable 3D parking bays, weathered asphal
 - **Options:** independent saved master/music volume sliders with live percentage readouts, and a fullscreen toggle in separate Audio and Display sections.
 - **Quit:** closes the application, or stops Play mode in the Editor.
 - Mouse, keyboard/UI navigation and gamepad are supported. Escape/back closes a panel.
+- Closing Shop or Options returns focus to its main-menu ribbon, not Start. Back, Escape and gamepad Back behave the same; Back/Escape with no panel open leaves the current selection unchanged.
+- Master and Music Volume show a cream-and-red focus frame when selected with a gamepad, keyboard or pointer. Up/down changes the selected control; left/right adjusts its volume. The frame clears when focus moves away or Options closes, without resizing the slider.
 
 ## Player preview and idle
 
@@ -104,6 +106,10 @@ The same optimization runs automatically on the transient Main Menu scene during
 `ArcadeButton` retains its existing feedback curve, but snaps the imperceptible final animation tail to the exact target scale and stops writing the UI transform while idle. It continues checking interactability and responds normally to pointer/keyboard/gamepad events.
 
 ## Validation
+
+Slider feedback validation passed **16 slider/menu/music tests**, covering gamepad selection and volume adjustment, pointer selection, disabled controls, panel reopening, saved wiring and safe reapplication. Rendered focus previews were checked for both volume rows. The saved scene adds only two focus frames and their feedback components; track/fill/handle geometry, audio callbacks, navigation and background artwork are unchanged. Feedback is also retained when regenerating or reapplying the menu sections, music controls or panel theme.
+
+Panel focus-return validation passed **13 menu/music tests**, including pointer and submit opening, Back/Escape/gamepad Back restoration, direct panel switching, and leaving selection unchanged when no panel is open. The headless input fixture temporarily routes keyboard input to Game view and restores the original input settings afterward. Menu scene artwork, controls, navigation links and music remain unchanged.
 
 Blink/facing validation passed **42 focused tests**, including five new eye/facing checks and existing idle/backflip, desktop-input, plane/truck/supercar and menu-optimization regressions. Instruction-free Shop/Options validation passed **12 menu/music tests**, covering all eight hidden helper labels, preserved functional labels and empty status, panel regeneration, slider geometry/input/navigation, music playback and saved audio settings. Both runs used an isolated Unity project without disturbing the open Editor or concurrent menu scenery edits.
 
