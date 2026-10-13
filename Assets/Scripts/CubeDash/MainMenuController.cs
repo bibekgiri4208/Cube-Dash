@@ -24,8 +24,10 @@ namespace CubeDash
         [SerializeField] private Renderer hero = null;
         private MaterialPropertyBlock appearance;
         private Button panelReturnButton;
+        private GameObject currentPanel;
         private bool loading;
         public bool Loading => loading;
+        public GameObject CurrentPanel => currentPanel;
         public string GameplayScene => gameplayScene;
         public GameObject ShopPanel => shopPanel;
         public GameObject OptionsPanel => optionsPanel;
@@ -65,6 +67,7 @@ namespace CubeDash
         public void StartGame()
         {
             if (loading) return;
+            GetComponentInChildren<MainMenuEntrance>()?.Complete();
             loading = true;
             if (startButton != null) startButton.interactable = false;
             if (music != null) music.Stop();
@@ -83,7 +86,9 @@ namespace CubeDash
 
         private void OpenPanel(GameObject panel, Button close, string action)
         {
-            if (panel == null) return;
+            if (panel == null || loading) return;
+            GetComponentInChildren<MainMenuEntrance>()?.Complete();
+            if (currentPanel == panel) { Focus(close); return; }
             // Pointer clicks, submit, and direct calls all return to the button for this panel.
             Button selected = EventSystem.current != null && EventSystem.current.currentSelectedGameObject != null
                 ? EventSystem.current.currentSelectedGameObject.GetComponent<Button>() : null;
@@ -91,8 +96,10 @@ namespace CubeDash
             if (panelReturnButton == null)
                 foreach (Button button in GetComponentsInChildren<Button>(true))
                     if (OpensPanel(button, action)) { panelReturnButton = button; break; }
-            HidePanels();
-            panel.SetActive(true);
+            HidePanels(panel);
+            currentPanel = panel;
+            if (panel.TryGetComponent(out MenuPanelMotion motion)) motion.Open();
+            else panel.SetActive(true);
             Focus(close);
         }
 
@@ -106,17 +113,25 @@ namespace CubeDash
 
         public void ClosePanels()
         {
-            if ((shopPanel == null || !shopPanel.activeSelf) && (optionsPanel == null || !optionsPanel.activeSelf)) return;
-            HidePanels();
+            if (currentPanel == null) return;
+            GameObject closing = currentPanel; currentPanel = null;
+            ClosePanel(closing);
             Focus(panelReturnButton != null && panelReturnButton.isActiveAndEnabled && panelReturnButton.IsInteractable()
                 ? panelReturnButton : startButton);
             panelReturnButton = null;
         }
 
-        private void HidePanels()
+        private void HidePanels(GameObject except = null)
         {
-            if (shopPanel != null) shopPanel.SetActive(false);
-            if (optionsPanel != null) optionsPanel.SetActive(false);
+            if (shopPanel != except) ClosePanel(shopPanel);
+            if (optionsPanel != except) ClosePanel(optionsPanel);
+        }
+
+        private static void ClosePanel(GameObject panel)
+        {
+            if (panel == null || !panel.activeSelf) return;
+            if (panel.TryGetComponent(out MenuPanelMotion motion)) motion.Close();
+            else panel.SetActive(false);
         }
 
         private static void Focus(Button button)

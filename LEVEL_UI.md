@@ -6,7 +6,7 @@ Open `Assets/Scenes/Level.unity` and press Play, or select Start in the Main Men
 
 - Uses the same `MenuRibbonGraphic`, `MenuPanelGraphic`, Anton font, pink paper, red accent, cream labels and dark outlines as the Main Menu.
 - Points/best stay top-right, the pause icon stays top-left, and distance stays top-centre in a compact **180 × 72** ribbon (below the corner HUD on narrow layouts). The counter shows only metres, such as **125 m**, with no stage text; gameplay progression is unchanged.
-- Pause: Resume Run, Restart, Quit; **pause Quit returns to Main Menu**, without closing the application or ending Editor Play mode. Game over: one score, Try Again, Quit (retains its application-exit behavior). Button focus uses the same outline/scale feedback as menu ribbons.
+- Pause: Resume Run, Restart, Quit. Game over: one score, Try Again, Quit. **Both in-game Quit buttons return to Main Menu**, without closing the application or ending Editor Play mode; only the Main Menu's own Quit exits. Button focus uses the same outline/scale feedback as menu ribbons.
 - Power-ups use separate compact pink cards stacked at the left safe-area edge, with red duration meters. Cheat messages keep their matching ribbon. Old instruction lines and geometric motifs remain editable but hidden.
 - All UI is saved under `Canvas/ Safe Area`; runtime does not generate UI objects or replace gameplay/scenery assets.
 
@@ -45,3 +45,5 @@ A serialized-scene audit confirmed that camera, world, player/collider, track/po
 The power-up-card upgrade passed 10 initial UI/duration/countdown checks, including rendered landscape/portrait previews of three simultaneous effects. A second scene audit confined the card upgrade to Canvas objects; gameplay/world objects were unchanged. Tests cover separate configured-duration fractions, refresh/expiry, shield charge, vehicle swaps, post-vehicle protection, pause, reset, navigation/raycast exclusion, safe reapplication, and repeated runs without UI-object growth.
 
 Final power-up/gameplay/UI regressions passed **76/76**. The compact distance-only counter and pause-to-Main-Menu follow-up passed **14/14** UI checks, including stage-boundary readings, pause/restart distance reset, returning from both a paused run and paused countdown, duplicate Quit clicks, menu music/focus restoration, and starting Level again. Pause Quit uses the existing saved callback and a guarded single-scene load; no button rewiring or gameplay progression changes were needed.
+
+Game Over Quit now uses the same guarded Main Menu return. Its follow-up test verifies duplicate-click safety, continued Play mode, gameplay unloading, restored menu music/focus and a visible replay of the startup stagger; **34/34** combined menu/Level/UI checks passed.

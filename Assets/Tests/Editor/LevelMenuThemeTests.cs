@@ -255,6 +255,30 @@ namespace CubeDash.Tests
         }
 
         [UnityTest]
+        public IEnumerator GameOverQuitReturnsToMainMenuWithoutExitingAndReplaysItsEntrance()
+        {
+            yield return new EnterPlayMode();
+            yield return EditorSceneManager.LoadSceneAsyncInPlayMode(LevelMenuTheme.ScenePath, new LoadSceneParameters(LoadSceneMode.Single));
+            yield return null;
+            var game = Object.FindAnyObjectByType<CubeDashGame>(); var hud = Object.FindAnyObjectByType<RunnerHud>();
+            game.StartRun();
+            typeof(CubeDashGame).GetMethod("Crash", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(game, null);
+            Assert.That(game.State, Is.EqualTo(CubeDashGame.RunState.GameOver));
+            var quit = hud.GameOverOverlay.transform.Find("Abstract Composition/Quit").GetComponent<Button>();
+            Assert.That(quit.gameObject.activeInHierarchy, Is.True);
+            quit.onClick.Invoke(); quit.onClick.Invoke();
+            float deadline = Time.realtimeSinceStartup + 20;
+            while (SceneManager.GetActiveScene().name != "Main Menu" && Time.realtimeSinceStartup < deadline) yield return null;
+            yield return null;
+            Assert.That(Application.isPlaying, Is.True); Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("Main Menu"));
+            Assert.That(Object.FindAnyObjectByType<CubeDashGame>(), Is.Null);
+            var menu = Object.FindAnyObjectByType<MainMenuController>();
+            Assert.That(menu.Music.isPlaying, Is.True);
+            Assert.That(menu.GetComponentInChildren<MainMenuEntrance>().Playing, Is.True, "Returning from gameplay must visibly replay the stagger.");
+            Assert.That(EventSystem.current.currentSelectedGameObject.name, Is.EqualTo("START"));
+        }
+
+        [UnityTest]
         public IEnumerator TopCounterShowsOnlyDistanceAcrossStageBoundariesPauseAndRestart()
         {
             yield return new EnterPlayMode();

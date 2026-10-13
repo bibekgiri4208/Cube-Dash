@@ -124,6 +124,7 @@ namespace CubeDash.Tests
                 EventSystem.current.SetSelectedGameObject(toggle.gameObject);
                 Assert.That(feedback.FocusFrame.enabled, Is.True);
                 InputSystem.QueueStateEvent(pad, new GamepadState().WithButton(GamepadButton.East)); yield return null; yield return null;
+                yield return MainMenuSectionTests.WaitForPanelClosed(menu.OptionsPanel);
                 Assert.That(menu.OptionsPanel.activeSelf, Is.False); Assert.That(feedback.FocusFrame.enabled, Is.False);
                 menu.OpenOptions(); yield return null;
                 Assert.That(feedback.FocusFrame.enabled, Is.False);

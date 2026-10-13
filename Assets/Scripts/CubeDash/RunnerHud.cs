@@ -164,21 +164,12 @@ namespace CubeDash
             else game.RequestRun();
         }
 
-        /// <summary>Pause Quit returns to the landing scene; game-over Quit retains its exit behavior.</summary>
+        /// <summary>In-game Quit returns to the landing scene without closing the application or Editor Play mode.</summary>
         public void QuitGame()
         {
             if (returningToMenu) return;
-            if (game != null && game.State == CubeDashGame.RunState.Paused)
-            {
-                returningToMenu = true;
-                SceneManager.LoadSceneAsync("Main Menu", LoadSceneMode.Single);
-                return;
-            }
-#if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-#else
-            Application.Quit();
-#endif
+            returningToMenu = true;
+            SceneManager.LoadSceneAsync("Main Menu", LoadSceneMode.Single);
         }
 
         public void MoveLeft() => game.ChangeLane(-1);

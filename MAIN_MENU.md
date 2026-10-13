@@ -12,6 +12,16 @@ The reference-inspired scene contains editable 3D parking bays, weathered asphal
 - Master and Music Volume show a cream-and-red focus frame when selected with a gamepad, keyboard or pointer. Up/down changes the selected control; left/right adjusts its volume. The frame clears when focus moves away or Options closes, without resizing the slider.
 - The Fullscreen checkbox uses the same focus frame, whether checked or unchecked. Gamepad confirm/keyboard submit toggles the tick; moving to Back or closing Options clears its focus frame. Its display-mode callback and checkbox/tick graphics are unchanged.
 
+## UI motion
+
+- Startup: Start, Shop, Options and Quit slide/fade in from **130 pixels** to the left in a **0.18-second stagger**, each easing into its saved position over **0.5 seconds**, after a **0.12-second lead-in**. Two hidden warmup frames and a bounded animation step prevent cold scene/shader loading from skipping the entrance. The full sequence lasts about **1.16 seconds** at normal frame rates and replays when returning from gameplay. Opening a submenu or starting gameplay early completes it immediately rather than delaying input.
+- Shop/Options: the backdrop fades while the card and its shadow gently lift/scale into place over **0.28 seconds**. Closing fades/lowers the panel over **0.18 seconds**, then deactivates it.
+- Closing panels immediately lose pointer/gamepad interaction, restore focus to their opener, and clear slider/toggle focus. Repeated Back/Escape does not reset selection. Reopening a closing panel reverses from its current pose; rapid panel switching does not leave hidden controls interactive.
+- Main-menu ribbons and Back buttons have a slightly stronger hover/focus lift, a directional press squash, and a short damped release/submit bounce. Feedback never invokes button actions itself; pointer and keyboard/gamepad submit still execute callbacks once.
+- Motion uses unscaled time, restores authored poses on disable and stops writing settled button transforms. Entrance position and button feedback scale are independent. Gameplay buttons retain their existing feedback curve.
+
+Edit `MainMenuEntrance` on **Reference Menu Canvas > Left menu ribbons** and `MenuPanelMotion` on the two panel roots to adjust timing. **Tools > Cube Dash > Animate Main Menu UI** (`MainMenuUiAnimations.ApplyFromCommandLine`) adds saved components without rebuilding scenery, changing control layouts/callbacks or generating runtime UI. Reapplication preserves custom timing; full menu regeneration includes the animations.
+
 ## Player preview and idle
 
 The menu mascot is `Assets/Prefab/CubeDash/PlayerCubeMenuPreview.prefab`, a **variant of the actual PlayerCube prefab**, not an independently modeled cube. It inherits the player's beveled mesh, material and two black rectangular eyes. The variant removes the collider, gameplay/power-up components and vehicle/effect models; its only script is mesh presentation. Keyboard/gamepad input continues to navigate the UI but cannot steer or transform this preview.
@@ -104,9 +114,13 @@ The menu uses bright, airy arcade daylight: neutral tonemapping, lifted exposure
 
 The same optimization runs automatically on the transient Main Menu scene during player builds, without saving over the source scene. During builds only, if the known menu renderer and shader sources/dependencies pass the scene-color audit, the menu camera's inherited **Opaque Texture** setting is overridden to **Off** to skip an unused color copy. Explicit author overrides, new scene-color shaders, extra cameras or custom renderer features prevent this opt-out. The Editor command leaves the source camera setting untouched, so future shader edits cannot inherit a permanently disabled buffer. Depth textures, ambient occlusion, bloom, depth of field, anti-aliasing, resolution, LOD thresholds, foliage wind and camera sway are not reduced. GPU Resident Drawer/foliage instancing remain unchanged pending target-device profiling.
 
-`ArcadeButton` retains its existing feedback curve, but snaps the imperceptible final animation tail to the exact target scale and stops writing the UI transform while idle. It continues checking interactability and responds normally to pointer/keyboard/gamepad events.
+`ArcadeButton` snaps the imperceptible final animation tail to the exact target scale and stops writing the UI transform while idle. It continues checking interactability and responds normally to pointer/keyboard/gamepad events. The Main Menu opts into the richer feedback above; Level/Country Side retain their existing curve.
 
 ## Validation
+
+Visible-stagger/Game Over return follow-up passed **34/34** UI/navigation/music regressions and a **GPU startup-render check**. The cold-frame fixture injects multi-second deltas and verifies that they cannot skip the stagger; Game Over Quit stays in Play mode, unloads gameplay, restarts menu music/focus and replays the entrance. Early/middle/settled previews were inspected to confirm visibly sequential buttons.
+
+UI animation validation passed **38/38** animation/navigation/music/Level regressions and **4/4** GPU behavior/render checks in the isolated project. Coverage includes stagger ordering, unscaled timing, settled-transform stability, reversible closing, rapid switching, immediate closing-input exclusion, opener focus, single-dispatch submit, safe reapplication, preserved slider/toggle/audio wiring and unchanged gameplay feedback. Startup and panel previews were inspected. A serialized-scene audit confined all changes to the menu Canvas (18 updated documents and 9 added components; no deleted objects or non-UI changes). Camera, scenery, lighting, hero, font/graphics quality and gameplay scenes remain unchanged.
 
 Fullscreen feedback validation passed **19 fullscreen/slider/menu/music tests** and **3 rendered fullscreen checks**. Gamepad focus stays visible with the tick both on and off, submit toggles it once, and moving away, disabling the control or closing/reopening Options clears focus correctly. Checked/unchecked previews were inspected; the saved scene adds only the focus frame/component, preserving checkbox/tick geometry, display callback, navigation and artwork. The submit fixture verifies UI behavior without changing the test machine's display mode.
 

@@ -7838,6 +7838,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50d5775893b24c17a4586c5a28504fa8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
+  livelyFeedback: 1
 --- !u!222 &121989791
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -14978,6 +14979,7 @@ GameObject:
   - component: {fileID: 237293024}
   - component: {fileID: 237293023}
   - component: {fileID: 237293025}
+  - component: {fileID: 237293028}
   m_Layer: 0
   m_Name: OPTIONS
   m_TagString: Untagged
@@ -15074,6 +15076,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50d5775893b24c17a4586c5a28504fa8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
+  livelyFeedback: 1
 --- !u!222 &237293026
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -15103,6 +15106,18 @@ RectTransform:
   m_AnchoredPosition: {x: 66, y: -511}
   m_SizeDelta: {x: 395, y: 106}
   m_Pivot: {x: 0, y: 1}
+--- !u!225 &237293028
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 237293022}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1001 &237860735
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -15476,6 +15491,7 @@ GameObject:
   - component: {fileID: 246846932}
   - component: {fileID: 246846934}
   - component: {fileID: 246846931}
+  - component: {fileID: 246846935}
   m_Layer: 0
   m_Name: START
   m_TagString: Untagged
@@ -15516,6 +15532,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50d5775893b24c17a4586c5a28504fa8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
+  livelyFeedback: 1
 --- !u!114 &246846932
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15601,6 +15618,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!225 &246846935
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 246846929}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &250081332
 GameObject:
   m_ObjectHideFlags: 0
@@ -20980,6 +21009,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50d5775893b24c17a4586c5a28504fa8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
+  livelyFeedback: 0
 --- !u!114 &333333100
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -44513,6 +44543,7 @@ GameObject:
   - component: {fileID: 727991289}
   - component: {fileID: 727991288}
   - component: {fileID: 727991287}
+  - component: {fileID: 727991291}
   m_Layer: 0
   m_Name: QUIT
   m_TagString: Untagged
@@ -44553,6 +44584,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50d5775893b24c17a4586c5a28504fa8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
+  livelyFeedback: 1
 --- !u!114 &727991288
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -44638,6 +44670,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 727991285}
   m_CullTransparentMesh: 1
+--- !u!225 &727991291
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 727991285}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &730354327
 GameObject:
   m_ObjectHideFlags: 0
@@ -47418,6 +47462,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 774713048}
+  - component: {fileID: 774713049}
   m_Layer: 0
   m_Name: Left menu ribbons
   m_TagString: Untagged
@@ -47448,6 +47493,32 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &774713049
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 774713047}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52ac53a968234c69a670e8ffb59fa774, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CubeDash::CubeDash.MainMenuEntrance
+  ribbons:
+  - {fileID: 246846930}
+  - {fileID: 2080677647}
+  - {fileID: 237293027}
+  - {fileID: 727991286}
+  fades:
+  - {fileID: 246846935}
+  - {fileID: 2080677648}
+  - {fileID: 237293028}
+  - {fileID: 727991291}
+  duration: 0.5
+  stagger: 0.18
+  startupDelay: 0.12
+  slideDistance: 130
 --- !u!1 &779236732
 GameObject:
   m_ObjectHideFlags: 0
@@ -53069,6 +53140,8 @@ GameObject:
   - component: {fileID: 848826123}
   - component: {fileID: 848826125}
   - component: {fileID: 848826124}
+  - component: {fileID: 848826127}
+  - component: {fileID: 848826126}
   m_Layer: 0
   m_Name: Shop - Skin Collections
   m_TagString: Untagged
@@ -53135,6 +53208,34 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 848826122}
   m_CullTransparentMesh: 1
+--- !u!114 &848826126
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 848826122}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c47250258f6436d9299ff811d3b18c1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelMotion
+  card: {fileID: 1187549938}
+  shadow: {fileID: 1259129184}
+  openDuration: 0.28
+  closeDuration: 0.18
+--- !u!225 &848826127
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 848826122}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &850422672
 GameObject:
   m_ObjectHideFlags: 0
@@ -56866,6 +56967,8 @@ GameObject:
   - component: {fileID: 913249312}
   - component: {fileID: 913249314}
   - component: {fileID: 913249313}
+  - component: {fileID: 913249316}
+  - component: {fileID: 913249315}
   m_Layer: 0
   m_Name: Options - Audio and Display
   m_TagString: Untagged
@@ -56932,6 +57035,34 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 913249311}
   m_CullTransparentMesh: 1
+--- !u!114 &913249315
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 913249311}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c47250258f6436d9299ff811d3b18c1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelMotion
+  card: {fileID: 47786827}
+  shadow: {fileID: 935199929}
+  openDuration: 0.28
+  closeDuration: 0.18
+--- !u!225 &913249316
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 913249311}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &915024785
 GameObject:
   m_ObjectHideFlags: 0
@@ -62394,6 +62525,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50d5775893b24c17a4586c5a28504fa8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
+  livelyFeedback: 0
 --- !u!114 &977369051
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -68824,6 +68956,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50d5775893b24c17a4586c5a28504fa8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
+  livelyFeedback: 0
 --- !u!114 &1075791804
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -69625,6 +69758,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50d5775893b24c17a4586c5a28504fa8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
+  livelyFeedback: 0
 --- !u!114 &1094038310
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -98547,6 +98681,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50d5775893b24c17a4586c5a28504fa8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
+  livelyFeedback: 0
 --- !u!114 &1592626323
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -103292,6 +103427,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50d5775893b24c17a4586c5a28504fa8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
+  livelyFeedback: 1
 --- !u!222 &1666041174
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -127419,6 +127555,7 @@ GameObject:
   - component: {fileID: 2080677644}
   - component: {fileID: 2080677643}
   - component: {fileID: 2080677645}
+  - component: {fileID: 2080677648}
   m_Layer: 0
   m_Name: SHOP
   m_TagString: Untagged
@@ -127515,6 +127652,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50d5775893b24c17a4586c5a28504fa8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
+  livelyFeedback: 1
 --- !u!222 &2080677646
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -127544,6 +127682,18 @@ RectTransform:
   m_AnchoredPosition: {x: 66, y: -404}
   m_SizeDelta: {x: 395, y: 102}
   m_Pivot: {x: 0, y: 1}
+--- !u!225 &2080677648
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2080677642}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &2080908041
 GameObject:
   m_ObjectHideFlags: 0

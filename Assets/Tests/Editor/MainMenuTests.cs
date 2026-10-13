@@ -176,6 +176,7 @@ namespace CubeDash.Tests
             Assert.That(menu.Hero.sharedMaterial.GetColor("_BaseColor").r, Is.GreaterThan(0.8f), "Preview must not modify the shared red material.");
             menu.PreviewRed();
             ribbons.Single(ribbon => ribbon.name == "OPTIONS").GetComponent<Button>().onClick.Invoke();
+            yield return MainMenuSectionTests.WaitForPanelClosed(menu.ShopPanel);
             Assert.That(menu.ShopPanel.activeSelf, Is.False);
             Assert.That(menu.OptionsPanel.activeSelf, Is.True);
             bool hadVolume = PlayerPrefs.HasKey(MainMenuController.VolumePreference);
@@ -193,6 +194,7 @@ namespace CubeDash.Tests
                 else PlayerPrefs.DeleteKey(MainMenuController.VolumePreference);
             }
             menu.ClosePanels();
+            yield return MainMenuSectionTests.WaitForPanelClosed(menu.OptionsPanel);
             Assert.That(menu.OptionsPanel.activeSelf, Is.False);
             ribbons.Single(ribbon => ribbon.name == "START").GetComponent<Button>().onClick.Invoke();
             Assert.That(menu.Loading, Is.True);

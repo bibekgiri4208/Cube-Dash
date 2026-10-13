@@ -162,6 +162,7 @@ namespace CubeDash.Tests
                 AssertPointerRoutesTo(menu.ShopPanel.GetComponentInChildren<Button>(), menu);
                 CaptureIfRequested(menu, "shop");
                 menu.ShopPanel.GetComponentInChildren<Button>().onClick.Invoke();
+                yield return WaitForPanelClosed(menu.ShopPanel);
                 Assert.That(menu.ShopPanel.activeSelf, Is.False); Assert.That(EventSystem.current.currentSelectedGameObject.name, Is.EqualTo("SHOP"));
                 menu.OpenOptions(); yield return null;
                 AssertHeadingRenders(menu.OptionsPanel);
@@ -186,7 +187,7 @@ namespace CubeDash.Tests
                 Assert.That(musicSlider.navigation.selectOnDown, Is.SameAs(toggle));
                 Assert.That(toggle.navigation.selectOnDown, Is.SameAs(back)); Assert.That(back.navigation.selectOnDown, Is.SameAs(slider));
                 CaptureIfRequested(menu, "options");
-                back.onClick.Invoke(); Assert.That(menu.OptionsPanel.activeSelf, Is.False);
+                back.onClick.Invoke(); yield return WaitForPanelClosed(menu.OptionsPanel); Assert.That(menu.OptionsPanel.activeSelf, Is.False);
                 Assert.That(EventSystem.current.currentSelectedGameObject.name, Is.EqualTo("OPTIONS"));
             }
             finally
@@ -257,21 +258,25 @@ namespace CubeDash.Tests
                 EventSystem.current.SetSelectedGameObject(menu.OptionsPanel.GetComponentInChildren<Slider>().gameObject);
                 keyboard.MakeCurrent();
                 InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Escape)); yield return null; yield return null;
+                yield return WaitForPanelClosed(menu.OptionsPanel);
                 Assert.That(menu.OptionsPanel.activeSelf, Is.False);
                 Assert.That(EventSystem.current.currentSelectedGameObject, Is.SameAs(options.gameObject));
                 InputSystem.QueueStateEvent(keyboard, new KeyboardState()); yield return null;
 
                 menu.OpenShop();
                 menu.OpenOptions();
+                yield return WaitForPanelClosed(menu.ShopPanel);
                 Assert.That(menu.ShopPanel.activeSelf, Is.False);
                 Assert.That(menu.OptionsPanel.activeSelf, Is.True);
                 InputSystem.QueueStateEvent(pad, new GamepadState().WithButton(GamepadButton.East)); yield return null;
+                yield return WaitForPanelClosed(menu.OptionsPanel);
                 Assert.That(menu.OptionsPanel.activeSelf, Is.False);
                 Assert.That(EventSystem.current.currentSelectedGameObject, Is.SameAs(options.gameObject));
                 InputSystem.QueueStateEvent(pad, new GamepadState()); yield return null;
 
                 menu.OpenShop();
                 InputSystem.QueueStateEvent(pad, new GamepadState().WithButton(GamepadButton.East)); yield return null;
+                yield return WaitForPanelClosed(menu.ShopPanel);
                 Assert.That(menu.ShopPanel.activeSelf, Is.False);
                 Assert.That(EventSystem.current.currentSelectedGameObject, Is.SameAs(shop.gameObject));
             }
@@ -362,6 +367,13 @@ namespace CubeDash.Tests
             Assert.That(hits.Count, Is.GreaterThan(0));
             Assert.That(ExecuteEvents.GetEventHandler<IPointerDownHandler>(hits[0].gameObject), Is.SameAs(control.gameObject),
                 "The visible control must receive pointer input rather than a decoration or underlying menu ribbon.");
+        }
+
+        public static IEnumerator WaitForPanelClosed(GameObject panel)
+        {
+            float deadline = Time.realtimeSinceStartup + 10;
+            while (panel.activeSelf && Time.realtimeSinceStartup < deadline) yield return null;
+            Assert.That(panel.activeSelf, Is.False, "Closing animation must finish and deactivate its panel.");
         }
 
         private static void CaptureIfRequested(MainMenuController menu, string name)
