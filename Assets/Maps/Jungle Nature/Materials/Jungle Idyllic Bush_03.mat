@@ -39,6 +39,6 @@ Material:
     m_Colors:
     - _BaseColor: {r: 0.10631998, g: 0.22799997, b: 0.15311998, a: 1}
     - _SceneryRise: {r: 0, g: 0, b: 80, a: 1.25}
-    - _TopColor: {r: 0.13295999, g: 0.264, b: 0.17507999, a: 1}
+    - _TopColor: {r: 0.15100797, g: 0.34319997, b: 0.19202721, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

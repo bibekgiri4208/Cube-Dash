@@ -70,6 +70,15 @@ namespace CubeDash.Tests
                         Assert.That(material.GetFloat("_LeafLightGain"), Is.EqualTo(material.name.Contains("Grass_") ? 0.72f : 0.76f).Within(0.0001f),
                             "Direct sun must not wash the rainforest foliage back into light green.");
                         Assert.That(saturation, Is.LessThan(oldSaturation * 0.83f), "Keep the family green, but less saturated.");
+                        if (material.name.Contains("Bush_"))
+                        {
+                            Color.RGBToHSV(material.GetColor("_TopColor"), out float topHue, out float topSaturation, out float topValue);
+                            Color.RGBToHSV(sourcePalette[2].GetColor("_BaseColor"), out float sourceTopHue, out float sourceTopSaturation, out float sourceTopValue);
+                            Assert.That(topHue, Is.EqualTo(Mathf.Repeat(sourceTopHue - 0.018f, 1)).Within(0.0001f));
+                            Assert.That(topSaturation, Is.EqualTo(sourceTopSaturation * 0.88f).Within(0.0001f));
+                            Assert.That(topValue, Is.EqualTo(sourceTopValue * 0.78f).Within(0.0001f));
+                            Assert.That(topValue, Is.GreaterThan(value * 1.4f), "Bushes need two distinct rainforest greens, not nearly identical tints.");
+                        }
                         Assert.That(material.GetFloat("_Smoothness"), Is.LessThan(0.15f));
                     }
                     foreach (string name in new[] { "River", "Landscape Ground" })
@@ -250,6 +259,19 @@ namespace CubeDash.Tests
                 Assert.That(front.g, Is.GreaterThan(0.08f), "Bush leaves must not render black.");
                 Assert.That(front.g, Is.GreaterThan(front.r));
                 Assert.That(back.g, Is.EqualTo(front.g).Within(0.025f), "Opposing leaf normals must not produce the pale-green/black checker pattern.");
+
+                // Exercise the saved two-tone palette without changing normals or lighting.
+                var bush = AssetDatabase.LoadAssetAtPath<Material>(JungleNatureBuilder.ArtPath + "/Materials/Jungle Idyllic Bush_01.mat");
+                material.CopyPropertiesFromMaterial(bush); material.SetFloat("_WindStrength", 0);
+                material.SetTexture("_BaseMap", Texture2D.whiteTexture);
+                mesh.colors = Enumerable.Repeat(new Color(0, 0, 1, 1), 4).ToArray();
+                reverse.colors = Enumerable.Repeat(new Color(0.7f, 0, 1, 1), 4).ToArray();
+                camera.Render();
+                RenderTexture.active = target; image.ReadPixels(new Rect(0, 0, 256, 128), 0, 0); image.Apply();
+                Color lower = image.GetPixel(80, 64), upper = image.GetPixel(176, 64);
+                Assert.That(upper.g, Is.GreaterThan(lower.g * 1.2f), "Upper and lower bush foliage must render visibly different greens.");
+                Assert.That(lower.g, Is.GreaterThan(lower.r));
+                Assert.That(upper.g, Is.GreaterThan(upper.r));
             }
             finally
             {

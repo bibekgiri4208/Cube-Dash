@@ -47,6 +47,8 @@ Foliage is deliberately rainforest-dark rather than neon: tree, bush and grass m
 
 Bushes have their own thin-leaf lighting profile: opposing card normals receive equivalent two-sided light, texture contrast is restrained, and self-shadow/contact-darkening cannot produce the pale-green/black checker pattern. Trees, grass, bark and stone retain their existing shading profiles. Validation includes a close-up bush render and a GPU check comparing opposite leaf normals, in addition to the gameplay/river/curved-road views.
 
+Bushes also use two distinct greens: the existing deep rainforest base and a richer, slightly warmer upper-leaf green (78% of the original tip color value, still below the original brightness). Their baked per-plant height spans the full tint blend, with the leaf texture retaining darker green detail among the upper leaves, instead of leaving the two colors almost indistinguishable. **Tools > Cube Dash > Apply Two-Tone Jungle Bushes** updates only the three bush materials; rebuilding or toning down foliage retains this palette. The rendered leaf probe checks both opposing-normal consistency and visible upper/lower color separation, without adding another material slot or draw call.
+
 ## Original standalone-map validation
 
 Passed **98/98** map/environment/ambience/road/progression/HUD/menu/music regressions and **2/2** GPU integration checks in an isolated Unity 6000.4.1f1 project. Rendered previews of all five maps and landscape/portrait map selection were inspected.

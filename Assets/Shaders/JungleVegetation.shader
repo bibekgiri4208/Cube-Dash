@@ -121,7 +121,12 @@ Shader "CubeDash/Jungle Vegetation"
                 half4 sampled = LeafSample(input);
                 // Keep the pack's leaf detail, not its yellow-green default palette.
                 half grain = dot(sampled.rgb, half3(0.299, 0.587, 0.114));
-                half3 tint = lerp(_BaseColor.rgb, _TopColor.rgb, input.tint.x);
+                // Bushes use the full two-color range across their baked plant height,
+                // not opposing card normals (which caused the earlier patchy shading).
+                half tintWeight = input.tint.x;
+                if (_BushLighting > 0.5)
+                    tintWeight = smoothstep(0.12h, 0.60h, input.tint.x) * smoothstep(0.20h, 0.65h, grain);
+                half3 tint = lerp(_BaseColor.rgb, _TopColor.rgb, tintWeight);
                 InputData data = (InputData)0;
                 data.positionWS = input.world;
                 data.normalWS = normalize(input.normal) * IS_FRONT_VFACE(face, 1, -1);

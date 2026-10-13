@@ -54,12 +54,37 @@ namespace CubeDash.Editor
             {
                 bool grass = material.name.Contains("Grass_"), bush = material.name.Contains("Bush_");
                 material.SetColor("_BaseColor", FoliageTone(original[1].GetColor("_BaseColor"), grass, bush));
-                material.SetColor("_TopColor", FoliageTone(original[2].GetColor("_BaseColor"), grass, bush));
+                material.SetColor("_TopColor", bush ? BushTopTone(original[2].GetColor("_BaseColor"))
+                    : FoliageTone(original[2].GetColor("_BaseColor"), grass, false));
                 material.SetFloat("_LeafLightGain", grass ? 0.72f : 0.76f);
                 EditorUtility.SetDirty(material);
             }
             AssetDatabase.SaveAssets();
             Debug.Log("Applied deep rainforest greens to seven Jungle foliage materials and reduced leaf light gain. Bushes/grass are visibly darker; tree highlights no longer wash pale. Scene, geometry, rocks and other maps unchanged.");
+        }
+
+        [MenuItem("Tools/Cube Dash/Apply Two-Tone Jungle Bushes")]
+        public static void ApplyDualToneBushesFromCommandLine()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) throw new InvalidOperationException("Stop Play mode first.");
+            var source = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/CubeDash/Environments/Jungle.prefab");
+            Material[] original = source.transform.Find("Landscape Details").GetComponent<Renderer>().sharedMaterials;
+            for (int i = 1; i <= 3; i++)
+            {
+                var material = AssetDatabase.LoadAssetAtPath<Material>(ArtPath + "/Materials/Jungle Idyllic Bush_0" + i + ".mat");
+                if (material == null) throw new InvalidOperationException("Missing saved Jungle bush material: " + i);
+                material.SetColor("_BaseColor", FoliageTone(original[1].GetColor("_BaseColor"), false, true));
+                material.SetColor("_TopColor", BushTopTone(original[2].GetColor("_BaseColor")));
+                EditorUtility.SetDirty(material);
+            }
+            AssetDatabase.SaveAssets();
+            Debug.Log("Applied two-tone Jungle bushes: deep green lower foliage and richer, slightly warmer green upper leaves. Trees, grass, lighting and geometry unchanged.");
+        }
+
+        private static Color BushTopTone(Color color)
+        {
+            Color.RGBToHSV(color, out float hue, out float saturation, out float value);
+            return Color.HSVToRGB(Mathf.Repeat(hue - 0.018f, 1), saturation * 0.88f, value * 0.78f);
         }
 
         private static Color FoliageTone(Color color, bool grass, bool bush)
@@ -279,7 +304,7 @@ namespace CubeDash.Editor
             {
                 bool bush = source.name.StartsWith("Bush", StringComparison.Ordinal);
                 baseColor = FoliageTone(baseColor, grass, bush);
-                topColor = FoliageTone(topColor, grass, bush);
+                topColor = bush ? BushTopTone(topColor) : FoliageTone(topColor, grass, false);
             }
             baseColor.a = topColor.a = 1;
             result.SetColor("_BaseColor", baseColor); result.SetColor("_TopColor", topColor);
