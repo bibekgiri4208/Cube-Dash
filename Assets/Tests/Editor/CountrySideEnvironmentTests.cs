@@ -22,7 +22,7 @@ namespace CubeDash.Tests
                 Assert.That(environment.transform.Find("Landscape - green valley and layered hills"), Is.Not.Null);
                 Assert.That(roots.SelectMany(root => root.GetComponentsInChildren<CubeDashGame>(true)).Count(), Is.EqualTo(1));
                 Assert.That(roots.SelectMany(root => root.GetComponentsInChildren<Camera>(true)).Count(), Is.EqualTo(1));
-                Assert.That(roots.SelectMany(root => root.GetComponentsInChildren<Light>(true)).Count(), Is.EqualTo(1));
+                Assert.That(roots.SelectMany(root => root.GetComponentsInChildren<Light>(true)).Count(), Is.EqualTo(2));
                 Camera camera = roots.Single(root => root.name == "Main Camera").GetComponent<Camera>();
                 Assert.That(camera.CompareTag("MainCamera"), Is.True);
                 Assert.That(camera.transform.position.z, Is.LessThan(0));

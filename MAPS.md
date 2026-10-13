@@ -9,7 +9,7 @@
 | Mountain | `Assets/Scenes/Mountain.unity` | Mountains, snow and forests |
 | Desert | `Assets/Scenes/Desert.unity` | Dunes, mesas and cacti |
 | Beach | `Assets/Scenes/Beach.unity` | Coast, palms and islands |
-| Country Side | `Assets/Scenes/Country Side.unity` | Existing Japanese countryside; unchanged |
+| Country Side | `Assets/Scenes/Country Side.unity` | Linked Japanese countryside, now with the same highway/UI/sky system |
 
 All scenes are enabled in Build Settings, with Main Menu still first. `Level.unity` is retained as the original mixed-biome runner, not replaced or renamed.
 
@@ -17,7 +17,7 @@ All scenes are enabled in Build Settings, with Main Menu still first. `Level.uni
 
 The five new maps are copies of the saved Level rig, not new gameplay implementations. They retain the same player/collision geometry, camera, three-lane road, shoulders, guardrails, markings, road curves, pooled encounters, coins, power-ups, vehicle presentations, controls and sounds. Difficulty still increases with travelled distance through the same five stages; choosing Mountain or Beach does not start at a later difficulty or reset progression every scenery loop.
 
-All five preserve the Main Menu-themed Level HUD, compact distance ribbon, independent left-side power-up duration cards, countdown, pause, Game Over, retry and return-to-Main-Menu Quit behavior. Country Side keeps its existing UI/entry flow.
+All six maps now use the Main Menu-themed Level HUD, compact distance ribbon, independent left-side power-up duration cards, countdown, pause, Game Over, retry and return-to-Main-Menu Quit behavior. Country Side's Japanese nature/architecture remain its distinct environment; see [COUNTRY_SIDE.md](COUNTRY_SIDE.md).
 
 ## What is separated
 
@@ -39,4 +39,4 @@ Passed **98/98** map/environment/ambience/road/progression/HUD/menu/music regres
 
 Saved-scene tests compare gameplay settings/references, player and vehicle hierarchy, camera, complete HUD hierarchy/callbacks, main road/Plane overrides, shoulders/guardrails/markings, coin/hazard colliders and power-up layouts against Level. Each new scene has one retained biome and a matching enabled build GUID. A seeded **3,780-metre** simulation of every map matches the original Level's hazard, coin, power-up and road-curve states, keeps the selected biome through recycling, and verifies pause/reset/countdown and menu return. Existing mixed-biome transitions and ambience tests still pass.
 
-Reapplying the creation tool preserves scene/GUID/sky files byte-for-byte. The final Main Menu audit changed only 15 existing UI documents, adding/removing none and preserving camera/scenery/artwork. Original Level/Country Side and shared prefab/material assets were hash-verified unchanged. Scene/metas, map skies, menu, Build Settings and code were hash-verified against the tested assets before application; unrelated project settings were not transferred.
+Reapplying the creation tool preserves scene/GUID/sky files byte-for-byte. During the initial five-map separation, the Main Menu audit changed only 15 existing UI documents, adding/removing none and preserving camera/scenery/artwork; original Level, the then-current Country Side and shared prefab/material assets were hash-verified unchanged. Scene/metas, map skies, menu, Build Settings and code were hash-verified against the tested assets before application; unrelated project settings were not transferred. Country Side's subsequent consistency upgrade and validation are documented in [COUNTRY_SIDE.md](COUNTRY_SIDE.md).

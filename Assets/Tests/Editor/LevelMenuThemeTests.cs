@@ -65,7 +65,7 @@ namespace CubeDash.Tests
         }
 
         [Test]
-        public void ReapplyingThemePreservesManualUiEditsAndOtherScenesKeepTheirOriginalReadyFlow()
+        public void ReapplyingThemePreservesManualUiEditsAndCountrySideUsesTheSameCountdownTheme()
         {
             var level = EditorSceneManager.OpenPreviewScene(LevelMenuTheme.ScenePath);
             var country = EditorSceneManager.OpenPreviewScene(CountrySideSceneBuilder.ScenePath);
@@ -78,8 +78,8 @@ namespace CubeDash.Tests
                 CubeDashHudLayout.Apply(hud); CubeDashDesktopControls.ApplyToScene(hud);
                 Assert.That(hud.GetComponentsInChildren<Transform>(true).Length, Is.EqualTo(count));
                 Assert.That(ribbon.Primary, Is.True); Assert.That(number.fontSize, Is.EqualTo(130));
-                Assert.That(Find<RunnerHud>(country).RibbonTheme, Is.False);
-                Assert.That(Find<CubeDashGame>(country).UsesStartCountdown, Is.False);
+                Assert.That(Find<RunnerHud>(country).RibbonTheme, Is.True);
+                Assert.That(Find<CubeDashGame>(country).UsesStartCountdown, Is.True);
                 Assert.Throws<System.InvalidOperationException>(() => LevelMenuTheme.ApplyToScene(country));
             }
             finally { EditorSceneManager.ClosePreviewScene(country); EditorSceneManager.ClosePreviewScene(level); }

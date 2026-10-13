@@ -21,6 +21,7 @@ Shader "CubeDash/Countryside Ground"
             #pragma multi_compile_instancing
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+            #include "RoadCurve.hlsl"
             CBUFFER_START(UnityPerMaterial)
                 half4 _BaseColor;
                 half _DetailStrength;
@@ -30,17 +31,18 @@ Shader "CubeDash/Countryside Ground"
             Varyings Vert(Attributes input)
             {
                 Varyings output; UNITY_SETUP_INSTANCE_ID(input); UNITY_TRANSFER_INSTANCE_ID(input, output); UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
-                VertexPositionInputs p = GetVertexPositionInputs(input.positionOS.xyz);
-                output.positionCS = p.positionCS; output.positionWS = p.positionWS;
+                output.positionWS = TransformObjectToWorld(input.positionOS.xyz);
                 output.normalWS = TransformObjectToWorldNormal(input.normalOS);
-                output.color = input.color * _BaseColor; output.fog = ComputeFogFactor(p.positionCS.z); return output;
+                CubeDashBendVertex(output.positionWS, output.normalWS);
+                output.positionCS = TransformWorldToHClip(output.positionWS);
+                output.color = input.color * _BaseColor; output.fog = ComputeFogFactor(output.positionCS.z); return output;
             }
             half4 Frag(Varyings input) : SV_Target
             {
                 UNITY_SETUP_INSTANCE_ID(input); UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 half3 normal = normalize(input.normalWS);
                 Light sun = GetMainLight(TransformWorldToShadowCoord(input.positionWS));
-                half noise = frac(sin(dot(floor(input.positionWS.xz * 5), float2(12.9898,78.233))) * 43758.5453);
+                half noise = frac(sin(dot(floor(CubeDashUnbend(input.positionWS).xz * 5), float2(12.9898,78.233))) * 43758.5453);
                 half3 albedo = input.color.rgb * (1 + (noise - 0.5h) * _DetailStrength);
                 half3 light = SampleSH(normal) * 0.7h + sun.color * saturate(dot(normal, sun.direction)) * sun.shadowAttenuation * 0.8h;
                 return half4(MixFog(albedo * light, input.fog), 1);

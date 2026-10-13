@@ -39,9 +39,11 @@ namespace CubeDash.Tests
                 Assert.That(game.SupercarPresentation, Is.Not.Null);
                 Assert.That(game.AudioPresentation, Is.Not.Null);
                 Assert.That(game.Track.Debris, Is.Not.Null);
-                Assert.That(game.Track.Environment, Is.Null);
-                Assert.That(game.AmbiencePresentation, Is.Null);
-                Assert.That(new SerializedObject(game.Track).FindProperty("roadCurveStrength").floatValue, Is.Zero);
+                Assert.That(game.Track.Environment, Is.Not.Null);
+                Assert.That(game.Track.Environment.HasFixedBiome, Is.True);
+                Assert.That(game.AmbiencePresentation, Is.Not.Null);
+                Assert.That(new SerializedObject(game.Track).FindProperty("roadCurveStrength").floatValue, Is.EqualTo(1));
+                Assert.That(game.UsesStartCountdown, Is.True);
                 Assert.That(objects.SelectMany(r => r.GetComponentsInChildren<EventSystem>(true)).Count(), Is.EqualTo(1));
                 var module = objects.SelectMany(r => r.GetComponentsInChildren<InputSystemUIInputModule>(true)).Single();
                 Assert.That(module.actionsAsset, Is.Not.Null);
@@ -147,7 +149,8 @@ namespace CubeDash.Tests
             Assert.That(game.enabled, Is.True);
             Assert.That(game.State, Is.EqualTo(CubeDashGame.RunState.Ready));
             var hud = Object.FindAnyObjectByType<RunnerHud>();
-            hud.GetComponentsInChildren<Button>(true).Single(button => button.name == "Primary Action").onClick.Invoke();
+            Assert.That(game.CountdownActive, Is.True);
+            typeof(CubeDashGame).GetMethod("TickStartCountdown", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(game, new object[] { 3.1f });
             Assert.That(game.State, Is.EqualTo(CubeDashGame.RunState.Running));
             game.ToggleInvincibility(); game.ChangeLane(1);
             float deadline = Time.time + 0.3f;
@@ -180,7 +183,7 @@ namespace CubeDash.Tests
             Assert.That(game.Player.position.x, Is.Zero);
             Assert.That(scenery.Tiles[0].localPosition.z, Is.Zero);
             Assert.That(scenery.Tiles[1].localPosition.z, Is.EqualTo(284));
-            Assert.That(Vector3.Dot(game.Player.Find("Cube Visual").rotation * Vector3.back, Vector3.forward), Is.GreaterThan(0.999f));
+            Assert.That(Object.FindAnyObjectByType<RunnerHud>().RibbonTheme, Is.True);
         }
 
         [UnityTest]
@@ -220,7 +223,8 @@ namespace CubeDash.Tests
             Assert.That(game.State, Is.EqualTo(CubeDashGame.RunState.GameOver));
             Object.FindAnyObjectByType<RunnerHud>().GameOverOverlay.GetComponentsInChildren<Button>(true)
                 .Single(button => button.name == "Retry").onClick.Invoke();
-            Assert.That(game.State, Is.EqualTo(CubeDashGame.RunState.Running));
+            Assert.That(game.State, Is.EqualTo(CubeDashGame.RunState.Ready));
+            Assert.That(game.CountdownActive, Is.True);
             Assert.That(game.Distance, Is.Zero); Assert.That(game.Score, Is.Zero);
             Assert.That(game.Flying || game.Trucking || game.MagnetActive, Is.False);
         }

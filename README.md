@@ -9,7 +9,7 @@ The separate playable **`Assets/Scenes/Country Side.unity`** uses the same runne
 
 ## Play
 
-- **Level and all five standalone maps:** press Play or choose a map from the Main Menu; an automatic **3, 2, 1** countdown replaces the old start screen. Retries/restarts use the same countdown. Country Side retains its existing Space/Enter, gamepad A/Cross or START RUN entry.
+- **Level and all six maps:** press Play or choose a map from the Main Menu; an automatic **3, 2, 1** countdown replaces the old start screen. Retries/restarts use the same countdown. Country Side now shares the highway, curves, themed UI and skybox system while retaining its linked Japanese countryside artwork.
 - Move with **A/D**, **Left/Right**, gamepad **left stick**, or **D-pad left/right**.
 - While running, **double-press Enter** (or numpad Enter) to toggle **Supercar ↔ Cube**.
   Two distinct presses within **0.35 seconds** count; holding the key does not toggle repeatedly.

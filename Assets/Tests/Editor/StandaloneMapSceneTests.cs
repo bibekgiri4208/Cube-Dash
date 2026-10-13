@@ -164,7 +164,7 @@ namespace CubeDash.Tests
             if (value is GameObject go) return Path(go.transform);
             return value.name;
         }
-        private static string Snapshot(Component component)
+        internal static string Snapshot(Component component)
         {
             var builder = new StringBuilder(); var property = new SerializedObject(component).GetIterator();
             bool enterChildren = true;
@@ -202,7 +202,7 @@ namespace CubeDash.Tests
                 default: return property.type;
             }
         }
-        private static string HierarchySnapshot(Transform root)
+        internal static string HierarchySnapshot(Transform root)
         {
             Assert.That(root, Is.Not.Null);
             return string.Join("\n", root.GetComponentsInChildren<Transform>(true).Select(transform => Path(transform) + ":" + transform.gameObject.activeSelf + "\n" + string.Join("\n", transform.GetComponents<Component>().Select(component => component.GetType().Name + ":" + Snapshot(component)))));

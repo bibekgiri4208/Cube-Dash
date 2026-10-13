@@ -26,7 +26,7 @@ Edit `MainMenuEntrance` on **Reference Menu Canvas > Left menu ribbons** and `Me
 
 Start opens **Start - Map Selection**, with six illustrated cards: **City, Jungle, Mountain, Desert, Beach and Country Side**. The saved submenu shares the Main Menu's pink cut-corner panels, dark outlines, red badges/Back ribbon, Anton font, hover/focus/click feedback and reversible panel transition. It uses three columns on wide canvases and two on narrower layouts.
 
-All six maps are playable and display **PLAY**. The five standalone scenes reuse the corresponding scenery from Level, with identical roads, gameplay progression and themed HUD. Each stays on its chosen biome as the track recycles; the original mixed-biome `Level` remains intact. Country Side is unchanged. Illustrations are original vector artwork, not screenshots of playable levels. See [MAPS.md](MAPS.md).
+All six maps are playable and display **PLAY**. The five standalone scenes reuse the corresponding scenery from Level; Country Side uses its linked Japanese countryside. All six share the highway, gameplay progression, themed HUD and automatic countdown. Each stays in its selected environment as the track recycles; the original mixed-biome `Level` remains intact. Illustrations are original vector artwork, not screenshots of playable levels. See [MAPS.md](MAPS.md).
 
 Opening map selection keeps menu music playing and focuses City. Keyboard/gamepad directional navigation follows the three-column desktop or two-column narrow grid and reaches every card and Back. Back, Escape and gamepad Back close it and restore Start focus. Music stops only when a map is selected. In-game Quit returns to the menu, where Start reopens map selection.
 
