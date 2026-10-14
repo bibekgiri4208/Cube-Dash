@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Japanese City Clear Sky
+  m_Shader: {fileID: 4800000, guid: 0b763ecc07d154246890fda7fe2fd144, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs: []
+    m_Ints: []
+    m_Floats: []
+    m_Colors:
+    - _GroundColor: {r: 0.6313726, g: 0.7019608, b: 0.7647059, a: 1}
+    - _HorizonColor: {r: 0.53333336, g: 0.7411765, b: 0.9607843, a: 1}
+    - _SunColor: {r: 1, g: 0.94, b: 0.86, a: 1}
+    - _SunDirection: {r: -0.4, g: 0.7, b: 0.3, a: 0}
+    - _ZenithColor: {r: 0.09019608, g: 0.41960785, b: 0.8901961, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

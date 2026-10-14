@@ -51,6 +51,20 @@ Bushes have their own thin-leaf lighting profile: opposing card normals receive 
 
 Bushes also use two distinct greens: the existing deep rainforest base and a richer, slightly warmer upper-leaf green (78% of the original tip color value, still below the original brightness). Their baked per-plant height spans the full tint blend, with the leaf texture retaining darker green detail among the upper leaves, instead of leaving the two colors almost indistinguishable. **Tools > Cube Dash > Apply Two-Tone Jungle Bushes** updates only the three bush materials; rebuilding or toning down foliage retains this palette. The rendered leaf probe checks both opposing-normal consistency and visible upper/lower color separation, without adding another material slot or draw call.
 
+## Japanese City
+
+`City.unity` has a scene-specific Japanese shopping street inspired by the sakura-city reference: warm plaster and timber shops, shallow tiled roofs, striped teal/red awnings, genuine Japanese shop lettering and projecting signs, ribbed paper lanterns, blue/red drink vending machines, tiled sidewalks, bus shelters, utility poles and sagging wires. Branched cherry trees have three faceted pink blossom tones, with scattered petals and low planters. Offset blue/cream midrises and an occasional high pedestrian bridge frame a clear blue gradient sky. The painted clouds and fixed Mount Fuji backdrop were removed after play feedback: they stayed centered while the street moved, emphasizing a treadmill effect. A City-only volume removes distant depth-of-field blur and reduces vignetting, leaving the shared graphics profile untouched. The sky material retains its historical `Fuji Sky.mat` filename/GUID to preserve saved scene references; it contains no mountain or cloud artwork.
+
+Eight deterministic streetscapes are baked under `Assets/Maps/Japanese City` and swapped through the existing scenery pool. They follow road curves and scenery-rise animation without generating runtime objects or adding colliders. The old City artwork remains inactive in the scene; shared City models/prefabs, the mixed-biome Level and all other maps are unchanged. Road geometry/materials, lanes, guardrails, camera, HUD, player, encounters, coins, power-ups and progression are retained.
+
+**Tools > Cube Dash > Upgrade City to Japanese Sakura Street** (`JapaneseCityBuilder.ApplyFromCommandLine`) authors an unmodified standalone City. Reapplying preserves saved edits; partial upgrades are rejected rather than overwritten. Initial lettering authoring requires a Japanese system font (Yu Gothic, MS Gothic or Noto Sans CJK JP); the saved atlas has no runtime system-font dependency. `JapaneseCityTests` covers the eight saved layouts, road clearance, signage/blossoms, pooled recycling, reapplication and rendered gameplay/storefront/curved-road views. Existing standalone-map tests compare the gameplay, road, camera and HUD against Level.
+
+[Japanese City gameplay preview](Japanese%20City%20Preview.png).
+
+Initial streetscape validation: **72/72 Unity tests passed**, including rendered street/HUD/curved-road checks and the five-map menu/countdown/recycling/pause/retry/quit simulation. Saved gameplay, camera, HUD and main road match Level. Applied scene/art files were hash-verified against the tested project; other map scenes, shared track prefab and original City sky remain unchanged.
+
+Clear-sky feedback fix: **18/18 tests passed**, including a sky-only GPU check for the absence of directional mountain/cloud artwork, gameplay/HUD/storefront/curved-road renders, scenery pooling and saved gameplay comparisons for all five maps. This adjustment changes only the City sky shader/material label and associated authoring/tests/preview; scene files, streetscape meshes, other City materials, and shared movement/atmosphere code are hash-verified unchanged.
+
 ## Original standalone-map validation
 
 Passed **98/98** map/environment/ambience/road/progression/HUD/menu/music regressions and **2/2** GPU integration checks in an isolated Unity 6000.4.1f1 project. Rendered previews of all five maps and landscape/portrait map selection were inspected.
