@@ -14,6 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: CubeDash::CubeDash.HighwayHazardVisuals
   barrier: {fileID: 4300000, guid: fd4e2b3bc3e75034e997bbcfd4f70dd5, type: 2}
   van: {fileID: 4300000, guid: 980910a1a4bb2674397299c257acb2c4, type: 2}
+  truck: {fileID: 4300000, guid: e8bce05c63ef040418bb95fb72e3fa2e, type: 2}
+  barrierVariants:
+  - {fileID: 4300000, guid: 9313a13c8d382a24ca67c21ab0b0929e, type: 2}
+  - {fileID: 4300000, guid: fa52be9433d0aed42a8a439dba6fd935, type: 2}
+  vanVariants:
+  - {fileID: 4300000, guid: c9defe7c540db3c4e8511b92e4c4c940, type: 2}
+  - {fileID: 4300000, guid: 0718e47f82eeaf4498426e8aae17459f, type: 2}
+  truckVariants:
+  - {fileID: 4300000, guid: 237f75bd1a6c26f4a8d6c3514ae89df1, type: 2}
   materials:
   - {fileID: 2100000, guid: 5ee71f70b01a31c4baa9e967b31a5bbb, type: 2}
   - {fileID: 2100000, guid: 670808a7abd197a419f82f894b0276b7, type: 2}

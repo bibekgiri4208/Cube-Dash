@@ -11,12 +11,11 @@ namespace CubeDash
         private readonly Shader shader = Resources.Load<Shader>("CubeDashCurvedLit");
         private readonly Dictionary<Material, Material> materials = new Dictionary<Material, Material>();
         private readonly Dictionary<(Mesh, Vector3), Mesh> meshes = new Dictionary<(Mesh, Vector3), Mesh>();
-        private readonly Dictionary<(HighwayHazard, Vector3, float), Mesh> hazards = new Dictionary<(HighwayHazard, Vector3, float), Mesh>();
+        private readonly Dictionary<(Mesh, Vector3, float), Mesh> hazards = new Dictionary<(Mesh, Vector3, float), Mesh>();
         private readonly List<(Renderer renderer, Material[] materials, Bounds bounds)> originals = new List<(Renderer, Material[], Bounds)>();
         private readonly List<(MeshFilter filter, Mesh mesh)> originalMeshes = new List<(MeshFilter, Mesh)>();
         private readonly HighwayHazardVisuals visualAssets;
         private readonly Dictionary<Color, Material[]> hazardPalettes = new Dictionary<Color, Material[]>();
-        private readonly Material dark, reflective;
 
         public static Bounds CurveBounds(Bounds bounds, Transform transform)
         {
@@ -27,19 +26,17 @@ namespace CubeDash
 
         public void Prewarm(RunnerCube cube)
         {
-            for (int i = 1; i <= 3; i++) HazardMesh(cube, (HighwayHazard)i);
+            for (int i = 1; i <= 3; i++)
+                for (int variant = 0; variant < visualAssets.VariantCount((HighwayHazard)i); variant++) HazardMesh(cube, (HighwayHazard)i, variant);
         }
 
         public HighwayPresentation()
         {
             if (shader == null) throw new InvalidOperationException("Missing Resources/CubeDashCurvedLit shader.");
             visualAssets = Resources.Load<HighwayHazardVisuals>(HighwayHazardVisuals.ResourcePath);
-            if (visualAssets == null || visualAssets.MeshFor(HighwayHazard.Barrier) == null || visualAssets.MeshFor(HighwayHazard.Van) == null
+            if (visualAssets == null || visualAssets.MeshFor(HighwayHazard.Barrier) == null || visualAssets.MeshFor(HighwayHazard.Van) == null || visualAssets.MeshFor(HighwayHazard.Truck) == null
                 || visualAssets.Materials.Length != 9)
                 throw new InvalidOperationException("Missing or incomplete baked Resources/HighwayHazards art.");
-            dark = new Material(shader) { name = "Highway tires and windows", color = new Color(0.025f, 0.04f, 0.055f) };
-            reflective = new Material(shader) { name = "Highway reflective trim", color = new Color(1, 0.78f, 0.28f) };
-            reflective.SetColor("_EmissionColor", new Color(0.2f, 0.12f, 0.025f));
         }
 
         public Material MaterialFor(Material source)
@@ -101,103 +98,46 @@ namespace CubeDash
                 : type == HighwayHazard.Van ? new Vector3(1.6f, 1.85f, 3.4f)
                 : type == HighwayHazard.Truck ? new Vector3(1.7f, 2.25f, 4.6f) : Vector3.one * 1.15f;
 
-        public void ConfigureHazard(RunnerCube cube, HighwayHazard type)
+        public void ConfigureHazard(RunnerCube cube, HighwayHazard type, int variant = 0)
         {
             if (type == HighwayHazard.Cube) return;
             Material paint = cube.GetComponent<Renderer>().sharedMaterial;
-            Material[] palette;
-            if (visualAssets.MeshFor(type) != null)
+            Color color = paint.GetColor("_BaseColor");
+            if (!hazardPalettes.TryGetValue(color, out Material[] palette))
             {
-                Color color = paint.GetColor("_BaseColor");
-                if (!hazardPalettes.TryGetValue(color, out palette))
-                {
-                    palette = (Material[])visualAssets.Materials.Clone();
-                    palette[0] = new Material(palette[0]) { name = "Traffic paint " + color, enableInstancing = true };
-                    palette[0].SetColor("_BaseColor", color);
-                    hazardPalettes.Add(color, palette);
-                }
+                palette = (Material[])visualAssets.Materials.Clone();
+                palette[0] = new Material(palette[0]) { name = "Traffic paint " + color, enableInstancing = true };
+                palette[0].SetColor("_BaseColor", color);
+                hazardPalettes.Add(color, palette);
             }
-            else palette = new[] { paint, dark, reflective }; // Existing box trucks retain their presentation.
-            cube.SetHazard(type, HazardMesh(cube, type), palette, HazardSize(type));
+            cube.SetHazard(type, HazardMesh(cube, type, variant), palette, HazardSize(type));
         }
 
-        private Mesh HazardMesh(RunnerCube cube, HighwayHazard type)
+        private Mesh HazardMesh(RunnerCube cube, HighwayHazard type, int variant)
         {
             Vector3 scale = cube.transform.lossyScale;
             float height = cube.transform.localPosition.y;
-            var key = (type, scale, height);
+            Mesh authored = visualAssets.MeshFor(type, variant);
+            var key = (authored, scale, height);
             if (!hazards.TryGetValue(key, out Mesh mesh))
             {
-                mesh = BuildHazard(type, scale, height);
+                mesh = BuildHazard(authored, scale, height);
                 hazards.Add(key, mesh);
             }
             return mesh;
         }
 
-        private Mesh BuildHazard(HighwayHazard type, Vector3 scale, float height)
+        private static Mesh BuildHazard(Mesh authored, Vector3 scale, float height)
         {
-            Mesh authored = visualAssets.MeshFor(type);
-            if (authored != null)
+            Mesh result = Object.Instantiate(authored); result.name = authored.name + " (pooled road space)";
+            Vector3[] points = result.vertices, normals = result.normals;
+            for (int i = 0; i < points.Length; i++)
             {
-                Mesh result = Object.Instantiate(authored); result.name = authored.name + " (pooled road space)";
-                Vector3[] points = result.vertices, normals = result.normals;
-                for (int i = 0; i < points.Length; i++)
-                {
-                    points[i] = new Vector3(points[i].x / scale.x, (points[i].y - height) / scale.y, points[i].z / scale.z);
-                    normals[i] = Vector3.Scale(normals[i], scale).normalized;
-                }
-                result.vertices = points; result.normals = normals;
-                result.RecalculateTangents(); result.RecalculateBounds(); return result;
+                points[i] = new Vector3(points[i].x / scale.x, (points[i].y - height) / scale.y, points[i].z / scale.z);
+                normals[i] = Vector3.Scale(normals[i], scale).normalized;
             }
-            Mesh box = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
-            var groups = new List<CombineInstance>[] { new List<CombineInstance>(), new List<CombineInstance>(), new List<CombineInstance>() };
-            Vector3 inverse = new Vector3(1 / scale.x, 1 / scale.y, 1 / scale.z);
-            void Part(int group, Vector3 center, Vector3 size)
-            {
-                groups[group].Add(new CombineInstance { mesh = box, transform = Matrix4x4.TRS(
-                    Vector3.Scale(center - Vector3.up * height, inverse), Quaternion.identity, Vector3.Scale(size, inverse)) });
-            }
-            Vector3 dimensions = HazardSize(type);
-            float w = dimensions.x, h = dimensions.y, d = dimensions.z;
-            if (type == HighwayHazard.Barrier)
-            {
-                Part(0, new Vector3(0, 0.62f, 0), new Vector3(w, 0.78f, 0.35f));
-                for (int side = -1; side <= 1; side += 2)
-                {
-                    Part(1, new Vector3(side * 0.64f, 0.16f, 0), new Vector3(0.18f, 0.32f, d));
-                    Part(2, new Vector3(side * 0.64f, 1.07f, 0), new Vector3(0.17f, 0.16f, 0.17f));
-                }
-                for (int stripe = -2; stripe <= 2; stripe++)
-                    Part(2, new Vector3(stripe * 0.33f, 0.63f, -0.185f), new Vector3(0.16f, 0.59f, 0.025f));
-            }
-            else
-            {
-                // Traffic faces the runner: cab and headlights at negative Z, box body behind.
-                float cabDepth = type == HighwayHazard.Truck ? 1.1f : 1.2f;
-                Part(0, new Vector3(0, h * 0.5f + 0.12f, cabDepth * 0.5f), new Vector3(w - 0.12f, h - 0.24f, d - cabDepth));
-                Part(0, new Vector3(0, h * 0.38f, -(d - cabDepth) * 0.5f), new Vector3(w - 0.12f, h * 0.57f, cabDepth));
-                Part(1, new Vector3(0, h * 0.5f, -d * 0.5f - 0.005f), new Vector3(w * 0.73f, h * 0.22f, 0.025f));
-                Part(1, new Vector3(0, 0.34f, 0), new Vector3(w * 0.9f, 0.18f, d));
-                for (int side = -1; side <= 1; side += 2)
-                {
-                    for (int axle = -1; axle <= 1; axle += 2)
-                        Part(1, new Vector3(side * (w * 0.5f - 0.13f), 0.29f, axle * (d * 0.5f - 0.65f)), new Vector3(0.26f, 0.58f, 0.58f));
-                    Part(2, new Vector3(side * w * 0.32f, 0.52f, -d * 0.5f - 0.025f), new Vector3(0.25f, 0.14f, 0.045f));
-                }
-                Part(2, new Vector3(0, 0.25f, -d * 0.5f - 0.02f), new Vector3(w * 0.9f, 0.09f, 0.05f));
-            }
-            var intermediate = new Mesh[3];
-            var combined = new CombineInstance[3];
-            for (int i = 0; i < 3; i++)
-            {
-                intermediate[i] = new Mesh();
-                intermediate[i].CombineMeshes(groups[i].ToArray(), true, true);
-                combined[i] = new CombineInstance { mesh = intermediate[i], transform = Matrix4x4.identity };
-            }
-            var mesh = new Mesh { name = "Highway " + type };
-            mesh.CombineMeshes(combined, false, true);
-            foreach (Mesh part in intermediate) Destroy(part);
-            return mesh;
+            result.vertices = points; result.normals = normals;
+            result.RecalculateTangents(); result.RecalculateBounds(); return result;
         }
 
         public void Dispose()
@@ -210,7 +150,6 @@ namespace CubeDash
             foreach (var entry in meshes) if (entry.Value != entry.Key.Item1) Destroy(entry.Value);
             foreach (Mesh mesh in hazards.Values) Destroy(mesh);
             foreach (Material[] palette in hazardPalettes.Values) Destroy(palette[0]);
-            Destroy(dark); Destroy(reflective);
         }
         private static void Destroy(Object obj)
         {

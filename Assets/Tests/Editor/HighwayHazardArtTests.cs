@@ -17,13 +17,19 @@ namespace CubeDash.Tests
         [UnityTearDown]
         public IEnumerator LeavePlayMode() { if (Application.isPlaying) yield return new ExitPlayMode(); }
 
-        [TestCase(HighwayHazard.Barrier, 1500, 5000)]
-        [TestCase(HighwayHazard.Van, 6000, 20000)]
-        public void DetailedMeshesHaveValidShadingAndStayInsideTheExistingHitboxes(HighwayHazard type, int minimum, int maximum)
+        [TestCase(HighwayHazard.Barrier, 0, 1500, 5000)]
+        [TestCase(HighwayHazard.Barrier, 1, 1000, 6000)]
+        [TestCase(HighwayHazard.Barrier, 2, 1000, 8000)]
+        [TestCase(HighwayHazard.Van, 0, 6000, 20000)]
+        [TestCase(HighwayHazard.Van, 1, 6000, 20000)]
+        [TestCase(HighwayHazard.Van, 2, 6000, 20000)]
+        [TestCase(HighwayHazard.Truck, 0, 6000, 20000)]
+        [TestCase(HighwayHazard.Truck, 1, 6000, 20000)]
+        public void DetailedMeshesHaveValidShadingAndStayInsideTheExistingHitboxes(HighwayHazard type, int variant, int minimum, int maximum)
         {
             var assets = Resources.Load<HighwayHazardVisuals>(HighwayHazardVisuals.ResourcePath);
             Assert.That(assets, Is.Not.Null);
-            Mesh mesh = assets.MeshFor(type); Vector3 size = HighwayPresentation.HazardSize(type);
+            Mesh mesh = assets.MeshFor(type, variant); Vector3 size = HighwayPresentation.HazardSize(type);
             Assert.That(mesh.vertexCount, Is.InRange(minimum, maximum));
             Assert.That(mesh.subMeshCount, Is.EqualTo(assets.Materials.Length));
             Assert.That(mesh.uv.Length, Is.EqualTo(mesh.vertexCount));
@@ -47,7 +53,7 @@ namespace CubeDash.Tests
             for (int i = 0; i < paint.Length; i += 3)
                 paintedArea += Vector3.Cross(positions[paint[i + 1]] - positions[paint[i]], positions[paint[i + 2]] - positions[paint[i]]).magnitude * 0.5f;
             Assert.That(paintedArea, Is.GreaterThan(type == HighwayHazard.Barrier ? 1.5f : 5), "Keep the gameplay color over broad, readable painted body panels.");
-            if (type == HighwayHazard.Van)
+            if (type == HighwayHazard.Van || type == HighwayHazard.Truck)
             {
                 foreach (int surface in new[] { 2, 3, 4, 5, 6, 7, 8 }) Assert.That(mesh.GetIndexCount(surface), Is.GreaterThan(0), "Model tires, rims, glazing, trim and separate lamps.");
                 Vector3[] points = mesh.vertices;
@@ -98,10 +104,11 @@ namespace CubeDash.Tests
                 Mesh home = first.GetComponent<MeshFilter>().sharedMesh; Vector3 homeCollider = a.Collider.size;
                 int count = first.GetComponentsInChildren<Transform>(true).Length;
                 presentation.Prewarm(a); presentation.Prewarm(b);
-                foreach (HighwayHazard type in new[] { HighwayHazard.Barrier, HighwayHazard.Van })
+                foreach (HighwayHazard type in new[] { HighwayHazard.Barrier, HighwayHazard.Van, HighwayHazard.Truck })
+                for (int variant = 0; variant < Resources.Load<HighwayHazardVisuals>(HighwayHazardVisuals.ResourcePath).VariantCount(type); variant++)
                 {
                     a.Configure(CubeColor.Blue, blue, false); b.Configure(CubeColor.Blue, blue, false);
-                    presentation.ConfigureHazard(a, type); presentation.ConfigureHazard(b, type); Physics.SyncTransforms();
+                    presentation.ConfigureHazard(a, type, variant); presentation.ConfigureHazard(b, type, variant); Physics.SyncTransforms();
                     Mesh mesh = first.GetComponent<MeshFilter>().sharedMesh;
                     Material paint = first.GetComponent<Renderer>().sharedMaterial;
                     Assert.That(second.GetComponent<MeshFilter>().sharedMesh, Is.SameAs(mesh));
@@ -111,7 +118,7 @@ namespace CubeDash.Tests
                     Assert.That(a.Collider.bounds.min.y, Is.EqualTo(0).Within(0.001f));
                     for (int repeat = 0; repeat < 50; repeat++)
                     {
-                        a.Configure(CubeColor.Blue, blue, false); presentation.ConfigureHazard(a, type);
+                        a.Configure(CubeColor.Blue, blue, false); presentation.ConfigureHazard(a, type, variant);
                         Assert.That(first.GetComponent<MeshFilter>().sharedMesh, Is.SameAs(mesh));
                         Assert.That(first.GetComponent<Renderer>().sharedMaterial, Is.SameAs(paint));
                     }
@@ -160,10 +167,54 @@ namespace CubeDash.Tests
                 camera.transform.LookAt(van.Collider.bounds.center); Capture(camera, "van-rear");
                 camera.transform.position = barrier.Collider.bounds.center + new Vector3(2.2f, 1.1f, -2.8f);
                 camera.transform.LookAt(barrier.Collider.bounds.center); Capture(camera, "barrier");
+                var assets = Resources.Load<HighwayHazardVisuals>(HighwayHazardVisuals.ResourcePath);
+                foreach (HighwayHazard type in new[] { HighwayHazard.Barrier, HighwayHazard.Van, HighwayHazard.Truck })
+                    for (int variant = 0; variant < assets.VariantCount(type); variant++)
+                    {
+                        van.Configure(CubeColor.Blue, game.Track.ColorMaterial(CubeColor.Blue), false);
+                        presentation.ConfigureHazard(van, type, variant); Physics.SyncTransforms();
+                        camera.transform.position = van.Collider.bounds.center + new Vector3(3.1f, 1.3f, type == HighwayHazard.Barrier ? -3.3f : -4.8f);
+                        camera.transform.LookAt(van.Collider.bounds.center); Capture(camera, type + "-" + variant);
+                        if (type == HighwayHazard.Truck && variant == 0 || type == HighwayHazard.Van && variant == 2)
+                        {
+                            camera.transform.position = van.Collider.bounds.center + new Vector3(-3.1f, 1.3f, 4.8f);
+                            camera.transform.LookAt(van.Collider.bounds.center); Capture(camera, type + "-" + variant + "-rear");
+                        }
+                    }
+                Vector3 guard = section.transform.TransformPoint(new Vector3(5.05f, 0.46f, 3));
+                camera.transform.position = guard + new Vector3(-1.5f, 0.85f, -3.2f);
+                camera.transform.LookAt(guard); Capture(camera, "guardrail");
                 Assert.That(ShaderUtil.ShaderHasError(Resources.Load<HighwayHazardVisuals>(HighwayHazardVisuals.ResourcePath).Materials[0].shader), Is.False);
             }
             finally { presentation.Dispose(); }
             yield return new ExitPlayMode();
+        }
+
+        [Test]
+        public void VariantCatalogHasDistinctArtAndGuardrailsHaveFoldedSteelAndAuthoredPbrTextures()
+        {
+            var assets = Resources.Load<HighwayHazardVisuals>(HighwayHazardVisuals.ResourcePath);
+            foreach (HighwayHazard type in new[] { HighwayHazard.Barrier, HighwayHazard.Van, HighwayHazard.Truck })
+            {
+                Assert.That(assets.VariantCount(type), Is.GreaterThanOrEqualTo(2));
+                Mesh[] meshes = Enumerable.Range(0, assets.VariantCount(type)).Select(i => assets.MeshFor(type, i)).ToArray();
+                Assert.That(meshes.Distinct().Count(), Is.EqualTo(meshes.Length));
+                Assert.That(assets.MeshFor(type, -1), Is.SameAs(meshes.Last()));
+                Assert.That(assets.MeshFor(type, meshes.Length), Is.SameAs(meshes.First()));
+            }
+            var rails = AssetDatabase.LoadAssetAtPath<Mesh>("Assets/3D Models/Environments/Highway Guardrails.asset");
+            Assert.That(rails.subMeshCount, Is.EqualTo(1), "All saved renderer overrides must still work without a scene rewrite.");
+            Assert.That(rails.vertexCount, Is.InRange(10000, 40000));
+            Assert.That(rails.bounds.min.z, Is.EqualTo(0).Within(0.0001f));
+            Assert.That(rails.bounds.max.z, Is.EqualTo(42).Within(0.0001f));
+            Assert.That(rails.vertices.All(p => Mathf.Abs(p.x) > 4.9f), Is.True);
+            Assert.That(rails.normals.All(n => n.sqrMagnitude > 0.99f), Is.True);
+            Assert.That(rails.colors32.Distinct().Count(), Is.GreaterThanOrEqualTo(4));
+            Assert.That(rails.vertices.Where(p => p.z == 0 && p.x > 0).Select(p => p.x).Distinct().Count(), Is.GreaterThanOrEqualTo(5), "A real folded W-section, not paired square bars.");
+            Material steel = AssetDatabase.LoadAssetAtPath<Material>("Assets/Material/Environments/Highway Guardrail.mat");
+            Assert.That(steel.shader.name, Is.EqualTo("CubeDash/Highway Hazard"));
+            foreach (string property in new[] { "_BaseMap", "_BumpMap", "_SurfaceMap" })
+                Assert.That(AssetDatabase.GetAssetPath(steel.GetTexture(property)), Does.Contain("Galvanized"));
         }
 
         private static void Capture(Camera camera, string name)

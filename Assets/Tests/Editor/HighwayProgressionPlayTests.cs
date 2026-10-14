@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -39,7 +40,9 @@ namespace CubeDash.Tests
                 Assert.That(slot.Hazard, Is.EqualTo(HighwayHazard.Truck));
                 Assert.That(slot.Collider.bounds.size.z, Is.EqualTo(4.6f).Within(0.01f));
                 Assert.That(slot.Collider.bounds.min.y, Is.EqualTo(0).Within(0.01f));
-                Assert.That(slot.GetComponent<Renderer>().sharedMaterials.Length, Is.EqualTo(3));
+                Assert.That(slot.GetComponent<Renderer>().sharedMaterials.Length, Is.EqualTo(9));
+                Assert.That(slot.GetComponent<MeshFilter>().sharedMesh.vertexCount, Is.GreaterThan(6000), "No legacy box-built traffic may remain in the truck slot.");
+                Assert.That(slot.GetComponent<Renderer>().sharedMaterial.shader.name, Is.EqualTo("CubeDash/Highway Hazard"));
                 slot.Configure(CubeColor.Red, track.ColorMaterial(CubeColor.Red), true);
                 Assert.That(slot.GetComponent<MeshFilter>().sharedMesh, Is.SameAs(original));
                 Assert.That(slot.Collider.size, Is.EqualTo(colliderSize));
@@ -49,15 +52,23 @@ namespace CubeDash.Tests
             finally { visual.Dispose(); }
 
             int trafficSeen = 0;
+            var variants = new[] { new HashSet<string>(), new HashSet<string>(), new HashSet<string>(), new HashSet<string>() };
             for (int step = 0; step < 60; step++)
             {
                 track.Advance(42, 0, 0, 1, Vector2.one * 0.45f, 0, false, false, true, false, out _, out _);
                 foreach (TrackSegment segment in track.Segments)
                     foreach (RunnerCube cube in segment.Cubes)
-                        if (cube.gameObject.activeSelf && (cube.Hazard == HighwayHazard.Truck || cube.Hazard == HighwayHazard.Van)) trafficSeen++;
+                        if (cube.gameObject.activeSelf && !cube.CoinVisible && cube.Hazard != HighwayHazard.Cube)
+                        {
+                            if (cube.Hazard == HighwayHazard.Truck || cube.Hazard == HighwayHazard.Van) trafficSeen++;
+                            variants[(int)cube.Hazard].Add(cube.GetComponent<MeshFilter>().sharedMesh.name);
+                        }
                 if (step == 12) RenderPreviewIfRequested(game.GameCamera);
             }
             Assert.That(trafficSeen, Is.GreaterThan(0));
+            var art = Resources.Load<HighwayHazardVisuals>(HighwayHazardVisuals.ResourcePath);
+            foreach (HighwayHazard type in new[] { HighwayHazard.Barrier, HighwayHazard.Van, HighwayHazard.Truck })
+                Assert.That(variants[(int)type].Count, Is.EqualTo(art.VariantCount(type)), "Every authored variant must actually spawn through the normal pooled progression: " + type);
             Assert.That(track.GetComponentsInChildren<Transform>(true).Length, Is.EqualTo(count));
             Assert.That(Shader.GetGlobalVector("_CubeDashRoadCurve").x, Is.EqualTo(track.Travelled));
             float frozen = track.Travelled;

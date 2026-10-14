@@ -10,7 +10,7 @@ using Object = UnityEngine.Object;
 namespace CubeDash.Editor
 {
     /// <summary>Bakes detailed traffic art and tileable PBR textures, never rewrites scenes or downloaded art.</summary>
-    public static class HighwayHazardArtBuilder
+    public static partial class HighwayHazardArtBuilder
     {
         public const string ArtPath = "Assets/Highway Hazards";
         private const int Paint = 0, Concrete = 1, Rubber = 2, Steel = 3, Glass = 4, Trim = 5, Amber = 6, Lamp = 7, Tail = 8;
@@ -23,7 +23,7 @@ namespace CubeDash.Editor
             foreach (string path in new[] { ArtPath, ArtPath + "/Meshes", ArtPath + "/Materials", ArtPath + "/Textures" }) Folder(path);
             Shader shader = AssetDatabase.LoadAssetAtPath<Shader>("Assets/Shaders/HighwayHazard.shader");
             if (shader == null || ShaderUtil.ShaderHasError(shader)) throw new InvalidOperationException("The highway hazard shader must compile first.");
-            foreach (string surface in new[] { "Paint", "Concrete", "Rubber", "Steel", "Glass", "Reflector" }) BakeTextures(surface);
+            foreach (string surface in new[] { "Paint", "Concrete", "Rubber", "Steel", "Glass", "Reflector", "Galvanized" }) BakeTextures(surface);
             Material Make(string name, string surface, Color tint, float metal, float gloss, float relief, Color emission = default)
             {
                 var material = new Material(shader) { name = "Traffic " + name, enableInstancing = true };
@@ -46,15 +46,32 @@ namespace CubeDash.Editor
             };
             Mesh barrier = Save(BuildBarrier(), ArtPath + "/Meshes/Reinforced Road Block.asset");
             Mesh van = Save(BuildVan(), ArtPath + "/Meshes/Panel Van.asset");
+            Mesh truck = Save(BuildBoxTruck(), ArtPath + "/Meshes/Delivery Box Truck.asset");
+            Mesh[] barrierVariants = { Save(BuildWaterBarrier(), ArtPath + "/Meshes/Water Filled Barrier.asset"), Save(BuildWorkBarrier(), ArtPath + "/Meshes/Work Zone Barricade.asset") };
+            Mesh[] vanVariants = { Save(BuildVan(1), ArtPath + "/Meshes/Passenger Shuttle.asset"), Save(BuildVan(2), ArtPath + "/Meshes/Service Van.asset") };
+            Mesh delivery = BuildVan(); delivery.name = "Long Wheelbase Delivery Van";
+            Vector3 stretch = new Vector3(1.05f, 1.20f, 1.345f);
+            delivery.vertices = delivery.vertices.Select(p => Vector3.Scale(p, stretch)).ToArray();
+            delivery.normals = delivery.normals.Select(p => new Vector3(p.x / stretch.x, p.y / stretch.y, p.z / stretch.z).normalized).ToArray();
+            delivery.RecalculateTangents(); delivery.RecalculateBounds();
+            Mesh[] truckVariants = { Save(delivery, ArtPath + "/Meshes/Long Wheelbase Delivery Van.asset") };
             const string resource = "Assets/Resources/HighwayHazards.asset";
             var data = AssetDatabase.LoadAssetAtPath<HighwayHazardVisuals>(resource);
             if (data == null) { data = ScriptableObject.CreateInstance<HighwayHazardVisuals>(); AssetDatabase.CreateAsset(data, resource); }
             var serialized = new SerializedObject(data);
             serialized.FindProperty("barrier").objectReferenceValue = barrier; serialized.FindProperty("van").objectReferenceValue = van;
+            serialized.FindProperty("truck").objectReferenceValue = truck;
+            void Variants(string name, Mesh[] values)
+            {
+                SerializedProperty property = serialized.FindProperty(name); property.arraySize = values.Length;
+                for (int i = 0; i < values.Length; i++) property.GetArrayElementAtIndex(i).objectReferenceValue = values[i];
+            }
+            Variants("barrierVariants", barrierVariants); Variants("vanVariants", vanVariants); Variants("truckVariants", truckVariants);
             var array = serialized.FindProperty("materials"); array.arraySize = materials.Length;
             for (int i = 0; i < materials.Length; i++) array.GetArrayElementAtIndex(i).objectReferenceValue = materials[i];
-            serialized.ApplyModifiedPropertiesWithoutUndo(); AssetDatabase.SaveAssets();
-            Debug.Log($"Baked detailed highway art: barrier {barrier.vertexCount} vertices, van {van.vertexCount} vertices, six PBR surface sets. Scenes, hitboxes, encounters and downloaded assets unchanged.");
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            BakeGuardrails(); AssetDatabase.SaveAssets();
+            Debug.Log("Baked eight detailed traffic variants and galvanized W-beam guardrails. Legacy runtime box traffic removed; scenes, hitboxes, encounters and downloaded assets unchanged.");
         }
 
         private static Mesh BuildBarrier()
@@ -113,12 +130,13 @@ namespace CubeDash.Editor
             return g.Finish("Reinforced Road Block");
         }
 
-        private static Mesh BuildVan()
+        private static Mesh BuildVan(int style = 0)
         {
             var g = new Geometry();
             const float wheelY = 0.30f, frontAxle = -1.04f, rearAxle = 1.02f;
             float[] stations = { -1.57f, -1.42f, -0.82f, -0.62f, 1.40f, 1.57f };
             float[] heights = { 0.91f, 0.97f, 1.78f, 1.82f, 1.82f, 1.74f };
+            if (style == 2) for (int i = 2; i < heights.Length; i++) heights[i] -= 0.17f;
             float Top(float z) => Sample(stations, heights, z);
             float Width(float z) => z < -1.42f ? Mathf.Lerp(0.69f, 0.73f, Mathf.InverseLerp(-1.57f, -1.42f, z)) : z > 1.40f ? Mathf.Lerp(0.73f, 0.70f, Mathf.InverseLerp(1.40f, 1.57f, z)) : 0.73f;
             float Bottom(float z)
@@ -166,14 +184,14 @@ namespace CubeDash.Editor
                 g.Beam(Screen(side * 0.08f, -1.30f, 0.03f), Screen(side * 0.50f, -1.10f, 0.03f), 0.012f, Trim);
                 float x = side * 0.738f;
                 Vector3[] window = { new Vector3(x, 1.00f, -1.30f), new Vector3(x, 1.00f, -0.18f),
-                    new Vector3(x, 1.60f, -0.18f), new Vector3(x, 1.60f, -0.85f) };
+                    new Vector3(x, style == 2 ? 1.43f : 1.60f, -0.18f), new Vector3(x, style == 2 ? 1.43f : 1.60f, -0.85f) };
                 g.Quad(window[0], window[1], window[2], window[3], Trim, Vector3.right * side);
                 Vector3 center = window.Aggregate(Vector3.zero, (sum, p) => sum + p) / 4;
                 Vector3[] pane = window.Select(p => Vector3.Lerp(center, p, 0.91f) + Vector3.right * side * 0.005f).ToArray();
                 g.Quad(pane[0], pane[1], pane[2], pane[3], Glass, Vector3.right * side);
                 // Recessed driver/cargo door outlines and three-dimensional handles.
-                g.Beam(new Vector3(x, 0.64f, -0.12f), new Vector3(x, 1.67f, -0.12f), 0.012f, Trim);
-                Vector3[] door = { new Vector3(x, 0.69f, 0.09f), new Vector3(x, 0.69f, 1.40f), new Vector3(x, 1.59f, 1.40f), new Vector3(x, 1.59f, 0.09f) };
+                g.Beam(new Vector3(x, 0.64f, -0.12f), new Vector3(x, style == 2 ? 1.49f : 1.67f, -0.12f), 0.012f, Trim);
+                Vector3[] door = { new Vector3(x, 0.69f, 0.09f), new Vector3(x, 0.69f, 1.40f), new Vector3(x, style == 2 ? 1.42f : 1.59f, 1.40f), new Vector3(x, style == 2 ? 1.42f : 1.59f, 0.09f) };
                 g.Quad(door[0], door[1], door[2], door[3], Paint, Vector3.right * side, 0.94f);
                 for (int edge = 0; edge < 4; edge++) g.Beam(door[edge] + Vector3.right * side * 0.004f, door[(edge + 1) % 4] + Vector3.right * side * 0.004f, 0.009f, Trim);
                 foreach (float z in new[] { -0.31f, 0.29f })
@@ -217,9 +235,15 @@ namespace CubeDash.Editor
                     }
                 }
                 // Raised roof strengthening ribs, flush enough to stay within the original hitbox.
-                g.Box(new Vector3(side * 0.30f, 1.826f, 0.39f), new Vector3(0.025f, 0.018f, 1.87f), Paint, 0.006f);
+                g.Box(new Vector3(side * 0.30f, 1.826f - (style == 2 ? 0.17f : 0), 0.39f), new Vector3(0.025f, 0.018f, 1.87f), Paint, 0.006f);
+                if (style == 1)
+                    foreach (float z in new[] { 0.38f, 1.04f })
+                    {
+                        g.Box(new Vector3(side * 0.747f, 1.36f, z), new Vector3(0.015f, 0.48f, 0.57f), Trim, 0.012f);
+                        g.Box(new Vector3(side * 0.758f, 1.37f, z), new Vector3(0.012f, 0.42f, 0.51f), Glass, 0.009f);
+                    }
                 Vector3[] rearGlass = { new Vector3(side * 0.07f, 1.20f, 1.578f), new Vector3(side * 0.54f, 1.20f, 1.578f),
-                    new Vector3(side * 0.54f, 1.56f, 1.578f), new Vector3(side * 0.07f, 1.56f, 1.578f) };
+                    new Vector3(side * 0.54f, style == 2 ? 1.39f : 1.56f, 1.578f), new Vector3(side * 0.07f, style == 2 ? 1.39f : 1.56f, 1.578f) };
                 g.Quad(rearGlass[0], rearGlass[1], rearGlass[2], rearGlass[3], Glass, Vector3.forward);
             }
             g.Box(new Vector3(0, 0.46f, -1.60f), new Vector3(1.48f, 0.19f, 0.19f), Trim, 0.045f);
@@ -230,7 +254,7 @@ namespace CubeDash.Editor
             g.Box(new Vector3(0, 0.48f, -1.705f + 0.012f), new Vector3(0.28f, 0.075f, 0.008f), Lamp, 0.008f);
             for (int mark = 0; mark < 7; mark++)
                 g.Box(new Vector3(-0.105f + mark * 0.034f, 0.48f, -1.698f), new Vector3(0.012f, 0.038f, 0.003f), Trim, 0);
-            g.Beam(new Vector3(0, 0.56f, 1.582f), new Vector3(0, 1.69f, 1.582f), 0.012f, Trim);
+            g.Beam(new Vector3(0, 0.56f, 1.582f), new Vector3(0, style == 2 ? 1.52f : 1.69f, 1.582f), 0.012f, Trim);
             g.Box(new Vector3(0.07f, 0.99f, 1.594f), new Vector3(0.14f, 0.035f, 0.022f), Steel, 0.007f);
             g.Cylinder(new Vector3(Width(1.48f) + 0.006f, 0.94f, 1.48f), 0.073f, 0.012f, Trim, Quaternion.identity, 16);
             g.Cylinder(new Vector3(Width(1.48f) + 0.015f, 0.94f, 1.48f), 0.061f, 0.012f, Paint, Quaternion.identity, 16);
@@ -238,7 +262,19 @@ namespace CubeDash.Editor
             g.Box(new Vector3(0, 0.70f, 1.601f), new Vector3(0.28f, 0.073f, 0.008f), Lamp, 0.008f);
             for (int mark = 0; mark < 7; mark++)
                 g.Box(new Vector3(-0.105f + mark * 0.034f, 0.70f, 1.608f), new Vector3(0.012f, 0.038f, 0.003f), Trim, 0);
-            return g.Finish("Panel Van");
+            if (style == 2)
+            {
+                foreach (float z in new[] { -0.37f, 0.99f })
+                {
+                    g.Box(new Vector3(0, 1.69f, z), new Vector3(1.20f, 0.08f, 0.075f), Trim, 0.015f);
+                    g.Box(new Vector3(0, 1.75f, z), new Vector3(1.35f, 0.045f, 0.065f), Steel, 0.012f);
+                }
+                foreach (float x in new[] { -0.36f, 0.36f })
+                    g.Box(new Vector3(x, 1.80f, 0.30f), new Vector3(0.045f, 0.045f, 2.02f), Steel, 0.01f);
+                for (int rung = 0; rung < 9; rung++)
+                    g.Box(new Vector3(0, 1.80f, -0.58f + rung * 0.22f), new Vector3(0.70f, 0.028f, 0.035f), Steel, 0.006f);
+            }
+            return g.Finish(style == 1 ? "Passenger Shuttle" : style == 2 ? "Service Van" : "Panel Van");
         }
 
         private static float Sample(float[] positions, float[] values, float point)
@@ -271,10 +307,17 @@ namespace CubeDash.Editor
                 h = (h ^ (h >> 13)) * 1274126177; return (h ^ (h >> 16)) / (float)uint.MaxValue;
             }
         }
+        private static float SmoothTileNoise(int x, int y, int cell, int seed)
+        {
+            int a = x / cell * cell, b = y / cell * cell;
+            float u = Mathf.SmoothStep(0, 1, (x - a) / (float)cell), v = Mathf.SmoothStep(0, 1, (y - b) / (float)cell);
+            return Mathf.Lerp(Mathf.Lerp(Noise(a, b, seed), Noise(a + cell, b, seed), u),
+                Mathf.Lerp(Noise(a, b + cell, seed), Noise(a + cell, b + cell, seed), u), v);
+        }
         private static void BakeTextures(string surface)
         {
             int n = TextureSize; var albedo = new Color32[n * n]; var packed = new Color32[n * n]; var height = new float[n * n];
-            int seed = Array.IndexOf(new[] { "Paint", "Concrete", "Rubber", "Steel", "Glass", "Reflector" }, surface) * 79 + 13;
+            int seed = Array.IndexOf(new[] { "Paint", "Concrete", "Rubber", "Steel", "Glass", "Reflector", "Galvanized" }, surface) * 79 + 13;
             for (int y = 0; y < n; y++)
                 for (int x = 0; x < n; x++)
                 {
@@ -290,6 +333,10 @@ namespace CubeDash.Editor
                         case "Steel":
                             value = 0.78f + Noise(0, y, seed) * 0.13f + grain * 0.06f; h = Noise(0, y, seed) * 0.13f;
                             gloss = 0.74f + grain * 0.22f; break;
+                        case "Galvanized":
+                            float spangle = SmoothTileNoise(x, y, 8, seed + 7) * 0.65f + SmoothTileNoise(x, y, 32, seed + 9) * 0.35f;
+                            value = 0.84f + spangle * 0.055f + grain * 0.025f; h = grain * 0.02f + spangle * 0.015f;
+                            gloss = 0.76f + spangle * 0.12f; break;
                         case "Glass":
                             value = 0.61f + 0.30f * Mathf.Sin(y / (float)n * Mathf.PI) + grain * 0.018f; h = grain * 0.005f; gloss = 0.96f; break;
                         case "Reflector":

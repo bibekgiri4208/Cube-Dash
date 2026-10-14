@@ -39,10 +39,10 @@ namespace CubeDash.Editor
             shoulder.SetFloat("_MicroNormalStrength", 0.015f);
             Material paint = Surface(MaterialFolder + "Highway Paint.mat", "Highway Paint",
                 new Color(0.90f, 0.88f, 0.78f), new Color(0.80f, 0.79f, 0.72f), 0, 0.16f);
-            Material steel = Surface(MaterialFolder + "Highway Guardrail.mat", "Highway Guardrail",
-                new Color(0.52f, 0.57f, 0.59f), new Color(0.38f, 0.42f, 0.44f), 0, 0.35f);
-            steel.SetFloat("_Metallic", 0.55f);
-            Mesh markings = Markings(), shoulders = Shoulders(), rails = Guardrails();
+            HighwayHazardArtBuilder.ApplyFromCommandLine();
+            Material steel = AssetDatabase.LoadAssetAtPath<Material>(MaterialFolder + "Highway Guardrail.mat");
+            Mesh markings = Markings(), shoulders = Shoulders();
+            Mesh rails = AssetDatabase.LoadAssetAtPath<Mesh>(MeshFolder + "Highway Guardrails.asset");
 
             // Source landscapes stay editable and inherit the same lift when rebaked.
             for (int i = 1; i < BiomeRules.Count; i++)
@@ -166,20 +166,6 @@ namespace CubeDash.Editor
                     Box(boxes, new Vector3(side * 1.3f, 0.008f, dash * 6 + 3), new Vector3(0.13f, 0.008f, 3));
             }
             return Combine(boxes, "Highway Lane Markings");
-        }
-
-        private static Mesh Guardrails()
-        {
-            var boxes = new List<CombineInstance>();
-            for (int side = -1; side <= 1; side += 2)
-            {
-                // Thin paired bands evoke a W-beam without a wall blocking the landscapes.
-                for (int band = 0; band < 2; band++)
-                    Box(boxes, new Vector3(side * 5.05f, 0.42f + band * 0.13f, 21), new Vector3(0.10f, 0.14f, 42));
-                for (int post = 0; post < 7; post++)
-                    Box(boxes, new Vector3(side * 5.11f, 0.13f, post * 6 + 3), new Vector3(0.12f, 0.76f, 0.12f));
-            }
-            return Combine(boxes, "Highway Guardrails");
         }
 
         private static Mesh Shoulders()

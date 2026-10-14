@@ -344,6 +344,7 @@ namespace CubeDash
 
         private void Populate(TrackSegment segment, int warmupRows, float difficulty = 0f, float sectionDistance = 0f)
         {
+            int artSection = Mathf.RoundToInt(sectionDistance / RunnerRules.SegmentLength);
             for (int row = 0; row < 3; row++)
             {
                 bool visible = row >= warmupRows;
@@ -378,7 +379,8 @@ namespace CubeDash
                     CubeColor color = (collectibleMask & bit) != 0 ? playerColor
                         : RunnerRules.ColorForLane(lane, matchingLane, playerColor, swapOthers);
                     cube.Configure(color, ColorMaterial(color), (collectibleMask & bit) != 0);
-                    if (presentation != null && (blockedMask & bit) != 0) presentation.ConfigureHazard(cube, hazard);
+                    if (presentation != null && (blockedMask & bit) != 0)
+                        presentation.ConfigureHazard(cube, hazard, unchecked(artSection * 17 + row * 7 + lane));
                     Vector3 position = segment.CubeHomePosition(row * 3 + lane);
                     position.x = (lane - 1) * laneWidth;
                     // Lead obstacles arrive before rewards, leaving the previous row clear when steering away.
