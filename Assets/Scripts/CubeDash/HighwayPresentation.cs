@@ -14,6 +14,8 @@ namespace CubeDash
         private readonly Dictionary<(HighwayHazard, Vector3, float), Mesh> hazards = new Dictionary<(HighwayHazard, Vector3, float), Mesh>();
         private readonly List<(Renderer renderer, Material[] materials, Bounds bounds)> originals = new List<(Renderer, Material[], Bounds)>();
         private readonly List<(MeshFilter filter, Mesh mesh)> originalMeshes = new List<(MeshFilter, Mesh)>();
+        private readonly HighwayHazardVisuals visualAssets;
+        private readonly Dictionary<Color, Material[]> hazardPalettes = new Dictionary<Color, Material[]>();
         private readonly Material dark, reflective;
 
         public static Bounds CurveBounds(Bounds bounds, Transform transform)
@@ -31,6 +33,10 @@ namespace CubeDash
         public HighwayPresentation()
         {
             if (shader == null) throw new InvalidOperationException("Missing Resources/CubeDashCurvedLit shader.");
+            visualAssets = Resources.Load<HighwayHazardVisuals>(HighwayHazardVisuals.ResourcePath);
+            if (visualAssets == null || visualAssets.MeshFor(HighwayHazard.Barrier) == null || visualAssets.MeshFor(HighwayHazard.Van) == null
+                || visualAssets.Materials.Length != 9)
+                throw new InvalidOperationException("Missing or incomplete baked Resources/HighwayHazards art.");
             dark = new Material(shader) { name = "Highway tires and windows", color = new Color(0.025f, 0.04f, 0.055f) };
             reflective = new Material(shader) { name = "Highway reflective trim", color = new Color(1, 0.78f, 0.28f) };
             reflective.SetColor("_EmissionColor", new Color(0.2f, 0.12f, 0.025f));
@@ -98,7 +104,21 @@ namespace CubeDash
         public void ConfigureHazard(RunnerCube cube, HighwayHazard type)
         {
             if (type == HighwayHazard.Cube) return;
-            cube.SetHazard(type, HazardMesh(cube, type), new[] { cube.GetComponent<Renderer>().sharedMaterial, dark, reflective }, HazardSize(type));
+            Material paint = cube.GetComponent<Renderer>().sharedMaterial;
+            Material[] palette;
+            if (visualAssets.MeshFor(type) != null)
+            {
+                Color color = paint.GetColor("_BaseColor");
+                if (!hazardPalettes.TryGetValue(color, out palette))
+                {
+                    palette = (Material[])visualAssets.Materials.Clone();
+                    palette[0] = new Material(palette[0]) { name = "Traffic paint " + color, enableInstancing = true };
+                    palette[0].SetColor("_BaseColor", color);
+                    hazardPalettes.Add(color, palette);
+                }
+            }
+            else palette = new[] { paint, dark, reflective }; // Existing box trucks retain their presentation.
+            cube.SetHazard(type, HazardMesh(cube, type), palette, HazardSize(type));
         }
 
         private Mesh HazardMesh(RunnerCube cube, HighwayHazard type)
@@ -114,8 +134,21 @@ namespace CubeDash
             return mesh;
         }
 
-        private static Mesh BuildHazard(HighwayHazard type, Vector3 scale, float height)
+        private Mesh BuildHazard(HighwayHazard type, Vector3 scale, float height)
         {
+            Mesh authored = visualAssets.MeshFor(type);
+            if (authored != null)
+            {
+                Mesh result = Object.Instantiate(authored); result.name = authored.name + " (pooled road space)";
+                Vector3[] points = result.vertices, normals = result.normals;
+                for (int i = 0; i < points.Length; i++)
+                {
+                    points[i] = new Vector3(points[i].x / scale.x, (points[i].y - height) / scale.y, points[i].z / scale.z);
+                    normals[i] = Vector3.Scale(normals[i], scale).normalized;
+                }
+                result.vertices = points; result.normals = normals;
+                result.RecalculateTangents(); result.RecalculateBounds(); return result;
+            }
             Mesh box = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
             var groups = new List<CombineInstance>[] { new List<CombineInstance>(), new List<CombineInstance>(), new List<CombineInstance>() };
             Vector3 inverse = new Vector3(1 / scale.x, 1 / scale.y, 1 / scale.z);
@@ -176,6 +209,7 @@ namespace CubeDash
             foreach (Material material in materials.Values) Destroy(material);
             foreach (var entry in meshes) if (entry.Value != entry.Key.Item1) Destroy(entry.Value);
             foreach (Mesh mesh in hazards.Values) Destroy(mesh);
+            foreach (Material[] palette in hazardPalettes.Values) Destroy(palette[0]);
             Destroy(dark); Destroy(reflective);
         }
         private static void Destroy(Object obj)

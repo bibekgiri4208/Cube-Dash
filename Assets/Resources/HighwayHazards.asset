@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c51f381ee2674e10a51c639ff5279149, type: 3}
+  m_Name: HighwayHazards
+  m_EditorClassIdentifier: CubeDash::CubeDash.HighwayHazardVisuals
+  barrier: {fileID: 4300000, guid: fd4e2b3bc3e75034e997bbcfd4f70dd5, type: 2}
+  van: {fileID: 4300000, guid: 980910a1a4bb2674397299c257acb2c4, type: 2}
+  materials:
+  - {fileID: 2100000, guid: 5ee71f70b01a31c4baa9e967b31a5bbb, type: 2}
+  - {fileID: 2100000, guid: 670808a7abd197a419f82f894b0276b7, type: 2}
+  - {fileID: 2100000, guid: cd56d5e2395805b44a4ddf352fdd530a, type: 2}
+  - {fileID: 2100000, guid: b47afdf1a4b78094982b409459ef3493, type: 2}
+  - {fileID: 2100000, guid: c861234334ffa0546b01eceb74dfb6b2, type: 2}
+  - {fileID: 2100000, guid: 0c3a88bbc88d8f94682894249245eb8b, type: 2}
+  - {fileID: 2100000, guid: 47b455742dde3c1409998cdceb9f98a6, type: 2}
+  - {fileID: 2100000, guid: 4b9b2f5591a17a34b82edbe08ed95f5d, type: 2}
+  - {fileID: 2100000, guid: 646c3006656bd324485fb965deb1d2f5, type: 2}
