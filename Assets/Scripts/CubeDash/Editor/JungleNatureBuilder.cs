@@ -48,7 +48,8 @@ namespace CubeDash.Editor
             Material[] original = source.transform.Find("Landscape Details").GetComponent<Renderer>().sharedMaterials;
             var materials = AssetDatabase.FindAssets("t:Material", new[] { ArtPath + "/Materials" })
                 .Select(guid => AssetDatabase.LoadAssetAtPath<Material>(AssetDatabase.GUIDToAssetPath(guid)))
-                .Where(material => material.HasProperty("_Foliage") && material.GetFloat("_Foliage") > 0.5f).ToArray();
+                .Where(material => material.name.StartsWith("Jungle Idyllic", StringComparison.Ordinal)
+                    && material.HasProperty("_Foliage") && material.GetFloat("_Foliage") > 0.5f).ToArray();
             if (materials.Length != 7) throw new InvalidOperationException("Expected the seven saved Jungle leaf, bush and grass materials.");
             foreach (Material material in materials)
             {
@@ -260,6 +261,7 @@ namespace CubeDash.Editor
             EditorSceneManager.MarkSceneDirty(scene);
             if (!EditorSceneManager.SaveScene(scene)) throw new InvalidOperationException("Could not save the jungle planting.");
             Debug.Log("Refined all eight jungle layouts: softly lit green foliage, ten angular Idyllic rocks per section, no moss caps or banana plant. Forest palette, river, hills, remaining landmarks and gameplay preserved.");
+            JungleSceneryRepair.ApplyFromCommandLine();
         }
 
         private static float Range(System.Random random, float min, float max) => min + (float)random.NextDouble() * (max - min);

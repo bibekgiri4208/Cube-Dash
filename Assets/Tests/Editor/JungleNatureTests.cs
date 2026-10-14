@@ -43,13 +43,17 @@ namespace CubeDash.Tests
                     Assert.That(scenery.EntranceLayouts, Is.EqualTo(scenery.Layouts));
                     Assert.That(scenery.ExitLayouts, Is.EqualTo(scenery.Layouts));
                     Assert.That(scenery.VarietyLayouts.All(mesh => AssetDatabase.GetAssetPath(mesh).StartsWith(JungleNatureBuilder.ArtPath)), Is.True);
+                    var varietyPalette = jungle.transform.Find("Landscape Variety").GetComponent<Renderer>().sharedMaterials;
+                    Assert.That(varietyPalette.Length, Is.EqualTo(18));
+                    Assert.That(varietyPalette.Skip(15).All(material => material != null && material.shader.name == "CubeDash/Jungle Vegetation"), Is.True);
                     var palette = jungle.transform.Find("Landscape Details").GetComponent<Renderer>().sharedMaterials;
                     Assert.That(palette.Take(15), Is.EqualTo(sourcePalette));
                     foreach (Material material in palette.Skip(15))
                     {
                         Assert.That(material.shader.name, Is.EqualTo("CubeDash/Jungle Vegetation"));
                         Assert.That(ShaderUtil.ShaderHasError(material.shader), Is.False);
-                        Assert.That(AssetDatabase.GetAssetPath(material.GetTexture("_BaseMap")), Does.StartWith("Assets/Idyllic Fantasy Nature/Textures/"));
+                        Assert.That(AssetDatabase.GetAssetPath(material.GetTexture("_BaseMap")), Does.StartWith(material.name.Contains("Stone_Medium")
+                            ? JungleSceneryRepair.StonePath + "textures/" : "Assets/Idyllic Fantasy Nature/Textures/"));
                         Assert.That(material.FindPass("ShadowCaster"), Is.GreaterThanOrEqualTo(0));
                         Assert.That(material.FindPass("DepthOnly"), Is.GreaterThanOrEqualTo(0));
                         Assert.That(material.FindPass("DepthNormals"), Is.GreaterThanOrEqualTo(0));
@@ -59,6 +63,16 @@ namespace CubeDash.Tests
                         {
                             Assert.That(material.GetFloat("_WindStrength"), Is.Zero);
                             Assert.That(material.GetFloat("_Foliage"), Is.Zero);
+                            if (material.name.Contains("Stone"))
+                            {
+                                Color stone = material.GetColor("_BaseColor"), originalStone = sourcePalette[3].GetColor("_BaseColor");
+                                Color.RGBToHSV(stone, out float stoneHue, out float stoneSaturation, out float stoneValue);
+                                Color.RGBToHSV(originalStone, out float originalHue, out float originalSaturation, out float originalValue);
+                                Assert.That(stoneHue, Is.EqualTo(originalHue).Within(0.06f), "Keep the environment's grey-green stone family.");
+                                Assert.That(stoneSaturation, Is.LessThanOrEqualTo(originalSaturation));
+                                Assert.That(stoneValue / originalValue, Is.InRange(0.5f, 0.7f), "Compensate for the new pack's white AO texture rather than rendering pale chalk rocks.");
+                                Assert.That(material.GetFloat("_Smoothness"), Is.LessThan(0.1f));
+                            }
                             continue;
                         }
                         Assert.That(material.GetFloat("_Foliage"), Is.EqualTo(1), "Leaf cards must use wrapped, softly shadowed lighting.");
@@ -117,6 +131,12 @@ namespace CubeDash.Tests
                 Vector2[] anchors = mesh.uv3, wind = mesh.uv2;
                 Assert.That(anchors.Length, Is.EqualTo(mesh.vertexCount));
                 Assert.That(mesh.uv.Length, Is.EqualTo(mesh.vertexCount));
+                var stoneFeet = new HashSet<Vector2>();
+                Scene preview = EditorSceneManager.OpenPreviewScene(JungleNatureBuilder.ScenePath);
+                Material[] palette;
+                try { palette = Find<EndlessTrack>(preview).Segments[0].Environment.Biomes[(int)EnvironmentBiome.Jungle]
+                    .transform.Find("Landscape Details").GetComponent<Renderer>().sharedMaterials; }
+                finally { EditorSceneManager.ClosePreviewScene(preview); }
                 for (int surface = 15; surface < mesh.subMeshCount; surface++)
                     foreach (int index in mesh.GetTriangles(surface).Distinct())
                     {
@@ -124,14 +144,105 @@ namespace CubeDash.Tests
                         Assert.That(Mathf.Abs(vertices[index].x), Is.GreaterThan(6.5f), "Foliage must never obscure the road or guardrails.");
                         Assert.That(Mathf.Abs(anchor.x + 29), Is.GreaterThan(3), "Plant feet remain outside the river channel.");
                         Assert.That(wind[index].x, Is.InRange(0, 1));
-                        feet[anchor] = feet.TryGetValue(anchor, out float minimum) ? Mathf.Min(minimum, vertices[index].y) : vertices[index].y;
+                        if (palette[surface].name.Contains("Stone_Medium")) stoneFeet.Add(anchor);
+                        else feet[anchor] = feet.TryGetValue(anchor, out float minimum) ? Mathf.Min(minimum, vertices[index].y) : vertices[index].y;
                     }
-                Assert.That(feet.Count, Is.EqualTo(246), "246 plants and ten pack rocks; ten riverbank bushes share grass-skirt anchors.");
+                Assert.That(feet.Count, Is.EqualTo(236), "Preserve the existing planting; ten riverbank bushes share grass-skirt anchors.");
+                Assert.That(stoneFeet.Count, Is.EqualTo(10), "Ten footprint-grounded package stones; validated separately from point-grounded plants.");
                 int[] terrain = mesh.GetTriangles(7);
                 foreach (var foot in feet)
                     Assert.That(foot.Value, Is.EqualTo(Ground(vertices, terrain, foot.Key.x, foot.Key.y) - 0.1f).Within(0.25f), "No floating trunks or grass on the hills.");
             }
         }
+
+        [Test]
+        public void NewStonesAreBuriedAtTheirSkirtsAndClearEveryTreeTrunk()
+        {
+            Scene scene = EditorSceneManager.OpenPreviewScene(JungleNatureBuilder.ScenePath);
+            try
+            {
+                var jungle = Find<EndlessTrack>(scene).Segments[0].Environment.Biomes[(int)EnvironmentBiome.Jungle];
+                var palette = jungle.transform.Find("Landscape Details").GetComponent<Renderer>().sharedMaterials;
+                foreach (Mesh mesh in jungle.GetComponent<BiomeScenery>().Layouts)
+                {
+                    Vector3[] vertices = mesh.vertices; Vector2[] anchors = mesh.uv3; int[] terrain = mesh.GetTriangles(7);
+                    int[] bark = Enumerable.Range(15, palette.Length - 15).Where(i => palette[i].name.Contains("Bark"))
+                        .SelectMany(mesh.GetTriangles).Distinct().ToArray();
+                    Bounds[] trunks = bark.GroupBy(index => anchors[index]).Select(group =>
+                    {
+                        float bottom = group.Min(index => vertices[index].y);
+                        return BoundsOf(group.Where(index => vertices[index].y < bottom + 3).Select(index => vertices[index]));
+                    }).ToArray();
+                    int[] stones = Enumerable.Range(15, palette.Length - 15).Where(i => palette[i].name.Contains("Stone_Medium"))
+                        .SelectMany(mesh.GetTriangles).Distinct().ToArray();
+                    var groups = stones.GroupBy(index => anchors[index]).ToArray();
+                    Assert.That(groups.Length, Is.EqualTo(10));
+                    var footprints = new List<Bounds>();
+                    foreach (var group in groups)
+                    {
+                        Vector3[] points = group.Select(index => vertices[index]).ToArray();
+                        Bounds bounds = BoundsOf(points);
+                        Assert.That(Mathf.Max(bounds.size.x, bounds.size.z), Is.InRange(2, 6));
+                        Assert.That(bounds.min.z, Is.GreaterThan(1.5f), "Keep stones clear of section seams.");
+                        Assert.That(bounds.max.z, Is.LessThan(40.5f));
+                        Vector3[] skirt = points.Where(point => point.y <= bounds.min.y + bounds.size.y * 0.22f + 0.0001f).ToArray();
+                        foreach (Vector3 point in skirt)
+                            Assert.That(point.y - Ground(vertices, terrain, point.x, point.z), Is.LessThan(-0.075f), "No hovering lower edges on uneven ground.");
+                        Vector3 top = points.OrderByDescending(point => point.y).First();
+                        Assert.That(top.y - Ground(vertices, terrain, top.x, top.z), Is.GreaterThan(0.45f), "Do not hide the whole stone underground.");
+                        bounds.Expand(new Vector3(1.4f, 0, 1.4f));
+                        foreach (Bounds trunk in trunks) Assert.That(OverlapsXZ(bounds, trunk), Is.False, "No rocks intersecting trunks or root flares.");
+                        foreach (Bounds other in footprints) Assert.That(OverlapsXZ(bounds, other), Is.False, "Keep individual stones separate.");
+                        footprints.Add(bounds);
+                    }
+                }
+            }
+            finally { EditorSceneManager.ClosePreviewScene(scene); }
+        }
+
+        [Test]
+        public void BambooHasSevenGroundedSegmentedCulmsAndNarrowLeavesWithoutFanPalms()
+        {
+            for (int layout = 0; layout < 8; layout++)
+            {
+                Mesh mesh = AssetDatabase.LoadAssetAtPath<Mesh>(JungleNatureBuilder.ArtPath + "/Layouts/Jungle Understory " + (layout + 1) + ".asset");
+                Mesh land = AssetDatabase.LoadAssetAtPath<Mesh>(JungleNatureBuilder.ArtPath + "/Layouts/Idyllic Jungle Layout " + (layout + 1) + ".asset");
+                Assert.That(mesh.subMeshCount, Is.EqualTo(18));
+                Assert.That(mesh.GetIndexCount(1), Is.Zero, "Retire the palm-frond bamboo and umbrella fan palms.");
+                Assert.That(mesh.GetIndexCount(2), Is.Zero);
+                Vector3[] vertices = mesh.vertices; Vector2[] anchors = mesh.uv3;
+                var stems = mesh.GetTriangles(15).Distinct().GroupBy(index => anchors[index]).ToArray();
+                Assert.That(stems.Length, Is.EqualTo(7));
+                foreach (var stem in stems)
+                {
+                    Assert.That(stem.Min(index => vertices[index].y), Is.EqualTo(Ground(land.vertices, land.GetTriangles(7), stem.Key.x, stem.Key.y) - 0.12f).Within(0.02f));
+                    float height = stem.Max(index => vertices[index].y) - stem.Min(index => vertices[index].y);
+                    Assert.That(height, Is.InRange(6.1f, 9.1f));
+                }
+                Assert.That(mesh.GetIndexCount(16), Is.GreaterThan(10000), "Visible nodes along all seven culms.");
+                int[] leaves = mesh.GetTriangles(17); Assert.That(leaves.Length, Is.EqualTo(7 * 6 * 7 * 12));
+                for (int i = 0; i < leaves.Length; i += 12)
+                {
+                    Bounds leaf = BoundsOf(leaves.Skip(i).Take(12).Select(index => vertices[index]));
+                    Assert.That(leaf.size.magnitude, Is.LessThan(0.9f), "Bamboo has slender lance leaves, not oversized palm fans.");
+                }
+                foreach (int index in mesh.GetTriangles(0))
+                {
+                    Vector2 anchor = anchors[index];
+                    Assert.That(Mathf.Abs(anchor.x - 13.5f) < 0.01f || (layout % 3 == 0 && Mathf.Abs(anchor.x - 28) < 0.01f), Is.True,
+                        "Only the fallen log and occasional gateway retain legacy geometry; no palm trunks.");
+                }
+            }
+        }
+
+        private static Bounds BoundsOf(IEnumerable<Vector3> points)
+        {
+            var bounds = new Bounds(points.First(), Vector3.zero);
+            foreach (Vector3 point in points) bounds.Encapsulate(point);
+            return bounds;
+        }
+
+        private static bool OverlapsXZ(Bounds a, Bounds b) => a.min.x < b.max.x && a.max.x > b.min.x && a.min.z < b.max.z && a.max.z > b.min.z;
 
         [Test]
         public void BananaGeometryAndGreenMossCapsAreRemovedInEveryVarietyLayout()
@@ -188,6 +299,10 @@ namespace CubeDash.Tests
             camera.transform.position = new Vector3(-22, 3.5f, -6);
             camera.transform.LookAt(new Vector3(-29, 0, 45));
             Capture(camera, "riverbank");
+            FocusOnScenery(game, camera, true);
+            Capture(camera, "bamboo-closeup");
+            FocusOnScenery(game, camera, false);
+            Capture(camera, "stone-closeup");
             FocusOnBush(game, camera);
             Capture(camera, "bush-closeup");
             camera.fieldOfView = fieldOfView;
@@ -202,6 +317,23 @@ namespace CubeDash.Tests
             AssertBushLeafSidesMatch(shader);
             canvas.enabled = true;
             yield return new ExitPlayMode();
+        }
+
+        private static void FocusOnScenery(CubeDashGame game, Camera camera, bool bamboo)
+        {
+            var segment = game.Track.Segments.OrderBy(item => Mathf.Abs(item.transform.position.z)).First();
+            Transform details = segment.Environment.Biomes[(int)EnvironmentBiome.Jungle].transform.Find(bamboo ? "Landscape Variety" : "Landscape Details");
+            Mesh mesh = details.GetComponent<MeshFilter>().sharedMesh;
+            Material[] materials = details.GetComponent<Renderer>().sharedMaterials;
+            int surface = bamboo ? 15 : System.Array.FindIndex(materials, material => material.name.Contains("Stone_Medium"));
+            Vector2[] anchors = mesh.uv3; Vector3[] vertices = mesh.vertices;
+            int[] indices = mesh.GetTriangles(surface).Distinct().ToArray();
+            Vector2 anchor = anchors[indices.OrderBy(index => (anchors[index] - new Vector2(18, 10)).sqrMagnitude).First()];
+            IEnumerable<int> target = bamboo ? Enumerable.Range(15, 3).SelectMany(mesh.GetTriangles).Distinct()
+                : indices.Where(index => anchors[index] == anchor);
+            Bounds bounds = BoundsOf(target.Select(index => details.TransformPoint(vertices[index])));
+            camera.transform.position = bounds.center + (bamboo ? new Vector3(8, 2, -12) : new Vector3(4, 2, -6));
+            camera.transform.LookAt(bounds.center); camera.fieldOfView = bamboo ? 48 : 45;
         }
 
         private static void FocusOnBush(CubeDashGame game, Camera camera)
