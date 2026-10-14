@@ -109,7 +109,7 @@ namespace CubeDash
                 palette[0].SetColor("_BaseColor", color);
                 hazardPalettes.Add(color, palette);
             }
-            cube.SetHazard(type, HazardMesh(cube, type, variant), palette, HazardSize(type));
+            cube.SetHazard(type, HazardMesh(cube, type, variant), palette, HazardSize(type), visualAssets.MeshFor(type, variant));
         }
 
         private Mesh HazardMesh(RunnerCube cube, HighwayHazard type, int variant)

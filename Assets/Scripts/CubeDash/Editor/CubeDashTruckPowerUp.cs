@@ -198,8 +198,9 @@ namespace CubeDash.Editor
             root.SetParent(null, true);
             ObstacleDebris debris = root.GetComponent<ObstacleDebris>();
             if (debris == null) debris = root.gameObject.AddComponent<ObstacleDebris>();
-            Mesh mesh = AssetDatabase.LoadAssetAtPath<Mesh>("Assets/3D Models/CubeDashBeveledCube.asset");
-            Material material = AssetDatabase.LoadAssetAtPath<Material>("Assets/Material/CubeDashRed.mat");
+            var breakup = Resources.Load<ObstacleBreakupCatalog>(ObstacleBreakupCatalog.ResourcePath);
+            if (breakup == null) { ObstacleBreakupBuilder.ApplyFromCommandLine(); breakup = Resources.Load<ObstacleBreakupCatalog>(ObstacleBreakupCatalog.ResourcePath); }
+            Mesh mesh = breakup.Fallback.fragments[0].mesh;
             var settings = new SerializedObject(debris);
             var pieces = settings.FindProperty("pieces"); pieces.arraySize = 128;
             var renderers = settings.FindProperty("renderers"); renderers.arraySize = 128;
@@ -207,7 +208,7 @@ namespace CubeDash.Editor
             {
                 Transform piece = root.Find("Fragment " + i.ToString("000"));
                 if (piece == null) { piece = new GameObject("Fragment " + i.ToString("000")).transform; piece.SetParent(root, false); }
-                Render(piece.gameObject, mesh, new[] { material });
+                Render(piece.gameObject, mesh, breakup.Materials);
                 MeshRenderer renderer = piece.GetComponent<MeshRenderer>(); renderer.shadowCastingMode = ShadowCastingMode.Off;
                 piece.gameObject.SetActive(false);
                 pieces.GetArrayElementAtIndex(i).objectReferenceValue = piece;

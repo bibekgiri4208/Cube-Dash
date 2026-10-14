@@ -18,6 +18,8 @@ namespace CubeDash
         private Bounds homeRenderBounds;
         private Vector3 homeColliderSize, homeColliderCenter;
         private bool hazardLayoutCached;
+        public Mesh HazardSourceMesh { get; private set; }
+        public Renderer ObstacleRenderer => cubeRenderer != null ? cubeRenderer : GetComponent<Renderer>();
         public HighwayHazard Hazard { get; private set; }
         public CubeColor Color => color;
         public BoxCollider Collider => GetComponent<BoxCollider>();
@@ -44,6 +46,7 @@ namespace CubeDash
             Collider.size = homeColliderSize;
             Collider.center = homeColliderCenter;
             Hazard = HighwayHazard.Cube;
+            HazardSourceMesh = homeMesh;
             cubeRenderer.sharedMaterials = new[] { material };
             cubeRenderer.enabled = !collectible || coinVisual == null;
             if (coinVisual == null) return;
@@ -55,9 +58,10 @@ namespace CubeDash
             coinVisual.gameObject.SetActive(collectible);
         }
 
-        public void SetHazard(HighwayHazard hazard, Mesh mesh, Material[] materials, Vector3 worldSize)
+        public void SetHazard(HighwayHazard hazard, Mesh mesh, Material[] materials, Vector3 worldSize, Mesh source = null)
         {
             Hazard = hazard;
+            HazardSourceMesh = source != null ? source : mesh;
             GetComponent<MeshFilter>().sharedMesh = mesh;
             cubeRenderer.localBounds = HighwayPresentation.CurveBounds(mesh.bounds, transform);
             cubeRenderer.sharedMaterials = materials;

@@ -79,6 +79,7 @@ namespace CubeDash.Editor
             for (int i = 0; i < materials.Length; i++) array.GetArrayElementAtIndex(i).objectReferenceValue = materials[i];
             serialized.ApplyModifiedPropertiesWithoutUndo();
             BakeGuardrails(); AssetDatabase.SaveAssets();
+            ObstacleBreakupBuilder.ApplyFromCommandLine();
             Debug.Log("Baked eleven detailed obstacle variants and galvanized W-beam guardrails. Visible cube obstacles and legacy box traffic removed; scenes, hitboxes, encounters and downloaded assets unchanged.");
         }
 

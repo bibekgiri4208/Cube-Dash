@@ -1,0 +1,415 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ce941f3a0f04a12a2d2d8032e4e5d8c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CubeDash::CubeDash.ObstacleBreakupCatalog
+  models:
+  - source: {fileID: 4300000, guid: 654d18a3bfd26f641a6fb5de902b3069, type: 2}
+    aliases:
+    - {fileID: 4300000, guid: d47c465013ffe6648af9863661a5eba4, type: 2}
+    fragments:
+    - mesh: {fileID: 4300000, guid: f9be5eefcdc75ad4aae7596acb0c7aea, type: 2}
+      center: {x: -0.255, y: 0.28152, z: -0.25499997}
+      role: 0
+    - mesh: {fileID: 4300000, guid: 4603a89e0970ffe408f7fbbceee2ccdf, type: 2}
+      center: {x: -0.225, y: 0.83352005, z: -0.22499996}
+      role: 0
+    - mesh: {fileID: 4300000, guid: 77f629249b0d4314b8811015c04674f7, type: 2}
+      center: {x: -0.255, y: 0.28152, z: 0.25499997}
+      role: 0
+    - mesh: {fileID: 4300000, guid: 5a8cfa49a853d454c993d5eafc8e9463, type: 2}
+      center: {x: -0.22499998, y: 0.83352005, z: 0.22499998}
+      role: 0
+    - mesh: {fileID: 4300000, guid: b76582d2578127049b663c5f6cd96f6e, type: 2}
+      center: {x: 0.255, y: 0.28152, z: -0.25499997}
+      role: 0
+    - mesh: {fileID: 4300000, guid: 5b9de4dd44cfe824f8848a27264fd10d, type: 2}
+      center: {x: 0.225, y: 0.83352005, z: -0.22499995}
+      role: 0
+    - mesh: {fileID: 4300000, guid: c5c5782d835bb794e8e21062ac3825cf, type: 2}
+      center: {x: 0.255, y: 0.28152, z: 0.25499997}
+      role: 0
+    - mesh: {fileID: 4300000, guid: 68580f2b3fc23a148b7cedd60ade5bce, type: 2}
+      center: {x: 0.22499998, y: 0.83352005, z: 0.22499998}
+      role: 0
+  - source: {fileID: 4300000, guid: 1f2f0ebb9f301764797e9895668250b3, type: 2}
+    aliases:
+    - {fileID: 4300000, guid: 48af3dc650ff376448b448a014d55404, type: 2}
+    fragments:
+    - mesh: {fileID: 4300000, guid: c49e29f951e648a40ac3cbb483130e6d, type: 2}
+      center: {x: -0.26, y: 0.2811375, z: -0.25999996}
+      role: 0
+    - mesh: {fileID: 4300000, guid: f0f56f5ea70a4e741b3bb927324c989d, type: 2}
+      center: {x: -0.12510188, y: 0.83238745, z: -0.12510188}
+      role: 0
+    - mesh: {fileID: 4300000, guid: 47d91decc3097ff42bfb67feb052a9dd, type: 2}
+      center: {x: -0.26, y: 0.2811375, z: 0.25999996}
+      role: 0
+    - mesh: {fileID: 4300000, guid: d4f16dea2b5f56945a1ad41cc8889910, type: 2}
+      center: {x: -0.12510188, y: 0.83238745, z: 0.12510186}
+      role: 0
+    - mesh: {fileID: 4300000, guid: a649f52995921f343be45da6ed79aa48, type: 2}
+      center: {x: 0.26, y: 0.2811375, z: -0.25999996}
+      role: 0
+    - mesh: {fileID: 4300000, guid: de8d9b5a5127c484e8a4a350121aa876, type: 2}
+      center: {x: 0.12510188, y: 0.83238745, z: -0.12510186}
+      role: 0
+    - mesh: {fileID: 4300000, guid: 227d7dd78e61f824eb38960e8d94daf0, type: 2}
+      center: {x: 0.26, y: 0.2811375, z: 0.25999996}
+      role: 0
+    - mesh: {fileID: 4300000, guid: 13074401e38a66f43a5ebac16b0c07da, type: 2}
+      center: {x: 0.12510188, y: 0.83238745, z: 0.12510188}
+      role: 0
+  - source: {fileID: 4300000, guid: 2a248668cddbcd947853cdfa67d115a0, type: 2}
+    aliases:
+    - {fileID: 4300000, guid: 80e6c2e5a707e0e4fb8389ab71800a93, type: 2}
+    fragments:
+    - mesh: {fileID: 4300000, guid: 84a82f6d52c7aad44a8fb58d3530e9b4, type: 2}
+      center: {x: -0.27435, y: 0.37, z: 0}
+      role: 0
+    - mesh: {fileID: 4300000, guid: f490bff48d4309545afc54e48636f413, type: 2}
+      center: {x: -0.27435, y: 0.8, z: 0}
+      role: 0
+    - mesh: {fileID: 4300000, guid: 11cfb4a53cc17724895ac7ca6ceec6a1, type: 2}
+      center: {x: 0.27435, y: 0.37, z: 0}
+      role: 0
+    - mesh: {fileID: 4300000, guid: fa654f94a9241d24f86c4041e9789788, type: 2}
+      center: {x: 0.27435, y: 0.8, z: 0}
+      role: 0
+    - mesh: {fileID: 4300000, guid: 137652f43e60fcb44bb586beec86219d, type: 2}
+      center: {x: -0.41540003, y: 0.57125, z: -0.21175}
+      role: 1
+    - mesh: {fileID: 4300000, guid: f8737c405d2421349b2dd530d53afd77, type: 2}
+      center: {x: -0.41540003, y: 0.57125, z: 0.21175}
+      role: 1
+    - mesh: {fileID: 4300000, guid: 2a2f87871c31bfb4597e2bbd74ed2e7e, type: 2}
+      center: {x: 0.41540003, y: 0.57125, z: -0.21175}
+      role: 1
+    - mesh: {fileID: 4300000, guid: ec89d83fea2d39741b64cf3a41a47745, type: 2}
+      center: {x: 0.41540003, y: 0.57125, z: 0.21175}
+      role: 1
+  - source: {fileID: 4300000, guid: fd4e2b3bc3e75034e997bbcfd4f70dd5, type: 2}
+    aliases: []
+    fragments:
+    - mesh: {fileID: 4300000, guid: ed2a040b064a4194398b50f7e303431f, type: 2}
+      center: {x: -0.65957165, y: 0.36781928, z: 0}
+      role: 2
+    - mesh: {fileID: 4300000, guid: ac7ac6ec36d46c4428616fe9db66c646, type: 2}
+      center: {x: -0.68330526, y: 0.8932567, z: -0.009000011}
+      role: 2
+    - mesh: {fileID: 4300000, guid: 439514bde37948e459bcf61a8f62c504, type: 2}
+      center: {x: -0.27802002, y: 0.3505226, z: 0}
+      role: 2
+    - mesh: {fileID: 4300000, guid: 79ebfde2b0977694fb8ba7e270717978, type: 2}
+      center: {x: -0.3561634, y: 0.84401083, z: -0.010035358}
+      role: 2
+    - mesh: {fileID: 4300000, guid: bd838308796806a40bfbb8928c50cf97, type: 2}
+      center: {x: 0.18605842, y: 0.30428812, z: 0}
+      role: 2
+    - mesh: {fileID: 4300000, guid: 129f900146bb79946862e92838943e61, type: 2}
+      center: {x: 0.11675625, y: 0.73734796, z: -0.013829723}
+      role: 2
+    - mesh: {fileID: 4300000, guid: 528d616c8d02b244499b0517e7d3afb0, type: 2}
+      center: {x: 0.6231819, y: 0.25934926, z: 0}
+      role: 2
+    - mesh: {fileID: 4300000, guid: 9fdac80089129de4881d8b672d394230, type: 2}
+      center: {x: 0.5588908, y: 0.7530191, z: -0.022101238}
+      role: 2
+  - source: {fileID: 4300000, guid: 9313a13c8d382a24ca67c21ab0b0929e, type: 2}
+    aliases: []
+    fragments:
+    - mesh: {fileID: 4300000, guid: 459b32ecb0ae8d3478e8d28b7b9d63f4, type: 2}
+      center: {x: -0.4425, y: 0.2793525, z: -0.195}
+      role: 0
+    - mesh: {fileID: 4300000, guid: b4463ddd75bfd2f44b64478e2ba34ab7, type: 2}
+      center: {x: -0.4125, y: 0.8118525, z: -0.149}
+      role: 0
+    - mesh: {fileID: 4300000, guid: 40f758c8f9af70546af196490c2da3ba, type: 2}
+      center: {x: -0.4425, y: 0.2793525, z: 0.195}
+      role: 0
+    - mesh: {fileID: 4300000, guid: caaabf572d38c4f4b8b9f12751c034d3, type: 2}
+      center: {x: -0.4125, y: 0.8118525, z: 0.149}
+      role: 0
+    - mesh: {fileID: 4300000, guid: 196df1e2e6581d34ea4f47bc6337ca14, type: 2}
+      center: {x: 0.4425, y: 0.2793525, z: -0.195}
+      role: 0
+    - mesh: {fileID: 4300000, guid: cdfeb0fe6dfd6c94086cbfea012c78cb, type: 2}
+      center: {x: 0.4125, y: 0.8271025, z: -0.149}
+      role: 0
+    - mesh: {fileID: 4300000, guid: 9735a30333fcf2e43a59a4f8a552a7c3, type: 2}
+      center: {x: 0.4425, y: 0.2793525, z: 0.195}
+      role: 0
+    - mesh: {fileID: 4300000, guid: ea48463f65e22ab4fb04c18a63ec094c, type: 2}
+      center: {x: 0.4125, y: 0.8271025, z: 0.149}
+      role: 0
+  - source: {fileID: 4300000, guid: fa52be9433d0aed42a8a439dba6fd935, type: 2}
+    aliases: []
+    fragments:
+    - mesh: {fileID: 4300000, guid: b321bb070e98aa040b4da8d92ee9724a, type: 2}
+      center: {x: -0.4425, y: 0.37, z: 0}
+      role: 0
+    - mesh: {fileID: 4300000, guid: a7a12a05d280b3745bcc798cd5794d20, type: 2}
+      center: {x: -0.4425, y: 0.8, z: 0}
+      role: 0
+    - mesh: {fileID: 4300000, guid: 0b0eaefc2ad95ca48833d625b67b7f2f, type: 2}
+      center: {x: 0.4425, y: 0.37, z: 0}
+      role: 0
+    - mesh: {fileID: 4300000, guid: c4305b7e606eeab45a303a68f87e5767, type: 2}
+      center: {x: 0.4425, y: 0.8, z: 0}
+      role: 0
+    - mesh: {fileID: 4300000, guid: 5ee431b25488a814792931ed6edd2096, type: 2}
+      center: {x: -0.67, y: 0.57125, z: -0.1925}
+      role: 1
+    - mesh: {fileID: 4300000, guid: 2b77e4379eecc8d47925208a6847a655, type: 2}
+      center: {x: -0.67, y: 0.57125, z: 0.1925}
+      role: 1
+    - mesh: {fileID: 4300000, guid: 7968e5304bf6eb64c8012434eec5e474, type: 2}
+      center: {x: 0.67, y: 0.57125, z: -0.1925}
+      role: 1
+    - mesh: {fileID: 4300000, guid: 6f1c36fa6ba5c2148817963abd52d359, type: 2}
+      center: {x: 0.67, y: 0.57125, z: 0.1925}
+      role: 1
+  - source: {fileID: 4300000, guid: 980910a1a4bb2674397299c257acb2c4, type: 2}
+    aliases: []
+    fragments:
+    - mesh: {fileID: 4300000, guid: 8dafe3556539a414cb8c70e3e201f911, type: 2}
+      center: {x: -0.67349994, y: 0.3, z: -1.04}
+      role: 4
+    - mesh: {fileID: 4300000, guid: eaf6c94c53b07cf449243003b3f8e958, type: 2}
+      center: {x: -0.67349994, y: 0.3, z: 1.02}
+      role: 4
+    - mesh: {fileID: 4300000, guid: 62dc2370a1cd12942936b446b79202a6, type: 2}
+      center: {x: 0.67349994, y: 0.3, z: -1.04}
+      role: 4
+    - mesh: {fileID: 4300000, guid: 23da3e262ee37cc41bd2bb0fe4ca1b46, type: 2}
+      center: {x: 0.67349994, y: 0.3, z: 1.02}
+      role: 4
+    - mesh: {fileID: 4300000, guid: 45fcb792b31a2524dab4158713f97a42, type: 2}
+      center: {x: -0.39375, y: 1.195125, z: 0.12649995}
+      role: 5
+    - mesh: {fileID: 4300000, guid: c3a0442b60d5e1342a7482068a921a54, type: 2}
+      center: {x: -0.3715, y: 1.531375, z: 0.21946293}
+      role: 5
+    - mesh: {fileID: 4300000, guid: abb7add37ec698d45abe532370fa69cd, type: 2}
+      center: {x: 0.39375, y: 1.195125, z: 0.12649995}
+      role: 5
+    - mesh: {fileID: 4300000, guid: cfff0cc744929b449bc42da3bbdf3589, type: 2}
+      center: {x: 0.3715, y: 1.531375, z: 0.21946293}
+      role: 5
+    - mesh: {fileID: 4300000, guid: 9152a6d877ad97445a8d7e17773b8ec3, type: 2}
+      center: {x: -0.4, y: 1.0474999, z: -0.9297499}
+      role: 3
+    - mesh: {fileID: 4300000, guid: f9e0d9d022077944890f5d8b9231a1ed, type: 2}
+      center: {x: -0.38875, y: 1.0474999, z: 0.32}
+      role: 3
+    - mesh: {fileID: 4300000, guid: 53fb433fd699023409b82cd7dd025289, type: 2}
+      center: {x: -0.379, y: 1.0474999, z: 1.235}
+      role: 3
+    - mesh: {fileID: 4300000, guid: bc7a9dbedad774341a24cdf7d4bd2d40, type: 2}
+      center: {x: 0.4, y: 1.0474999, z: -0.9297499}
+      role: 3
+    - mesh: {fileID: 4300000, guid: e85ba90d4aee53542882f7adb091ed82, type: 2}
+      center: {x: 0.38875, y: 1.0474999, z: 0.32}
+      role: 3
+    - mesh: {fileID: 4300000, guid: 11de8662e4c7db845a40db1fea6a574d, type: 2}
+      center: {x: 0.379, y: 1.0474999, z: 1.235}
+      role: 3
+  - source: {fileID: 4300000, guid: c9defe7c540db3c4e8511b92e4c4c940, type: 2}
+    aliases: []
+    fragments:
+    - mesh: {fileID: 4300000, guid: ba2a5936b6378b240a37ad6144591bb2, type: 2}
+      center: {x: -0.67349994, y: 0.3, z: -1.04}
+      role: 4
+    - mesh: {fileID: 4300000, guid: 8068b689170cf894593bb243b2ca849e, type: 2}
+      center: {x: -0.67349994, y: 0.3, z: 1.02}
+      role: 4
+    - mesh: {fileID: 4300000, guid: 18d3ab8120dafc34fa406302bf4830fe, type: 2}
+      center: {x: 0.67349994, y: 0.3, z: -1.04}
+      role: 4
+    - mesh: {fileID: 4300000, guid: e2ac22dff34c54d49a321caf25917f20, type: 2}
+      center: {x: 0.67349994, y: 0.3, z: 1.02}
+      role: 4
+    - mesh: {fileID: 4300000, guid: 4a6a2719512b9f64bb0f8b3be76ed4f6, type: 2}
+      center: {x: -0.39375, y: 1.195125, z: 0.12649995}
+      role: 5
+    - mesh: {fileID: 4300000, guid: e28ed20e210b4d04d9e52db9808ee6ce, type: 2}
+      center: {x: -0.382, y: 1.531375, z: 0.21946293}
+      role: 5
+    - mesh: {fileID: 4300000, guid: f88ca1fe7d86f8e4f82d8c5b7e71f892, type: 2}
+      center: {x: 0.39375, y: 1.195125, z: 0.12649995}
+      role: 5
+    - mesh: {fileID: 4300000, guid: 3c92ed76fb064384b8ee017c8b887e23, type: 2}
+      center: {x: 0.382, y: 1.531375, z: 0.21946293}
+      role: 5
+    - mesh: {fileID: 4300000, guid: 14848b14d6dcd104ba2e70306b3f8916, type: 2}
+      center: {x: -0.4, y: 1.0474999, z: -0.9297499}
+      role: 3
+    - mesh: {fileID: 4300000, guid: af6fa748cd877ab49a4047f8dc405068, type: 2}
+      center: {x: -0.38875, y: 1.0474999, z: 0.32}
+      role: 3
+    - mesh: {fileID: 4300000, guid: 1d2ec9c253867dc4399a719802a77ce3, type: 2}
+      center: {x: -0.379, y: 1.0474999, z: 1.235}
+      role: 3
+    - mesh: {fileID: 4300000, guid: 339400003d1d6ec4da60be1529712307, type: 2}
+      center: {x: 0.4, y: 1.0474999, z: -0.9297499}
+      role: 3
+    - mesh: {fileID: 4300000, guid: 9cdcb3c3e638a744693643acc74438f8, type: 2}
+      center: {x: 0.38875, y: 1.0474999, z: 0.32}
+      role: 3
+    - mesh: {fileID: 4300000, guid: 971105380a53c3540ae598ab85948bd7, type: 2}
+      center: {x: 0.379, y: 1.0474999, z: 1.235}
+      role: 3
+  - source: {fileID: 4300000, guid: 0718e47f82eeaf4498426e8aae17459f, type: 2}
+    aliases: []
+    fragments:
+    - mesh: {fileID: 4300000, guid: 9fec02b2319340847828a3b65ecf41d0, type: 2}
+      center: {x: -0.67349994, y: 0.3, z: -1.04}
+      role: 4
+    - mesh: {fileID: 4300000, guid: 2af7f0a2841063b46bb84ae0fa85c34c, type: 2}
+      center: {x: -0.67349994, y: 0.3, z: 1.02}
+      role: 4
+    - mesh: {fileID: 4300000, guid: 9568a72dd557d1643a5c49f6cfe1348a, type: 2}
+      center: {x: 0.67349994, y: 0.3, z: -1.04}
+      role: 4
+    - mesh: {fileID: 4300000, guid: f0304f242ab54f24f8a60bfa8b13a031, type: 2}
+      center: {x: 0.67349994, y: 0.3, z: 1.02}
+      role: 4
+    - mesh: {fileID: 4300000, guid: a24adc61f75141240a5e90dbfc5a226b, type: 2}
+      center: {x: -0.39375, y: 1.1518458, z: 0.12649995}
+      role: 5
+    - mesh: {fileID: 4300000, guid: 3c4cb3b574258544f8c1de196c399975, type: 2}
+      center: {x: -0.3715, y: 1.4168376, z: 0.2197851}
+      role: 5
+    - mesh: {fileID: 4300000, guid: 6ced214f6578e314ea60cbc358ffa5d1, type: 2}
+      center: {x: 0.39375, y: 1.1518458, z: 0.12649995}
+      role: 5
+    - mesh: {fileID: 4300000, guid: ef4a2afa26273ed46990a3fe6763e648, type: 2}
+      center: {x: 0.3715, y: 1.4168376, z: 0.2197851}
+      role: 5
+    - mesh: {fileID: 4300000, guid: e6e738bab3c23bc4fa813fc53ccb45e2, type: 2}
+      center: {x: -0.4, y: 1.04125, z: -0.9297499}
+      role: 3
+    - mesh: {fileID: 4300000, guid: cc85974fd13263341a64a36180af2247, type: 2}
+      center: {x: -0.38875, y: 1.04125, z: 0.32}
+      role: 3
+    - mesh: {fileID: 4300000, guid: bc77335a55d22854ea58b3c6653c9886, type: 2}
+      center: {x: -0.379, y: 1.04125, z: 1.235}
+      role: 3
+    - mesh: {fileID: 4300000, guid: c30db8e0f5d5a1e46866ac015c0f1588, type: 2}
+      center: {x: 0.4, y: 1.04125, z: -0.9297499}
+      role: 3
+    - mesh: {fileID: 4300000, guid: 33cc206c8be971d44a4888b64e291b39, type: 2}
+      center: {x: 0.38875, y: 1.04125, z: 0.32}
+      role: 3
+    - mesh: {fileID: 4300000, guid: 0e8235ec3859f574c9ba5231d1ef6c4a, type: 2}
+      center: {x: 0.379, y: 1.04125, z: 1.235}
+      role: 3
+  - source: {fileID: 4300000, guid: e8bce05c63ef040418bb95fb72e3fa2e, type: 2}
+    aliases: []
+    fragments:
+    - mesh: {fileID: 4300000, guid: 3e3bca83705d2e546b5204be5ce440ee, type: 2}
+      center: {x: -0.71774995, y: 0.3, z: -1.65}
+      role: 4
+    - mesh: {fileID: 4300000, guid: 962f6066258e7bf48b3916d73a64e257, type: 2}
+      center: {x: -0.71774995, y: 0.3, z: 1.42}
+      role: 4
+    - mesh: {fileID: 4300000, guid: a8de66dfcf1e87849b64ee03e6af1579, type: 2}
+      center: {x: 0.71774995, y: 0.3, z: -1.65}
+      role: 4
+    - mesh: {fileID: 4300000, guid: 90fa160b569f2f848af28b4a6739fbcd, type: 2}
+      center: {x: 0.71774995, y: 0.3, z: 1.42}
+      role: 4
+    - mesh: {fileID: 4300000, guid: eece9d37402bdb844aa2293e24c95ea9, type: 2}
+      center: {x: -0.40875, y: 1.2525, z: -1.520375}
+      role: 5
+    - mesh: {fileID: 4300000, guid: 1171350123162734389fc5188406f6c5, type: 2}
+      center: {x: -0.3595, y: 1.5374999, z: -1.4579141}
+      role: 5
+    - mesh: {fileID: 4300000, guid: f73843e393adf1c4aaaf54397e241a01, type: 2}
+      center: {x: 0.40875, y: 1.2525, z: -1.520375}
+      role: 5
+    - mesh: {fileID: 4300000, guid: f6d8fa56ff043e443b5379ce4669fee7, type: 2}
+      center: {x: 0.3595, y: 1.5374999, z: -1.4579141}
+      role: 5
+    - mesh: {fileID: 4300000, guid: 47daf37e4f4e94d4bb42f7b489a449be, type: 2}
+      center: {x: -0.415, y: 1.08, z: -1.535}
+      role: 3
+    - mesh: {fileID: 4300000, guid: ed5bf0b4ac854724499713c3b82ace23, type: 2}
+      center: {x: -0.42325, y: 1.2887499, z: 0.025000036}
+      role: 3
+    - mesh: {fileID: 4300000, guid: 4ce86d495eb8d2c4a8a93bf99957a6e3, type: 2}
+      center: {x: -0.42325, y: 1.24875, z: 1.56}
+      role: 3
+    - mesh: {fileID: 4300000, guid: ee5553aa845a5cf47a5ff3da4e09d36a, type: 2}
+      center: {x: 0.415, y: 1.08, z: -1.535}
+      role: 3
+    - mesh: {fileID: 4300000, guid: 0b0506c056478464a98f1945c7276381, type: 2}
+      center: {x: 0.42325, y: 1.2887499, z: 0.025000036}
+      role: 3
+    - mesh: {fileID: 4300000, guid: 1305e52ab998bb142a0b34665fff1e2e, type: 2}
+      center: {x: 0.42325, y: 1.24875, z: 1.56}
+      role: 3
+  - source: {fileID: 4300000, guid: 237f75bd1a6c26f4a8d6c3514ae89df1, type: 2}
+    aliases: []
+    fragments:
+    - mesh: {fileID: 4300000, guid: 17a9bd8eb2ecea043857dbe4345833e6, type: 2}
+      center: {x: -0.7071749, y: 0.36, z: -1.3987999}
+      role: 4
+    - mesh: {fileID: 4300000, guid: 377e7c756dbb56e4fa107b67f47af98d, type: 2}
+      center: {x: -0.7071749, y: 0.36, z: 1.3719}
+      role: 4
+    - mesh: {fileID: 4300000, guid: c306b15a0e248954ab0ba4ada7352e4f, type: 2}
+      center: {x: 0.7071749, y: 0.36, z: -1.3987999}
+      role: 4
+    - mesh: {fileID: 4300000, guid: ffa7aaae0f763364f9f8a4ade31d522a, type: 2}
+      center: {x: 0.7071749, y: 0.36, z: 1.3719}
+      role: 4
+    - mesh: {fileID: 4300000, guid: 55a93b4fd63b5114385be171bcad814e, type: 2}
+      center: {x: -0.4134375, y: 1.43415, z: 0.17014247}
+      role: 5
+    - mesh: {fileID: 4300000, guid: 92be7f8ca90f3c8489b23baf829beb46, type: 2}
+      center: {x: -0.39007497, y: 1.8376501, z: 0.29517764}
+      role: 5
+    - mesh: {fileID: 4300000, guid: 23cde1958d9e37a4faf213da4876d2b6, type: 2}
+      center: {x: 0.4134375, y: 1.43415, z: 0.17014247}
+      role: 5
+    - mesh: {fileID: 4300000, guid: 9ace64c1ec1850a4b856d59492861b72, type: 2}
+      center: {x: 0.39007497, y: 1.8376501, z: 0.29517764}
+      role: 5
+    - mesh: {fileID: 4300000, guid: d32ffc151638e114faa9bb4a29727bf4, type: 2}
+      center: {x: -0.42, y: 1.257, z: -1.2505137}
+      role: 3
+    - mesh: {fileID: 4300000, guid: 8d47f01c1f56291488215a97029780c5, type: 2}
+      center: {x: -0.40818748, y: 1.257, z: 0.43039998}
+      role: 3
+    - mesh: {fileID: 4300000, guid: 17ea54bafff6c2b4b8a09260391a0ab5, type: 2}
+      center: {x: -0.39795, y: 1.257, z: 1.6610751}
+      role: 3
+    - mesh: {fileID: 4300000, guid: 43266d3480be84b4daefaede552928a2, type: 2}
+      center: {x: 0.42, y: 1.257, z: -1.2505137}
+      role: 3
+    - mesh: {fileID: 4300000, guid: e2d67deab0290d24891a5990341dcb3e, type: 2}
+      center: {x: 0.40818748, y: 1.257, z: 0.43039998}
+      role: 3
+    - mesh: {fileID: 4300000, guid: b463d42b1d8182e4ca1a87159ba6c3c6, type: 2}
+      center: {x: 0.39795, y: 1.257, z: 1.6610751}
+      role: 3
+  materials:
+  - {fileID: 2100000, guid: 5ee71f70b01a31c4baa9e967b31a5bbb, type: 2}
+  - {fileID: 2100000, guid: 670808a7abd197a419f82f894b0276b7, type: 2}
+  - {fileID: 2100000, guid: cd56d5e2395805b44a4ddf352fdd530a, type: 2}
+  - {fileID: 2100000, guid: b47afdf1a4b78094982b409459ef3493, type: 2}
+  - {fileID: 2100000, guid: c861234334ffa0546b01eceb74dfb6b2, type: 2}
+  - {fileID: 2100000, guid: 0c3a88bbc88d8f94682894249245eb8b, type: 2}
+  - {fileID: 2100000, guid: 47b455742dde3c1409998cdceb9f98a6, type: 2}
+  - {fileID: 2100000, guid: 4b9b2f5591a17a34b82edbe08ed95f5d, type: 2}
+  - {fileID: 2100000, guid: 646c3006656bd324485fb965deb1d2f5, type: 2}
