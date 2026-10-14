@@ -63,6 +63,7 @@ namespace CubeDash.Editor
                 foreach (ArcadeButton feedback in panel.GetComponentsInChildren<ArcadeButton>(true)) EnableFeedback(feedback);
             }
             foreach (ArcadeButton feedback in ribbons.GetComponentsInChildren<ArcadeButton>(true)) EnableFeedback(feedback);
+            MainMenuRibbonPolish.ApplyToScene(scene);
             EditorSceneManager.MarkSceneDirty(scene);
         }
         private static void EnableFeedback(ArcadeButton feedback)

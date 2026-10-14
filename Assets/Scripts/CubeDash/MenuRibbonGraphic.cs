@@ -9,6 +9,18 @@ namespace CubeDash
     {
         [SerializeField] private bool primary;
         public bool Primary { get => primary; set { primary = value; SetVerticesDirty(); } }
+        private float focusAmount;
+        public const float FocusOutset = 5f;
+        public float FocusAmount
+        {
+            get => focusAmount;
+            set
+            {
+                value = Mathf.Clamp01(value);
+                if (focusAmount == value) return;
+                focusAmount = value; SetVerticesDirty();
+            }
+        }
 
         protected override void OnPopulateMesh(VertexHelper vh)
         {
@@ -19,6 +31,9 @@ namespace CubeDash
             Color border = primary ? new Color(0.27f, 0, 0.055f) : new Color(0.018f, 0.014f, 0.025f);
             Vector2[] outline = Contour(r, 0, -5, r.width, r.height);
             Vector2[] face = Contour(r, 5, 3, r.width - 12, r.height - 10);
+            if (focusAmount > 0)
+                MenuVectorGeometry.Ring(vh, MenuVectorGeometry.OffsetContour(outline, FocusOutset),
+                    MenuVectorGeometry.OffsetContour(outline, 2), new Color(1, 1, 1, focusAmount), fringe);
             MenuVectorGeometry.Polygon(vh, outline, border, fringe);
             Color left = primary ? new Color(1, 0.065f, 0.15f) : new Color(1, 0.69f, 0.73f);
             Color right = primary ? new Color(0.95f, 0.02f, 0.11f) : new Color(1, 0.82f, 0.84f);

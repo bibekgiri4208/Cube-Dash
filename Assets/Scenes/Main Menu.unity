@@ -898,6 +898,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
   livelyFeedback: 1
+  ribbonFeedback: 0
 --- !u!114 &7207210
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8209,6 +8210,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
   livelyFeedback: 1
+  ribbonFeedback: 0
 --- !u!222 &121989791
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -15592,6 +15594,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
   livelyFeedback: 1
+  ribbonFeedback: 1
 --- !u!222 &237293026
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -15618,7 +15621,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 66, y: -511}
+  m_AnchoredPosition: {x: 68, y: -524.7937}
   m_SizeDelta: {x: 395, y: 106}
   m_Pivot: {x: 0, y: 1}
 --- !u!225 &237293028
@@ -16032,7 +16035,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 62, y: -260}
+  m_AnchoredPosition: {x: 68, y: -248}
   m_SizeDelta: {x: 455, y: 122}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &246846931
@@ -16048,6 +16051,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
   livelyFeedback: 1
+  ribbonFeedback: 1
 --- !u!114 &246846932
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21525,6 +21529,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
   livelyFeedback: 0
+  ribbonFeedback: 0
 --- !u!114 &333333100
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -45258,6 +45263,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
   livelyFeedback: 1
+  ribbonFeedback: 0
 --- !u!114 &718521766
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -45762,7 +45768,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 66, y: -623}
+  m_AnchoredPosition: {x: 68, y: -659.65234}
   m_SizeDelta: {x: 395, y: 112}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &727991287
@@ -45778,6 +45784,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
   livelyFeedback: 1
+  ribbonFeedback: 1
 --- !u!114 &727991288
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -51102,6 +51109,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
   livelyFeedback: 1
+  ribbonFeedback: 0
 --- !u!114 &797774336
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -69178,6 +69186,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
   livelyFeedback: 0
+  ribbonFeedback: 0
 --- !u!114 &977369051
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -75758,6 +75767,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
   livelyFeedback: 0
+  ribbonFeedback: 0
 --- !u!114 &1075791804
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -76591,6 +76601,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
   livelyFeedback: 0
+  ribbonFeedback: 0
 --- !u!114 &1094038310
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -102174,6 +102185,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
   livelyFeedback: 1
+  ribbonFeedback: 0
 --- !u!114 &1524170824
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -110956,6 +110968,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
   livelyFeedback: 0
+  ribbonFeedback: 0
 --- !u!114 &1592626323
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -115702,6 +115715,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
   livelyFeedback: 1
+  ribbonFeedback: 0
 --- !u!222 &1666041174
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -123452,6 +123466,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
   livelyFeedback: 1
+  ribbonFeedback: 0
 --- !u!114 &1719005151
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -147890,6 +147905,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
   livelyFeedback: 1
+  ribbonFeedback: 0
 --- !u!222 &2041074211
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -150493,6 +150509,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
   livelyFeedback: 1
+  ribbonFeedback: 1
 --- !u!222 &2080677646
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -150519,7 +150536,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 66, y: -404}
+  m_AnchoredPosition: {x: 68, y: -397.77045}
   m_SizeDelta: {x: 395, y: 102}
   m_Pivot: {x: 0, y: 1}
 --- !u!225 &2080677648
@@ -153815,6 +153832,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.ArcadeButton
   livelyFeedback: 1
+  ribbonFeedback: 0
 --- !u!114 &2130579289
 MonoBehaviour:
   m_ObjectHideFlags: 0
