@@ -120,7 +120,8 @@ namespace CubeDash.Editor
             Model("Village Torii", CountrySideMeshes.Torii, ArchitectureMaterials());
             Model("Stone Lantern", CountrySideMeshes.Lantern, ArchitectureMaterials());
             Model("Canal Footbridge", CountrySideMeshes.Bridge, ArchitectureMaterials());
-            Model("Rice Paddy", CountrySideMeshes.Paddy, new[] { M("Paddy Embankment"), M("Canal Water"), M("Rice Shade"), M("Rice Tips") });
+            Material paddyWater = AssetDatabase.LoadAssetAtPath<Material>(CountrySideWaterBuilder.PaddyMaterialPath);
+            Model("Rice Paddy", CountrySideMeshes.Paddy, new[] { M("Paddy Embankment"), paddyWater != null ? paddyWater : M("Canal Water"), M("Rice Shade"), M("Rice Tips") });
             foreach (string name in new[] { "BlossomTree_01", "BlossomTree_03", "BlossomTree_05", "BroadleafTree_01_Green", "BroadleafTree_03_Green", "Fir_02", "Fir_04",
                 "Bush_01_01", "Bush_02_01", "Bush_03_01", "Grass_01", "Grass_02", "Grass_03", "FlowerMeadow_Pink", "FlowerMeadow_White", "FlowerMeadow_PurpleRedPink",
                 "FlowerMeadow_OrangePinkRedPurpleBlue", "FlowerMeadow_BluePurple", "Flower_Pink", "Flower_White", "Flower_Yellow", "Rock_Medium_01", "Rock_Small_02", "Reeds_01" })
@@ -185,8 +186,8 @@ namespace CubeDash.Editor
             Part("Asphalt and rural road paint", road, MeshAsset("Country Road", () => g.Finish("Country road - asphalt and painted edges")), new[] { M("Country Asphalt"), M("Road Edge Paint") }, Vector3.zero, Vector3.one);
             Transform details = Group("Rural details - canals fences and farm paths", parent);
             var props = new CountrySideMeshes.Geometry(4); // stone, wood, path, water
-            props.Box(new Vector3(7.8f, -0.025f, 108), new Vector3(2.35f, 0.06f, 262), 3);
-            foreach (float x in new[] { 6.46f, 9.14f }) props.Box(new Vector3(x, 0.12f, 108), new Vector3(0.30f, 0.34f, 262), 0);
+            props.WaterSurface(new Vector3(7.8f, 0.005f, 106), new Vector2(2.35f, 284), 3);
+            foreach (float x in new[] { 6.46f, 9.14f }) props.Box(new Vector3(x, 0.12f, 106), new Vector3(0.30f, 0.34f, 284), 0);
             foreach (float z in new[] { 24f, 45f, 118f, 146f })
             {
                 float side = z == 24 || z == 118 || z == 146 ? -1 : 1;

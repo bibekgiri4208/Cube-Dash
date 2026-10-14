@@ -63,7 +63,7 @@ namespace CubeDash.Editor
             var surfaces = environment.GetComponentsInChildren<MeshRenderer>(true).Where(renderer => renderer.gameObject.activeInHierarchy
                 && !nativeRenderers.Contains(renderer) && renderer.transform.childCount == 0
                 && renderer.sharedMaterials.All(material => material != null && (material.shader.name == "Universal Render Pipeline/Lit"
-                    || material.shader.name == "CubeDash/Countryside Ground"))).ToArray();
+                    || material.shader.name == "CubeDash/Countryside Ground" || material.shader.name == CountrySideWaterBuilder.ShaderName))).ToArray();
             var data = new SerializedObject(scenery);
             Array(data.FindProperty("curvePlants"), plants); Array(data.FindProperty("curvedSurfaces"), surfaces);
             data.ApplyModifiedPropertiesWithoutUndo();

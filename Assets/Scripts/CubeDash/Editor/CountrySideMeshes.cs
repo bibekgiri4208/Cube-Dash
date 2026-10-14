@@ -274,7 +274,7 @@ namespace CubeDash.Editor
         {
             var g = new Geometry(4); // soil, water, rice shade, fresh rice
             g.Box(new Vector3(0, -0.06f, 0), new Vector3(14, 0.18f, 26), 0);
-            g.Box(new Vector3(0, 0.055f, 0), new Vector3(13.2f, 0.025f, 25.2f), 1);
+            g.WaterSurface(new Vector3(0, 0.0675f, 0), new Vector2(13.2f, 25.2f), 1);
             foreach (float x in new[] { -6.85f, 6.85f }) g.Box(new Vector3(x, 0.13f, 0), new Vector3(0.30f, 0.35f, 26), 0);
             foreach (float z in new[] { -12.85f, 12.85f }) g.Box(new Vector3(0, 0.13f, z), new Vector3(14, 0.35f, 0.30f), 0);
             for (int row = 0; row < 25; row++) for (int column = 0; column < 14; column++)
@@ -301,6 +301,15 @@ namespace CubeDash.Editor
                 triangles = new List<int>[slots]; for (int i = 0; i < slots; i++) triangles[i] = new List<int>();
             }
             private void Vertex(Vector3 p, Color color, Vector2 texture) { vertices.Add(p); colors.Add(color); uv.Add(texture); }
+            public void WaterSurface(Vector3 center, Vector2 size, int slot)
+            {
+                int start = vertices.Count;
+                Vertex(center + new Vector3(-size.x, 0, -size.y) * 0.5f, Color.white, Vector2.zero);
+                Vertex(center + new Vector3(-size.x, 0, size.y) * 0.5f, Color.white, Vector2.up);
+                Vertex(center + new Vector3(size.x, 0, size.y) * 0.5f, Color.white, Vector2.one);
+                Vertex(center + new Vector3(size.x, 0, -size.y) * 0.5f, Color.white, Vector2.right);
+                triangles[slot].AddRange(new[] { start, start + 1, start + 2, start, start + 2, start + 3 });
+            }
             public void Quad(Vector3 a, Vector3 b, Vector3 c, Vector3 d, int slot, Vector3 outward, Color? tint = null)
             {
                 if (Vector3.Dot(Vector3.Cross(b - a, c - a), outward) < 0) { Vector3 swap = b; b = d; d = swap; }
