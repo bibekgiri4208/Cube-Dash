@@ -179,7 +179,7 @@ namespace CubeDash.Tests
             yield return null;
             var game = Object.FindAnyObjectByType<CubeDashGame>(); game.StartRun(); game.TogglePause(); Clear(game);
             foreach (SceneryRise rise in game.Track.GetComponentsInChildren<SceneryRise>()) rise.Settle();
-            foreach (Canvas canvas in Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None)) canvas.enabled = false;
+            foreach (Canvas canvas in Object.FindObjectsByType<Canvas>()) canvas.enabled = false;
             RoadCurve.Clear();
             var catalog = Resources.Load<ObstacleBreakupCatalog>(ObstacleBreakupCatalog.ResourcePath);
             var art = Resources.Load<HighwayHazardVisuals>(HighwayHazardVisuals.ResourcePath);
