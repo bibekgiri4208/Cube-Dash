@@ -45,6 +45,13 @@ namespace CubeDash.Editor
                 Make("Rear Lamp Lenses", "Reflector", new Color(0.58f, 0.025f, 0.018f), 0.15f, 0.66f, 0.25f, new Color(0.07f, 0.001f, 0.001f))
             };
             Mesh barrier = Save(BuildBarrier(), ArtPath + "/Meshes/Reinforced Road Block.asset");
+            Mesh compact = Save(BuildTrafficDrum(), ArtPath + "/Meshes/Traffic Drum.asset");
+            Mesh barricade = BuildWorkBarrier(); barricade.name = "Compact Road Barricade";
+            Vector3 compactScale = new Vector3(0.62f, 1, 1.10f);
+            barricade.vertices = barricade.vertices.Select(p => Vector3.Scale(p, compactScale)).ToArray();
+            barricade.normals = barricade.normals.Select(p => new Vector3(p.x / compactScale.x, p.y, p.z / compactScale.z).normalized).ToArray();
+            barricade.RecalculateTangents(); barricade.RecalculateBounds();
+            Mesh[] compactVariants = { Save(BuildTrafficCone(), ArtPath + "/Meshes/Weighted Traffic Cone.asset"), Save(barricade, ArtPath + "/Meshes/Compact Road Barricade.asset") };
             Mesh van = Save(BuildVan(), ArtPath + "/Meshes/Panel Van.asset");
             Mesh truck = Save(BuildBoxTruck(), ArtPath + "/Meshes/Delivery Box Truck.asset");
             Mesh[] barrierVariants = { Save(BuildWaterBarrier(), ArtPath + "/Meshes/Water Filled Barrier.asset"), Save(BuildWorkBarrier(), ArtPath + "/Meshes/Work Zone Barricade.asset") };
@@ -61,17 +68,18 @@ namespace CubeDash.Editor
             var serialized = new SerializedObject(data);
             serialized.FindProperty("barrier").objectReferenceValue = barrier; serialized.FindProperty("van").objectReferenceValue = van;
             serialized.FindProperty("truck").objectReferenceValue = truck;
+            serialized.FindProperty("compactObstacle").objectReferenceValue = compact;
             void Variants(string name, Mesh[] values)
             {
                 SerializedProperty property = serialized.FindProperty(name); property.arraySize = values.Length;
                 for (int i = 0; i < values.Length; i++) property.GetArrayElementAtIndex(i).objectReferenceValue = values[i];
             }
-            Variants("barrierVariants", barrierVariants); Variants("vanVariants", vanVariants); Variants("truckVariants", truckVariants);
+            Variants("compactVariants", compactVariants); Variants("barrierVariants", barrierVariants); Variants("vanVariants", vanVariants); Variants("truckVariants", truckVariants);
             var array = serialized.FindProperty("materials"); array.arraySize = materials.Length;
             for (int i = 0; i < materials.Length; i++) array.GetArrayElementAtIndex(i).objectReferenceValue = materials[i];
             serialized.ApplyModifiedPropertiesWithoutUndo();
             BakeGuardrails(); AssetDatabase.SaveAssets();
-            Debug.Log("Baked eight detailed traffic variants and galvanized W-beam guardrails. Legacy runtime box traffic removed; scenes, hitboxes, encounters and downloaded assets unchanged.");
+            Debug.Log("Baked eleven detailed obstacle variants and galvanized W-beam guardrails. Visible cube obstacles and legacy box traffic removed; scenes, hitboxes, encounters and downloaded assets unchanged.");
         }
 
         private static Mesh BuildBarrier()

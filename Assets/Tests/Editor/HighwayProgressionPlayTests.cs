@@ -58,8 +58,9 @@ namespace CubeDash.Tests
                 track.Advance(42, 0, 0, 1, Vector2.one * 0.45f, 0, false, false, true, false, out _, out _);
                 foreach (TrackSegment segment in track.Segments)
                     foreach (RunnerCube cube in segment.Cubes)
-                        if (cube.gameObject.activeSelf && !cube.CoinVisible && cube.Hazard != HighwayHazard.Cube)
+                        if (cube.gameObject.activeSelf && !cube.CoinVisible)
                         {
+                            Assert.That(cube.GetComponent<Renderer>().sharedMaterials.Length, Is.EqualTo(9), "Every visible obstacle, including warm-up slots, uses authored traffic art.");
                             if (cube.Hazard == HighwayHazard.Truck || cube.Hazard == HighwayHazard.Van) trafficSeen++;
                             variants[(int)cube.Hazard].Add(cube.GetComponent<MeshFilter>().sharedMesh.name);
                         }
@@ -67,7 +68,7 @@ namespace CubeDash.Tests
             }
             Assert.That(trafficSeen, Is.GreaterThan(0));
             var art = Resources.Load<HighwayHazardVisuals>(HighwayHazardVisuals.ResourcePath);
-            foreach (HighwayHazard type in new[] { HighwayHazard.Barrier, HighwayHazard.Van, HighwayHazard.Truck })
+            foreach (HighwayHazard type in new[] { HighwayHazard.Cube, HighwayHazard.Barrier, HighwayHazard.Van, HighwayHazard.Truck })
                 Assert.That(variants[(int)type].Count, Is.EqualTo(art.VariantCount(type)), "Every authored variant must actually spawn through the normal pooled progression: " + type);
             Assert.That(track.GetComponentsInChildren<Transform>(true).Length, Is.EqualTo(count));
             Assert.That(Shader.GetGlobalVector("_CubeDashRoadCurve").x, Is.EqualTo(track.Travelled));

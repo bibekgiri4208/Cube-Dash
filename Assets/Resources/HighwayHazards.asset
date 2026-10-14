@@ -12,6 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c51f381ee2674e10a51c639ff5279149, type: 3}
   m_Name: HighwayHazards
   m_EditorClassIdentifier: CubeDash::CubeDash.HighwayHazardVisuals
+  compactObstacle: {fileID: 4300000, guid: 654d18a3bfd26f641a6fb5de902b3069, type: 2}
+  compactVariants:
+  - {fileID: 4300000, guid: 1f2f0ebb9f301764797e9895668250b3, type: 2}
+  - {fileID: 4300000, guid: 2a248668cddbcd947853cdfa67d115a0, type: 2}
   barrier: {fileID: 4300000, guid: fd4e2b3bc3e75034e997bbcfd4f70dd5, type: 2}
   van: {fileID: 4300000, guid: 980910a1a4bb2674397299c257acb2c4, type: 2}
   truck: {fileID: 4300000, guid: e8bce05c63ef040418bb95fb72e3fa2e, type: 2}

@@ -6,6 +6,52 @@ namespace CubeDash.Editor
 {
     public static partial class HighwayHazardArtBuilder
     {
+        private static Mesh BuildTrafficDrum()
+        {
+            var g = new Geometry();
+            g.Cylinder(new Vector3(0, 0.045f, 0), 0.51f, 0.09f, Rubber, Quaternion.Euler(0, 0, 90), 32);
+            float[] heights = { 0.08f, 0.13f, 0.28f, 0.32f, 0.48f, 0.53f, 0.70f, 0.75f, 0.91f, 0.97f, 1.03f };
+            float[] radii = { 0.42f, 0.445f, 0.43f, 0.45f, 0.44f, 0.45f, 0.43f, 0.45f, 0.42f, 0.42f, 0.38f };
+            TurnedSurface(g, heights, radii, row => row == 2 || row == 5 ? Lamp : Paint);
+            g.Cylinder(new Vector3(0, 1.034f, 0), 0.38f, 0.014f, Paint, Quaternion.Euler(0, 0, 90), 32);
+            foreach (float x in new[] { -0.12f, 0.12f }) g.Box(new Vector3(x, 1.063f, 0), new Vector3(0.04f, 0.07f, 0.07f), Trim, 0.01f);
+            g.Box(new Vector3(0, 1.09f, 0), new Vector3(0.28f, 0.028f, 0.065f), Trim, 0.008f);
+            g.Cylinder(new Vector3(0, 1.035f, 0.24f), 0.053f, 0.035f, Amber, Quaternion.Euler(0, 0, 90), 16);
+            return g.Finish("Traffic Drum");
+        }
+
+        private static Mesh BuildTrafficCone()
+        {
+            var g = new Geometry();
+            g.Box(new Vector3(0, 0.055f, 0), new Vector3(1.04f, 0.11f, 1.04f), Rubber, 0.035f);
+            g.Cylinder(new Vector3(0, 0.105f, 0), 0.44f, 0.06f, Trim, Quaternion.Euler(0, 0, 90), 32);
+            float[] heights = { 0.13f, 0.18f, 0.42f, 0.58f, 0.73f, 0.87f, 1.06f, 1.09f };
+            float[] radii = { 0.40f, 0.385f, 0.30f, 0.244f, 0.19f, 0.14f, 0.068f, 0.059f };
+            TurnedSurface(g, heights, radii, row => row == 2 || row == 4 ? Lamp : Paint);
+            g.Cylinder(new Vector3(0, 1.089f, 0), 0.059f, 0.014f, Paint, Quaternion.Euler(0, 0, 90), 24);
+            g.Cylinder(new Vector3(0, 1.099f, 0), 0.037f, 0.007f, Trim, Quaternion.Euler(0, 0, 90), 24);
+            foreach (float x in new[] { -0.43f, 0.43f })
+                foreach (float z in new[] { -0.43f, 0.43f })
+                    g.Cylinder(new Vector3(x, 0.116f, z), 0.02f, 0.012f, Steel, Quaternion.Euler(0, 0, 90), 8);
+            return g.Finish("Weighted Traffic Cone");
+        }
+
+        private static void TurnedSurface(Geometry g, float[] heights, float[] radii, System.Func<int, int> material)
+        {
+            Vector3 Point(int row, int sector)
+            {
+                float angle = sector * Mathf.PI * 2 / 32;
+                return new Vector3(Mathf.Cos(angle) * radii[row], heights[row], Mathf.Sin(angle) * radii[row]);
+            }
+            for (int row = 0; row < heights.Length - 1; row++)
+                for (int sector = 0; sector < 32; sector++)
+                {
+                    Vector3 a = Point(row, sector), b = Point(row, sector + 1);
+                    Vector3 hint = (a + b) * 0.5f; hint.y = 0;
+                    g.Quad(a, b, Point(row + 1, sector + 1), Point(row + 1, sector), material(row), hint);
+                }
+        }
+
         private static Mesh BuildWaterBarrier()
         {
             var g = new Geometry();

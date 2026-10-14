@@ -26,7 +26,7 @@ namespace CubeDash
 
         public void Prewarm(RunnerCube cube)
         {
-            for (int i = 1; i <= 3; i++)
+            for (int i = 0; i <= 3; i++)
                 for (int variant = 0; variant < visualAssets.VariantCount((HighwayHazard)i); variant++) HazardMesh(cube, (HighwayHazard)i, variant);
         }
 
@@ -34,7 +34,7 @@ namespace CubeDash
         {
             if (shader == null) throw new InvalidOperationException("Missing Resources/CubeDashCurvedLit shader.");
             visualAssets = Resources.Load<HighwayHazardVisuals>(HighwayHazardVisuals.ResourcePath);
-            if (visualAssets == null || visualAssets.MeshFor(HighwayHazard.Barrier) == null || visualAssets.MeshFor(HighwayHazard.Van) == null || visualAssets.MeshFor(HighwayHazard.Truck) == null
+            if (visualAssets == null || visualAssets.MeshFor(HighwayHazard.Cube) == null || visualAssets.MeshFor(HighwayHazard.Barrier) == null || visualAssets.MeshFor(HighwayHazard.Van) == null || visualAssets.MeshFor(HighwayHazard.Truck) == null
                 || visualAssets.Materials.Length != 9)
                 throw new InvalidOperationException("Missing or incomplete baked Resources/HighwayHazards art.");
         }
@@ -100,7 +100,6 @@ namespace CubeDash
 
         public void ConfigureHazard(RunnerCube cube, HighwayHazard type, int variant = 0)
         {
-            if (type == HighwayHazard.Cube) return;
             Material paint = cube.GetComponent<Renderer>().sharedMaterial;
             Color color = paint.GetColor("_BaseColor");
             if (!hazardPalettes.TryGetValue(color, out Material[] palette))

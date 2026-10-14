@@ -17,6 +17,9 @@ namespace CubeDash.Tests
         [UnityTearDown]
         public IEnumerator LeavePlayMode() { if (Application.isPlaying) yield return new ExitPlayMode(); }
 
+        [TestCase(HighwayHazard.Cube, 0, 800, 6000)]
+        [TestCase(HighwayHazard.Cube, 1, 800, 6000)]
+        [TestCase(HighwayHazard.Cube, 2, 800, 8000)]
         [TestCase(HighwayHazard.Barrier, 0, 1500, 5000)]
         [TestCase(HighwayHazard.Barrier, 1, 1000, 6000)]
         [TestCase(HighwayHazard.Barrier, 2, 1000, 8000)]
@@ -52,7 +55,7 @@ namespace CubeDash.Tests
             float paintedArea = 0;
             for (int i = 0; i < paint.Length; i += 3)
                 paintedArea += Vector3.Cross(positions[paint[i + 1]] - positions[paint[i]], positions[paint[i + 2]] - positions[paint[i]]).magnitude * 0.5f;
-            Assert.That(paintedArea, Is.GreaterThan(type == HighwayHazard.Barrier ? 1.5f : 5), "Keep the gameplay color over broad, readable painted body panels.");
+            Assert.That(paintedArea, Is.GreaterThan(type == HighwayHazard.Cube ? 0.6f : type == HighwayHazard.Barrier ? 1.5f : 5), "Keep the gameplay color over broad, readable painted body panels.");
             if (type == HighwayHazard.Van || type == HighwayHazard.Truck)
             {
                 foreach (int surface in new[] { 2, 3, 4, 5, 6, 7, 8 }) Assert.That(mesh.GetIndexCount(surface), Is.GreaterThan(0), "Model tires, rims, glazing, trim and separate lamps.");
@@ -104,7 +107,7 @@ namespace CubeDash.Tests
                 Mesh home = first.GetComponent<MeshFilter>().sharedMesh; Vector3 homeCollider = a.Collider.size;
                 int count = first.GetComponentsInChildren<Transform>(true).Length;
                 presentation.Prewarm(a); presentation.Prewarm(b);
-                foreach (HighwayHazard type in new[] { HighwayHazard.Barrier, HighwayHazard.Van, HighwayHazard.Truck })
+                foreach (HighwayHazard type in new[] { HighwayHazard.Cube, HighwayHazard.Barrier, HighwayHazard.Van, HighwayHazard.Truck })
                 for (int variant = 0; variant < Resources.Load<HighwayHazardVisuals>(HighwayHazardVisuals.ResourcePath).VariantCount(type); variant++)
                 {
                     a.Configure(CubeColor.Blue, blue, false); b.Configure(CubeColor.Blue, blue, false);
@@ -142,6 +145,7 @@ namespace CubeDash.Tests
             var game = Object.FindAnyObjectByType<CubeDashGame>(); game.StartRun(); game.TogglePause();
             game.Track.Reset(7321, CubeColor.Red);
             foreach (var rise in game.Track.GetComponentsInChildren<SceneryRise>()) rise.Settle();
+            Capture(game.GameCamera, "opening-stage");
             foreach (var segment in game.Track.Segments)
             {
                 foreach (var cube in segment.Cubes) cube.gameObject.SetActive(false);
@@ -168,12 +172,12 @@ namespace CubeDash.Tests
                 camera.transform.position = barrier.Collider.bounds.center + new Vector3(2.2f, 1.1f, -2.8f);
                 camera.transform.LookAt(barrier.Collider.bounds.center); Capture(camera, "barrier");
                 var assets = Resources.Load<HighwayHazardVisuals>(HighwayHazardVisuals.ResourcePath);
-                foreach (HighwayHazard type in new[] { HighwayHazard.Barrier, HighwayHazard.Van, HighwayHazard.Truck })
+                foreach (HighwayHazard type in new[] { HighwayHazard.Cube, HighwayHazard.Barrier, HighwayHazard.Van, HighwayHazard.Truck })
                     for (int variant = 0; variant < assets.VariantCount(type); variant++)
                     {
                         van.Configure(CubeColor.Blue, game.Track.ColorMaterial(CubeColor.Blue), false);
                         presentation.ConfigureHazard(van, type, variant); Physics.SyncTransforms();
-                        camera.transform.position = van.Collider.bounds.center + new Vector3(3.1f, 1.3f, type == HighwayHazard.Barrier ? -3.3f : -4.8f);
+                        camera.transform.position = van.Collider.bounds.center + new Vector3(3.1f, 1.3f, type == HighwayHazard.Barrier || type == HighwayHazard.Cube ? -3.3f : -4.8f);
                         camera.transform.LookAt(van.Collider.bounds.center); Capture(camera, type + "-" + variant);
                         if (type == HighwayHazard.Truck && variant == 0 || type == HighwayHazard.Van && variant == 2)
                         {
@@ -194,7 +198,7 @@ namespace CubeDash.Tests
         public void VariantCatalogHasDistinctArtAndGuardrailsHaveFoldedSteelAndAuthoredPbrTextures()
         {
             var assets = Resources.Load<HighwayHazardVisuals>(HighwayHazardVisuals.ResourcePath);
-            foreach (HighwayHazard type in new[] { HighwayHazard.Barrier, HighwayHazard.Van, HighwayHazard.Truck })
+            foreach (HighwayHazard type in new[] { HighwayHazard.Cube, HighwayHazard.Barrier, HighwayHazard.Van, HighwayHazard.Truck })
             {
                 Assert.That(assets.VariantCount(type), Is.GreaterThanOrEqualTo(2));
                 Mesh[] meshes = Enumerable.Range(0, assets.VariantCount(type)).Select(i => assets.MeshFor(type, i)).ToArray();
@@ -215,6 +219,50 @@ namespace CubeDash.Tests
             Assert.That(steel.shader.name, Is.EqualTo("CubeDash/Highway Hazard"));
             foreach (string property in new[] { "_BaseMap", "_BumpMap", "_SurfaceMap" })
                 Assert.That(AssetDatabase.GetAssetPath(steel.GetTexture(property)), Does.Contain("Galvanized"));
+        }
+
+        [UnityTest]
+        public IEnumerator OpeningAndUnpatternedRunsNeverDisplayTheOldCubeObstacle()
+        {
+            yield return new EnterPlayMode();
+            Mesh oldCube = AssetDatabase.LoadAssetAtPath<Mesh>("Assets/3D Models/CubeDashBeveledCube.asset");
+            foreach (string scene in new[] { "Assets/Scenes/Level.unity", "Assets/Scenes/Jungle.unity" })
+            {
+                yield return EditorSceneManager.LoadSceneAsyncInPlayMode(scene, new LoadSceneParameters(LoadSceneMode.Single));
+                yield return null;
+                var game = Object.FindAnyObjectByType<CubeDashGame>(); game.StartRun(); game.TogglePause();
+                int count = game.Track.GetComponentsInChildren<Transform>(true).Length;
+                foreach (bool patterned in new[] { true, false })
+                {
+                    var settings = new SerializedObject(game.Track);
+                    settings.FindProperty("patternedEncounters").boolValue = patterned; settings.ApplyModifiedPropertiesWithoutUndo();
+                    game.Track.Reset(7321, CubeColor.Red);
+                    var compactModels = new System.Collections.Generic.HashSet<string>();
+                    for (int step = 0; step < 8; step++)
+                    {
+                        Physics.SyncTransforms();
+                        foreach (TrackSegment segment in game.Track.Segments)
+                            foreach (RunnerCube slot in segment.Cubes)
+                                if (slot.gameObject.activeSelf && !slot.CoinVisible)
+                                {
+                                    Mesh mesh = slot.GetComponent<MeshFilter>().sharedMesh;
+                                    Assert.That(mesh, Is.Not.SameAs(oldCube));
+                                    Assert.That(mesh.vertexCount, Is.GreaterThan(500));
+                                    Assert.That(slot.GetComponent<Renderer>().sharedMaterials.Length, Is.EqualTo(9));
+                                    Assert.That(Vector4.Distance(slot.GetComponent<Renderer>().sharedMaterial.GetColor("_BaseColor"), game.Track.ColorMaterial(slot.Color).GetColor("_BaseColor")), Is.LessThan(0.00001f));
+                                    if (slot.Hazard == HighwayHazard.Cube)
+                                    {
+                                        compactModels.Add(mesh.name);
+                                        Assert.That(Vector3.Distance(slot.Collider.bounds.size, Vector3.one * 1.15f), Is.LessThan(0.001f));
+                                    }
+                                }
+                        game.Track.Advance(42, 0, 0, 1, Vector2.one * 0.45f, 0, false, false, true, false, out _, out _);
+                    }
+                    Assert.That(compactModels.Count, Is.EqualTo(3), scene + " / patterned=" + patterned);
+                    Assert.That(game.Track.GetComponentsInChildren<Transform>(true).Length, Is.EqualTo(count));
+                }
+            }
+            yield return new ExitPlayMode();
         }
 
         private static void Capture(Camera camera, string name)

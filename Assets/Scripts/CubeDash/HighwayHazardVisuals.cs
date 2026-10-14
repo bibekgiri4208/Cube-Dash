@@ -6,6 +6,8 @@ namespace CubeDash
     public sealed class HighwayHazardVisuals : ScriptableObject
     {
         public const string ResourcePath = "HighwayHazards";
+        [SerializeField] private Mesh compactObstacle = null;
+        [SerializeField] private Mesh[] compactVariants = new Mesh[0];
         [SerializeField] private Mesh barrier = null;
         [SerializeField] private Mesh van = null;
         [SerializeField] private Mesh truck = null;
@@ -14,14 +16,15 @@ namespace CubeDash
         [SerializeField] private Mesh[] truckVariants = new Mesh[0];
         [SerializeField] private Material[] materials = new Material[0];
         public Material[] Materials => materials;
-        private Mesh[] Variants(HighwayHazard type) => type == HighwayHazard.Barrier ? barrierVariants : type == HighwayHazard.Van ? vanVariants : type == HighwayHazard.Truck ? truckVariants : null;
-        public int VariantCount(HighwayHazard type) => type == HighwayHazard.Cube ? 0 : 1 + (Variants(type)?.Length ?? 0);
+        // Cube remains the serialized compact collision category, not a visible cube model.
+        private Mesh[] Variants(HighwayHazard type) => type == HighwayHazard.Cube ? compactVariants : type == HighwayHazard.Barrier ? barrierVariants : type == HighwayHazard.Van ? vanVariants : type == HighwayHazard.Truck ? truckVariants : null;
+        public int VariantCount(HighwayHazard type) => 1 + (Variants(type)?.Length ?? 0);
         public Mesh MeshFor(HighwayHazard type, int variant = 0)
         {
             int count = VariantCount(type);
             if (count == 0) return null;
             int index = (variant % count + count) % count;
-            return index == 0 ? (type == HighwayHazard.Barrier ? barrier : type == HighwayHazard.Van ? van : truck) : Variants(type)[index - 1];
+            return index == 0 ? (type == HighwayHazard.Cube ? compactObstacle : type == HighwayHazard.Barrier ? barrier : type == HighwayHazard.Van ? van : truck) : Variants(type)[index - 1];
         }
     }
 }
