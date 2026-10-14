@@ -35,7 +35,10 @@ namespace CubeDash.Tests
                     Assert.That(scenery.ExitLayouts, Is.EqualTo(scenery.Layouts));
                     Assert.That(scenery.VarietyLayouts, Is.Empty);
                     Assert.That(city.GetComponentsInChildren<Collider>(true), Is.Empty);
-                    Assert.That(city.GetComponentsInChildren<Renderer>().Length, Is.EqualTo(1), "Only the baked street renderer is active; old scenery is archived.");
+                    var nativeTrees = city.transform.Find(JapaneseCitySidewalks.TreesName);
+                    Assert.That(nativeTrees, Is.Not.Null);
+                    int rendererCount = 1 + nativeTrees.GetComponentsInChildren<Renderer>(true).Length;
+                    Assert.That(city.GetComponentsInChildren<Renderer>().Length, Is.EqualTo(rendererCount), "Only the street and saved native tree LOD renderers are active; old scenery is archived.");
                     var streets = city.transform.Find(JapaneseCityBuilder.StreetsName);
                     Assert.That(streets.position.y, Is.EqualTo(0).Within(0.01f));
                     Assert.That(streets.GetComponent<Renderer>().sharedMaterials.All(material => AssetDatabase.GetAssetPath(material).StartsWith(JapaneseCityBuilder.ArtPath)), Is.True);
@@ -44,7 +47,7 @@ namespace CubeDash.Tests
                     {
                         segment.Environment.Configure(section, 8, EnvironmentBiome.City);
                         Assert.That(streets.GetComponent<MeshFilter>().sharedMesh, Is.SameAs(scenery.DetailLayout(section, 8, true)));
-                        Assert.That(city.GetComponentsInChildren<Renderer>().Length, Is.EqualTo(1), "Recycling must not reactivate the archived skyline.");
+                        Assert.That(city.GetComponentsInChildren<Renderer>().Length, Is.EqualTo(rendererCount), "Recycling must not reactivate the archived skyline or create more trees.");
                     }
                     Assert.That(city.GetComponentsInChildren<Transform>(true).Length, Is.EqualTo(count));
                 }
@@ -58,10 +61,12 @@ namespace CubeDash.Tests
         {
             Mesh mesh = AssetDatabase.LoadAssetAtPath<Mesh>(JapaneseCityBuilder.ArtPath + "/Layouts/Japanese Sakura Street " + layout + ".asset");
             Assert.That(mesh, Is.Not.Null); Assert.That(mesh.vertexCount, Is.InRange(30000, 220000));
-            Assert.That(mesh.subMeshCount, Is.EqualTo(22)); Assert.That(mesh.uv.Length, Is.EqualTo(mesh.vertexCount));
+            Assert.That(mesh.subMeshCount, Is.EqualTo(JapaneseCitySidewalks.SurfaceCount)); Assert.That(mesh.uv.Length, Is.EqualTo(mesh.vertexCount));
             Assert.That(mesh.uv3.Length, Is.EqualTo(mesh.vertexCount));
-            foreach (int surface in new[] { 6, 7, 10, 14, 15, 16, 17, 20, 21 })
-                Assert.That(mesh.GetIndexCount(surface), Is.GreaterThan(50), "Windows, lanterns, branches, three blossom tones, signs and real Japanese glyphs are modeled.");
+            foreach (int surface in new[] { 6, 7, 10, 16, 17, 20, 21 })
+                Assert.That(mesh.GetIndexCount(surface), Is.GreaterThan(50), "Windows, lanterns, fallen petals, signs and real Japanese glyphs are modeled.");
+            Assert.That(mesh.GetIndexCount(14), Is.Zero, "Original faceted sakura branches are retired.");
+            Assert.That(mesh.GetIndexCount(15), Is.Zero, "Original faceted sakura crowns are retired.");
             foreach (Vector3 vertex in mesh.vertices)
             {
                 Assert.That(float.IsNaN(vertex.x) || float.IsNaN(vertex.y) || float.IsNaN(vertex.z), Is.False);
@@ -101,7 +106,7 @@ namespace CubeDash.Tests
             Assert.That(colors.Length, Is.EqualTo(mesh.vertexCount));
             Assert.That(colors.Min(c => c.r), Is.LessThan(180), "Shaded shop recesses, foliage interiors and contacts.");
             Assert.That(colors.Max(c => c.r), Is.EqualTo(255), "Open, unoccluded surfaces remain clean.");
-            Assert.That(colors.Count(c => c.r < 230), Is.GreaterThan(mesh.vertexCount / 12));
+            Assert.That(colors.Count(c => c.r < 230), Is.GreaterThan(mesh.vertexCount / 25), "Retained shop AO; the native canopies no longer occupy this baked mesh.");
             Assert.That(colors.All(c => c.r == c.g && c.g == c.b && c.a == 255), Is.True, "AO does not repaint the material palette.");
             var glass = AssetDatabase.LoadAssetAtPath<Material>(JapaneseCityBuilder.ArtPath + "/Materials/Window blue.mat");
             Assert.That(glass.shader.name, Is.EqualTo("CubeDash/Japanese City Surface"));
@@ -167,6 +172,114 @@ namespace CubeDash.Tests
         }
 
         [Test]
+        public void CityUsesNativeMenuSakuraWithLodsClearRoadAndNoRuntimeColliders()
+        {
+            Scene scene = EditorSceneManager.OpenPreviewScene(JapaneseCityBuilder.ScenePath);
+            try
+            {
+                var track = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<EndlessTrack>(true)).Single();
+                var blossom = AssetDatabase.LoadAssetAtPath<Material>(JapaneseCityReferenceFinish.BlossomPath);
+                Assert.That(blossom, Is.Not.Null);
+                int total = 0;
+                foreach (var segment in track.Segments)
+                {
+                    var avenue = segment.Environment.Biomes[0].transform.Find(JapaneseCitySidewalks.TreesName);
+                    var presentation = avenue.GetComponent<CitySakuraTrees>();
+                    Assert.That(presentation.Trees.Length, Is.EqualTo(4));
+                    Assert.That(presentation.Homes.Length, Is.EqualTo(4));
+                    Assert.That(avenue.GetComponentsInChildren<Collider>(true), Is.Empty);
+                    Assert.That(avenue.GetComponentsInChildren<MonoBehaviour>(true).Length, Is.EqualTo(1), "Only the pooled presentation component, no imported scripts.");
+                    foreach (var tree in presentation.Trees)
+                    {
+                        total++;
+                        string source = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(tree.gameObject);
+                        Assert.That(JapaneseCitySidewalks.Species.Any(n => source == MainMenuAssetStoreTrees.PrefabPath + n + ".prefab"), Is.True, source);
+                        Assert.That(tree.GetComponent<LODGroup>().GetLODs().Length, Is.GreaterThanOrEqualTo(3));
+                        Assert.That(tree.GetComponentsInChildren<Transform>(true).All(t => GameObjectUtility.GetStaticEditorFlags(t.gameObject) == 0), Is.True, "Pooled/bent trees must not be statically batched in builds.");
+                        Assert.That(tree.GetComponentsInChildren<MeshRenderer>(true).SelectMany(r => r.sharedMaterials), Does.Contain(blossom));
+                        Assert.That(tree.GetComponentsInChildren<MeshFilter>(true).All(f => AssetDatabase.GetAssetPath(f.sharedMesh).StartsWith("Assets/Idyllic Fantasy Nature/")), Is.True);
+                        Bounds bounds = JapaneseCitySidewalks.BoundsOfTree(tree.gameObject, true);
+                        Assert.That(bounds.min.y, Is.EqualTo(0.225f).Within(0.003f));
+                        Assert.That(bounds.size.y, Is.InRange(3, 7.41f));
+                        Assert.That(bounds.min.x > 5.9f || bounds.max.x < -5.9f, Is.True, "Every native LOD stays outside the road: " + bounds);
+                    }
+                }
+                Assert.That(total, Is.EqualTo(32));
+            }
+            finally { EditorSceneManager.ClosePreviewScene(scene); }
+        }
+
+        [TestCase(1)] [TestCase(2)] [TestCase(3)] [TestCase(4)]
+        [TestCase(5)] [TestCase(6)] [TestCase(7)] [TestCase(8)]
+        public void SidewalksHaveReferenceRectangularSlabsJointsCurbsOuterPathsAndSoilBeds(int layout)
+        {
+            Mesh mesh = AssetDatabase.LoadAssetAtPath<Mesh>(JapaneseCityBuilder.ArtPath + "/Layouts/Japanese Sakura Street " + layout + ".asset");
+            for (int surface = 22; surface < JapaneseCitySidewalks.SurfaceCount; surface++)
+                Assert.That(mesh.GetIndexCount(surface), Is.GreaterThan(30), "Slab color variants, mortar, curb, soil and gutter: " + surface);
+            Vector3[] vertices = mesh.vertices;
+            Assert.That(mesh.GetTriangles(22).Select(i => vertices[i].y).Max(), Is.EqualTo(0.23f).Within(0.001f));
+            Assert.That(mesh.GetTriangles(25).Select(i => vertices[i].y).Max(), Is.EqualTo(0.2f).Within(0.001f), "Joints are physically recessed, not painted on.");
+            Assert.That(mesh.GetTriangles(26).Select(i => vertices[i].y).Max(), Is.EqualTo(0.255f).Within(0.001f));
+            foreach (int surface in new[] { 22, 23, 24 })
+                foreach (int i in mesh.GetTriangles(surface))
+                {
+                    Vector3 v = vertices[i]; float x = Mathf.Abs(v.x);
+                    Assert.That(x > 8.301f && x < 10.299f && (Mathf.Abs(v.z - 8.05f) < 0.999f || Mathf.Abs(v.z - 29.05f) < 0.999f), Is.False, "Paving is cut away for open tree beds.");
+                }
+            Vector3[] normals = mesh.normals;
+            int[] curb = mesh.GetTriangles(26);
+            for (int triangle = 0; triangle < curb.Length; triangle += 3)
+            {
+                Vector3 a = vertices[curb[triangle]], b = vertices[curb[triangle + 1]], c = vertices[curb[triangle + 2]];
+                Vector3 geometric = Vector3.Cross(b - a, c - a).normalized;
+                Assert.That(Vector3.Dot(geometric, normals[curb[triangle]]), Is.GreaterThan(0.99f));
+                if (a.y > 0.23f && b.y > 0.23f && c.y > 0.23f)
+                    Assert.That(geometric.y, Is.GreaterThan(0), "Top and bevel faces must point upward/outward to catch the daylight.");
+            }
+            var slab = AssetDatabase.LoadAssetAtPath<Material>(JapaneseCityBuilder.ArtPath + "/Materials/Sidewalk sandstone.mat");
+            Color color = slab.GetColor("_BaseColor");
+            Assert.That(color.r, Is.GreaterThan(color.g)); Assert.That(color.g, Is.GreaterThan(color.b));
+        }
+
+        [Test]
+        public void NativeSakuraFollowsBendRiseAndOriginShiftWithoutCumulativeDrift()
+        {
+            Scene scene = EditorSceneManager.OpenPreviewScene(JapaneseCityBuilder.ScenePath);
+            Vector4 curve = Shader.GetGlobalVector("_CubeDashRoadCurve"), origin = Shader.GetGlobalVector("_CubeDashRoadOrigin");
+            float time = Shader.GetGlobalFloat("_CubeDashEnvironmentTime");
+            try
+            {
+                var track = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<EndlessTrack>(true)).Single();
+                var segment = track.Segments[4];
+                var trees = segment.Environment.Biomes[0].GetComponentInChildren<CitySakuraTrees>(true);
+                var rise = segment.GetComponent<SceneryRise>();
+                rise.Settle(); RoadCurve.Apply(800, 2.3f, 1, 0); trees.SyncPresentation();
+                Vector3[] positions = trees.Trees.Select(t => t.position).ToArray();
+                for (int i = 0; i < trees.Trees.Length; i++)
+                {
+                    Vector3 home = trees.transform.TransformPoint(trees.Homes[i]);
+                    float bend = RoadCurve.Offset(home.z, 800, 2.3f);
+                    Assert.That(trees.Trees[i].position.x, Is.EqualTo(home.x + bend).Within(0.001f));
+                    Assert.That(trees.Trees[i].position.y, Is.EqualTo(home.y).Within(0.001f));
+                }
+                trees.SyncPresentation();
+                for (int i = 0; i < positions.Length; i++) Assert.That(Vector3.Distance(trees.Trees[i].position, positions[i]), Is.LessThan(0.001f));
+                segment.transform.position -= Vector3.forward * 4096;
+                RoadCurve.Apply(800, 2.3f, 1, -4096); trees.SyncPresentation();
+                for (int i = 0; i < positions.Length; i++) Assert.That(Vector3.Distance(trees.Trees[i].position, positions[i] - Vector3.forward * 4096), Is.LessThan(0.002f));
+                Shader.SetGlobalFloat("_CubeDashEnvironmentTime", 20); rise.Begin(true, 20); trees.SyncPresentation();
+                for (int i = 0; i < trees.Trees.Length; i++) Assert.That(trees.Trees[i].localPosition.y, Is.LessThan(trees.Homes[i].y - 79));
+                rise.Settle(); RoadCurve.Clear(); trees.SyncPresentation();
+                for (int i = 0; i < trees.Trees.Length; i++) Assert.That(Vector3.Distance(trees.Trees[i].localPosition, trees.Homes[i]), Is.LessThan(0.001f));
+            }
+            finally
+            {
+                Shader.SetGlobalVector("_CubeDashRoadCurve", curve); Shader.SetGlobalVector("_CubeDashRoadOrigin", origin);
+                Shader.SetGlobalFloat("_CubeDashEnvironmentTime", time); EditorSceneManager.ClosePreviewScene(scene);
+            }
+        }
+
+        [Test]
         public void ReapplyingPreservesSavedCityAndArtByteForByte()
         {
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -175,6 +288,8 @@ namespace CubeDash.Tests
             { using (var sha = SHA256.Create()) using (var stream = File.OpenRead(path)) return System.BitConverter.ToString(sha.ComputeHash(stream)); }
             var hashes = files.Select(Hash).ToArray();
             JapaneseCityBuilder.ApplyFromCommandLine();
+            JapaneseCitySidewalks.ApplyFromCommandLine();
+            JapaneseCityReferenceFinish.ApplyFromCommandLine();
             for (int i = 0; i < files.Length; i++) Assert.That(Hash(files[i]), Is.EqualTo(hashes[i]), files[i]);
         }
 
@@ -205,13 +320,14 @@ namespace CubeDash.Tests
             Assert.That(game.Track.Environment.CurrentBiome, Is.EqualTo(EnvironmentBiome.City));
             Capture(camera, "curved-road");
             canvas.enabled = true;
-            foreach (string path in new[] { "Assets/Shaders/JapaneseCityLettering.shader", "Assets/Shaders/JapaneseCitySky.shader", "Assets/Shaders/JapaneseCitySurface.shader" })
+            foreach (string path in new[] { "Assets/Shaders/JapaneseCityLettering.shader", "Assets/Shaders/JapaneseCitySky.shader", "Assets/Shaders/JapaneseCitySurface.shader", "Assets/Shaders/JapaneseCitySakura.shader" })
                 Assert.That(ShaderUtil.ShaderHasError(AssetDatabase.LoadAssetAtPath<Shader>(path)), Is.False, path);
             yield return new ExitPlayMode();
         }
 
         private static void Capture(Camera camera, string name)
         {
+            foreach (var trees in Object.FindObjectsByType<CitySakuraTrees>(FindObjectsSortMode.None)) trees.SyncPresentation();
             var previous = camera.targetTexture; var active = RenderTexture.active; bool async = ShaderUtil.allowAsyncCompilation;
             var target = new RenderTexture(1440, 1080, 24); var image = new Texture2D(1440, 1080, TextureFormat.RGB24, false);
             try

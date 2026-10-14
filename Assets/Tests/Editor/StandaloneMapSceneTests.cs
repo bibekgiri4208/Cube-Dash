@@ -55,7 +55,7 @@ namespace CubeDash.Tests
                     {
                         Transform road = segment.transform.Find(name), oldRoad = old.transform.Find(name);
                         if (oldRoad == null) Assert.That(road, Is.Null, name);
-                        else Assert.That(HierarchySnapshot(road), Is.EqualTo(HierarchySnapshot(oldRoad)), name);
+                        else Assert.That(HierarchySnapshot(road, index == 0), Is.EqualTo(HierarchySnapshot(oldRoad, index == 0)), name);
                     }
                     for (int slot = 0; slot < segment.Cubes.Length; slot++)
                         Assert.That(HierarchySnapshot(segment.Cubes[slot].transform), Is.EqualTo(HierarchySnapshot(old.Cubes[slot].transform)), "Cube/coin/collider layout");
@@ -164,13 +164,17 @@ namespace CubeDash.Tests
             if (value is GameObject go) return Path(go.transform);
             return value.name;
         }
-        internal static string Snapshot(Component component)
+        internal static string Snapshot(Component component, bool cityRoadAppearance = false)
         {
             var builder = new StringBuilder(); var property = new SerializedObject(component).GetIterator();
             bool enterChildren = true;
             while (property.Next(enterChildren))
             {
                 enterChildren = property.propertyType != SerializedPropertyType.ObjectReference;
+                // City has an explicitly requested scene-local reference road finish. Only its
+                // renderer material slots / visual mesh may differ; transforms/colliders still match.
+                if (cityRoadAppearance && ((component is MeshRenderer && property.propertyPath.StartsWith("m_Materials")) ||
+                    (component is MeshFilter && property.propertyPath == "m_Mesh"))) continue;
                 if (property.propertyPath == "m_CorrespondingSourceObject" || property.propertyPath == "m_PrefabInstance" || property.propertyPath == "m_PrefabAsset" || property.propertyType == SerializedPropertyType.Generic) continue;
                 builder.Append(property.propertyPath).Append('=');
                 if (property.propertyType == SerializedPropertyType.ObjectReference) builder.Append(Reference(property.objectReferenceValue));
@@ -202,10 +206,10 @@ namespace CubeDash.Tests
                 default: return property.type;
             }
         }
-        internal static string HierarchySnapshot(Transform root)
+        internal static string HierarchySnapshot(Transform root, bool cityRoadAppearance = false)
         {
             Assert.That(root, Is.Not.Null);
-            return string.Join("\n", root.GetComponentsInChildren<Transform>(true).Select(transform => Path(transform) + ":" + transform.gameObject.activeSelf + "\n" + string.Join("\n", transform.GetComponents<Component>().Select(component => component.GetType().Name + ":" + Snapshot(component)))));
+            return string.Join("\n", root.GetComponentsInChildren<Transform>(true).Select(transform => Path(transform) + ":" + transform.gameObject.activeSelf + "\n" + string.Join("\n", transform.GetComponents<Component>().Select(component => component.GetType().Name + ":" + Snapshot(component, cityRoadAppearance)))));
         }
         private static void Capture(CubeDashGame game, string name)
         {

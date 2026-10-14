@@ -143,6 +143,7 @@ namespace CubeDash.Editor
                 JapaneseCityLighting.ApplyToScene(scene);
                 AssetDatabase.SaveAssets(); EditorSceneManager.MarkSceneDirty(scene);
                 if (!EditorSceneManager.SaveScene(scene)) throw new InvalidOperationException("Could not save Japanese City.");
+                JapaneseCitySidewalks.ApplyFromCommandLine();
                 Debug.Log("Japanese City saved: eight pooled sakura streets, authentic Japanese signs, shopfronts, utility wires, lanterns, vending machines, shelters and a clear blue sky. Gameplay, road, camera, HUD and other maps preserved.");
             }
             finally { Object.DestroyImmediate(blossom); if (font != null) Object.DestroyImmediate(font); font = null; }

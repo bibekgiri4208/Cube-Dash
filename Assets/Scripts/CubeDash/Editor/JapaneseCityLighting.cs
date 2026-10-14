@@ -68,6 +68,11 @@ namespace CubeDash.Editor
                     material.SetColor("_ShadeColor", new Color(0.79f, 0.84f, 0.97f));
                 }
                 if (name.Contains("paving") || name == "Paving joints") { material.SetFloat("_SurfaceType", 5); material.SetFloat("_Smoothness", 0.12f); }
+                if (name.StartsWith("Sidewalk", StringComparison.Ordinal))
+                {
+                    material.SetFloat("_SurfaceType", 5); material.SetFloat("_Smoothness", 0.12f);
+                    material.SetColor("_ShadeColor", new Color(0.94f, 0.94f, 0.96f));
+                }
                 if (name == "Iron") { material.SetFloat("_SurfaceType", 6); material.SetFloat("_Smoothness", 0.44f); material.SetFloat("_Metallic", 0.48f); }
                 if (name == "Lantern gold") { material.SetFloat("_SurfaceType", 7); material.SetFloat("_EmissionStrength", 0.38f); }
                 EditorUtility.SetDirty(material);
