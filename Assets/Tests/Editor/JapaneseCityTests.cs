@@ -82,10 +82,52 @@ namespace CubeDash.Tests
             Assert.That(profile.TryGet<DepthOfField>(out var depth), Is.True);
             Assert.That(depth.mode.value, Is.EqualTo(DepthOfFieldMode.Off));
             Assert.That(profile.TryGet<Vignette>(out var vignette), Is.True);
-            Assert.That(vignette.intensity.value, Is.EqualTo(0.08f).Within(0.001f));
-            Assert.That(profile.components.Count, Is.EqualTo(2), "Only distance blur and vignette are overridden, not player/HUD colors.");
+            Assert.That(vignette.intensity.value, Is.EqualTo(0.075f).Within(0.001f));
+            Assert.That(profile.TryGet<Bloom>(out var bloom), Is.True);
+            Assert.That(bloom.intensity.value, Is.LessThan(0.3f)); Assert.That(bloom.threshold.value, Is.GreaterThan(1));
+            Assert.That(profile.TryGet<ColorAdjustments>(out var grade), Is.True); Assert.That(grade.contrast.value, Is.InRange(6, 18));
+            Assert.That(profile.TryGet<Tonemapping>(out var tone), Is.True); Assert.That(tone.mode.value, Is.EqualTo(TonemappingMode.Neutral));
+            Assert.That(profile.components.Count, Is.EqualTo(7), "City-local lighting grade, not shared graphics defaults.");
             var lettering = AssetDatabase.LoadAssetAtPath<Material>(JapaneseCityBuilder.ArtPath + "/Materials/Lettering.mat");
             Assert.That(AssetDatabase.GetAssetPath(lettering.GetTexture("_BaseMap")), Is.EqualTo(JapaneseCityBuilder.ArtPath + "/Japanese Glyphs.png"));
+        }
+
+        [TestCase(1)] [TestCase(2)] [TestCase(3)] [TestCase(4)]
+        [TestCase(5)] [TestCase(6)] [TestCase(7)] [TestCase(8)]
+        public void CityHasSavedCreviceShadingWithoutChangingTopologyOrAddingRuntimeColliders(int layout)
+        {
+            var mesh = AssetDatabase.LoadAssetAtPath<Mesh>(JapaneseCityBuilder.ArtPath + "/Layouts/Japanese Sakura Street " + layout + ".asset");
+            Color32[] colors = mesh.colors32;
+            Assert.That(colors.Length, Is.EqualTo(mesh.vertexCount));
+            Assert.That(colors.Min(c => c.r), Is.LessThan(180), "Shaded shop recesses, foliage interiors and contacts.");
+            Assert.That(colors.Max(c => c.r), Is.EqualTo(255), "Open, unoccluded surfaces remain clean.");
+            Assert.That(colors.Count(c => c.r < 230), Is.GreaterThan(mesh.vertexCount / 12));
+            Assert.That(colors.All(c => c.r == c.g && c.g == c.b && c.a == 255), Is.True, "AO does not repaint the material palette.");
+            var glass = AssetDatabase.LoadAssetAtPath<Material>(JapaneseCityBuilder.ArtPath + "/Materials/Window blue.mat");
+            Assert.That(glass.shader.name, Is.EqualTo("CubeDash/Japanese City Surface"));
+            Assert.That(glass.GetFloat("_Smoothness"), Is.GreaterThan(0.65f));
+            Assert.That(glass.FindPass("ShadowCaster"), Is.GreaterThanOrEqualTo(0));
+            Assert.That(glass.FindPass("DepthNormals"), Is.GreaterThanOrEqualTo(0));
+            Assert.That(ShaderUtil.ShaderHasError(glass.shader), Is.False);
+        }
+
+        [Test]
+        public void CitySunAndAmbientHaveDirectionalWarmCoolSeparation()
+        {
+            Scene scene = EditorSceneManager.OpenPreviewScene(JapaneseCityBuilder.ScenePath);
+            try
+            {
+                var track = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<EndlessTrack>(true)).Single();
+                var data = new SerializedObject(track.Environment);
+                var sun = (Light)data.FindProperty("sunlight").objectReferenceValue;
+                var fill = (Light)data.FindProperty("skyFill").objectReferenceValue;
+                Assert.That(sun.shadowStrength, Is.EqualTo(1)); Assert.That(fill.intensity, Is.LessThan(0.13f));
+                var a = data.FindProperty("atmospheres").GetArrayElementAtIndex(0);
+                Assert.That(a.FindPropertyRelative("SunIntensity").floatValue, Is.GreaterThan(1.6f));
+                Color ambient = a.FindPropertyRelative("AmbientEquator").colorValue;
+                Assert.That(ambient.b, Is.GreaterThan(ambient.r)); Assert.That(ambient.maxColorComponent, Is.LessThan(0.75f));
+            }
+            finally { EditorSceneManager.ClosePreviewScene(scene); }
         }
 
         [Test]
@@ -142,7 +184,7 @@ namespace CubeDash.Tests
             yield return new EnterPlayMode();
             yield return EditorSceneManager.LoadSceneAsyncInPlayMode(JapaneseCityBuilder.ScenePath, new LoadSceneParameters(LoadSceneMode.Single));
             yield return null;
-            var game = Object.FindAnyObjectByType<CubeDashGame>(); game.StartRun(); game.Track.Reset(7321, CubeColor.Red);
+            var game = Object.FindAnyObjectByType<CubeDashGame>(); game.StartRun(); game.Track.ResetForward(7321, CubeColor.Red, game.Player.position.z);
             foreach (var rise in game.Track.GetComponentsInChildren<SceneryRise>()) rise.Settle();
             var camera = game.GameCamera; var canvas = Object.FindAnyObjectByType<Canvas>();
             var mode = canvas.renderMode; canvas.renderMode = RenderMode.ScreenSpaceCamera; canvas.worldCamera = camera; canvas.planeDistance = 1;
@@ -153,13 +195,17 @@ namespace CubeDash.Tests
             Capture(camera, "storefront"); camera.transform.SetPositionAndRotation(position, rotation);
             int count = game.Track.GetComponentsInChildren<Transform>(true).Length;
             for (int step = 0; step < 40; step++)
-                game.Track.Advance(42, 0, 0, LevelProgression.Difficulty((step + 1) * 42), Vector2.one * 0.45f, 0, false, false, true, false, out _, out _);
+            {
+                game.Player.position += Vector3.forward * 42; camera.transform.position += Vector3.forward * 42;
+                game.Track.AdvanceForward(42, 0, 0, LevelProgression.Difficulty((step + 1) * 42), Vector2.one * 0.45f,
+                    game.Player.position.z, false, false, true, false, false, 8, game.Player.position, 0.1f, out _, out _);
+            }
             foreach (var rise in game.Track.GetComponentsInChildren<SceneryRise>()) rise.Settle();
             Assert.That(game.Track.GetComponentsInChildren<Transform>(true).Length, Is.EqualTo(count));
             Assert.That(game.Track.Environment.CurrentBiome, Is.EqualTo(EnvironmentBiome.City));
             Capture(camera, "curved-road");
             canvas.enabled = true;
-            foreach (string path in new[] { "Assets/Shaders/JapaneseCityLettering.shader", "Assets/Shaders/JapaneseCitySky.shader" })
+            foreach (string path in new[] { "Assets/Shaders/JapaneseCityLettering.shader", "Assets/Shaders/JapaneseCitySky.shader", "Assets/Shaders/JapaneseCitySurface.shader" })
                 Assert.That(ShaderUtil.ShaderHasError(AssetDatabase.LoadAssetAtPath<Shader>(path)), Is.False, path);
             yield return new ExitPlayMode();
         }

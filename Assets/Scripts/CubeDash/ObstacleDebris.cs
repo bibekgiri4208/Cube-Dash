@@ -119,6 +119,11 @@ namespace CubeDash
             for (int i = 0; i < pieces.Length; i++) { lifetimes[i] = 0; pieces[i].gameObject.SetActive(false); }
         }
 
+        public void ShiftWorldOrigin(float offset)
+        {
+            foreach (Transform piece in pieces) piece.position += Vector3.back * offset;
+        }
+
         private static float Hash(uint value)
         {
             unchecked { value ^= value >> 16; value *= 0x7feb352d; value ^= value >> 15; return (value & 65535u) / 65535f; }

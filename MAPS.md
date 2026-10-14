@@ -19,6 +19,14 @@ The five new maps are copies of the saved Level rig, not new gameplay implementa
 
 All six maps now use the Main Menu-themed Level HUD, compact distance ribbon, independent left-side power-up duration cards, countdown, pause, Game Over, retry and return-to-Main-Menu Quit behavior. Country Side's Japanese nature/architecture remain its distinct environment; see [COUNTRY_SIDE.md](COUNTRY_SIDE.md).
 
+## Forward world movement
+
+Live gameplay in Level and all six selectable maps now advances the player's world-space Z position. The camera follows at its authored forward offset, with existing lateral/altitude smoothing. Road sections, obstacles and scenery no longer scroll backward each frame: a section remains in place until its end is at least 18 metres behind the player, then the saved pool relocates it to the front and populates its next seeded encounters/scenery. Countryside street and landscape tiles likewise stay in place until their full extent is behind the player. No endless stream of new GameObjects is allocated.
+
+`CubeDashGame` uses `EndlessTrack.ResetForward` / `AdvanceForward`: contacts sweep the moving player's previous/current position through stationary hazards and bonuses, including moving-target magnet/flight attraction. Road-curve shader origin follows the player's current Z. Trail pieces and debris use world-space travel. The origin-centred `Reset` / `Advance` API remains available for authoring and relative-motion regression simulations, not live gameplay.
+
+Every 4,096 metres of local forward travel, a coordinated floating-origin reset shifts the player, camera, pooled track, countryside tiles, debris and wake together. It preserves all relative positions and cumulative distance/progression, avoiding precision jitter during endless runs. Countdown/pause freeze movement; retry restores the authored start and resets pooled coordinates. This is shared runtime code only; saved scenes, art, gameplay tuning, controls and HUD layout are not rebuilt.
+
 ## What is separated
 
 Each new scene retains only its chosen biome roots and ambience sources. Shared prefab/material/mesh assets are not modified. Track prefab instances are unpacked only within the new scenes so unused scenery can be removed without editing the original track prefab; nested player, pickup and retained environment prefabs remain linked where originally linked.
@@ -64,6 +72,12 @@ Eight deterministic streetscapes are baked under `Assets/Maps/Japanese City` and
 Initial streetscape validation: **72/72 Unity tests passed**, including rendered street/HUD/curved-road checks and the five-map menu/countdown/recycling/pause/retry/quit simulation. Saved gameplay, camera, HUD and main road match Level. Applied scene/art files were hash-verified against the tested project; other map scenes, shared track prefab and original City sky remain unchanged.
 
 Clear-sky feedback fix: **18/18 tests passed**, including a sky-only GPU check for the absence of directional mountain/cloud artwork, gameplay/HUD/storefront/curved-road renders, scenery pooling and saved gameplay comparisons for all five maps. This adjustment changes only the City sky shader/material label and associated authoring/tests/preview; scene files, streetscape meshes, other City materials, and shared movement/atmosphere code are hash-verified unchanged.
+
+### City lighting and shading
+
+**Tools > Cube Dash > Refine Japanese City Lighting and Shading** (`JapaneseCityLighting.ApplyFromCommandLine`) applies a City-only warm/cool daylight treatment: stronger warm directional sun, full soft sun shadows, restrained cool sky fill and ambient bounce, and lighter distant atmospheric haze. The City volume adds neutral highlight rolloff, modest contrast/saturation, subtle warm highlights/cool shadows, and greatly reduced bloom. Distance blur remains off. It does not change the shared renderer, pipeline, volume defaults, gameplay tuning, road materials, camera or HUD layout, and does not restore the removed mountain/cloud sky artwork.
+
+City streetscape materials use `JapaneseCitySurface.shader`: matte plaster, restrained wood grain, cool reflective glazing, metallic iron, softly glowing lanterns and shaded pink blossom interiors, with depth/normal/shadow passes and the same road-curve/scenery-rise support. Short-range hemisphere ambient occlusion is baked into the eight saved layouts' vertex colors, including neighboring section coverage. It shades recesses and contacts without a runtime bake, extra runtime colliders or new drawing objects. Positions, normals, indices, signage UVs, reveal anchors and culling bounds are retained. Reapplying the lighting preset preserves the baked AO and existing material base colors; it deliberately reapplies lighting/finish/grade settings, so save custom art edits first.
 
 ## Original standalone-map validation
 

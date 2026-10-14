@@ -64,13 +64,23 @@ namespace CubeDash
         public float PowerUpChance => powerUpChance;
         public EnvironmentDirector Environment => environment;
         public float Travelled => travelled;
+        public bool PlayerMovesForward { get; private set; }
+        public float WorldOriginOffset { get; private set; }
         public ObstacleDebris Debris => debris;
         /// <summary>Actual obstacle destructions in the latest sweep; coins and shield hits are excluded.</summary>
         public int LastTruckSmashes { get; private set; }
         /// <summary>Bonuses collected by the most recent Advance call.</summary>
         public IReadOnlyList<PowerUpType> LastPowerUps => collectedPowerUps;
 
+        /// <summary>Origin-centred authoring/relative-motion simulation. Live gameplay uses ResetForward.</summary>
         public void Reset(int seed, CubeColor color = CubeColor.Red)
+            => ResetRun(seed, color, false, 0);
+
+        /// <summary>Start a world-space run. Only sections behind the player are relocated.</summary>
+        public void ResetForward(int seed, CubeColor color, float playerZ)
+            => ResetRun(seed, color, true, playerZ);
+
+        private void ResetRun(int seed, CubeColor color, bool forward, float playerZ)
         {
             random = new System.Random(seed);
             patterns = new HighwayPatterns(seed);
@@ -80,6 +90,10 @@ namespace CubeDash
             previousBlockedMask = 0;
             firstVisibleRow = true;
             travelled = 0;
+            PlayerMovesForward = forward;
+            WorldOriginOffset = 0;
+            curveOriginZ = playerZ;
+            contacts.Clear(); powerUpContacts.Clear(); collectedPowerUps.Clear();
             LastTruckSmashes = 0;
             nextSectionIndex = segments.Length - 1;
             if (debris != null) debris.ResetDebris();
@@ -95,6 +109,16 @@ namespace CubeDash
             }
             UpdateHorizonEdges();
             if (Application.isPlaying) RoadCurve.Apply(0, curvePhase, roadCurveStrength, curveOriginZ);
+        }
+
+        /// <summary>Rare precision reset; distance/progression remain continuous and relative positions do not change.</summary>
+        public void ShiftWorldOrigin(float offset)
+        {
+            WorldOriginOffset += offset;
+            foreach (TrackSegment segment in segments) segment.transform.position += Vector3.back * offset;
+            if (debris != null) debris.ShiftWorldOrigin(offset);
+            curveOriginZ -= offset;
+            if (Application.isPlaying) RoadCurve.Apply(travelled, curvePhase, roadCurveStrength, curveOriginZ);
         }
 
         public bool Advance(float travel, float previousPlayerX, float playerX, float difficulty,
@@ -136,6 +160,22 @@ namespace CubeDash
         public bool Advance(float travel, float previousPlayerX, float playerX, float difficulty,
             Vector2 playerHalfSize, float playerZ, bool shield, bool airborne, bool landingShield, bool trucking,
             bool magnet, float magnetRange, Vector3 magnetTarget, float dt, out int collected, out bool shieldUsed)
+            => AdvanceRun(travel, previousPlayerX, playerX, difficulty, playerHalfSize, playerZ,
+                shield, airborne, landingShield, trucking, magnet, magnetRange, magnetTarget, dt, false,
+                out collected, out shieldUsed);
+
+        /// <summary>Sweep the advancing player through stationary sections. playerZ is the end-of-frame contact centre.</summary>
+        public bool AdvanceForward(float travel, float previousPlayerX, float playerX, float difficulty,
+            Vector2 playerHalfSize, float playerZ, bool shield, bool airborne, bool landingShield, bool trucking,
+            bool magnet, float magnetRange, Vector3 magnetTarget, float dt, out int collected, out bool shieldUsed)
+            => AdvanceRun(travel, previousPlayerX, playerX, difficulty, playerHalfSize, playerZ,
+                shield, airborne, landingShield, trucking, magnet, magnetRange, magnetTarget, dt, true,
+                out collected, out shieldUsed);
+
+        private bool AdvanceRun(float travel, float previousPlayerX, float playerX, float difficulty,
+            Vector2 playerHalfSize, float playerZ, bool shield, bool airborne, bool landingShield, bool trucking,
+            bool magnet, float magnetRange, Vector3 magnetTarget, float dt, bool forward,
+            out int collected, out bool shieldUsed)
         {
             Physics.SyncTransforms();
             contacts.Clear();
@@ -144,10 +184,14 @@ namespace CubeDash
             LastTruckSmashes = 0;
             collected = 0;
             shieldUsed = false;
+            PlayerMovesForward = forward;
+            float scroll = forward ? 0 : travel;
+            Vector2 playerFrom = new Vector2(previousPlayerX, forward ? playerZ - travel : playerZ);
+            Vector2 playerTo = new Vector2(playerX, playerZ);
             travelled += travel;
             curveOriginZ = playerZ;
             if (Application.isPlaying) RoadCurve.Apply(travelled, curvePhase, roadCurveStrength, playerZ);
-            if (debris != null) debris.Tick(Time.deltaTime, travel);
+            if (debris != null) debris.Tick(dt, scroll);
             if (environment != null) environment.ApplyDistance(travelled, Time.deltaTime);
             float furthest = float.MinValue;
             foreach (TrackSegment segment in segments)
@@ -158,9 +202,9 @@ namespace CubeDash
                     if (airborne || !cube.gameObject.activeInHierarchy || !cube.Collider.enabled) continue;
                     Bounds bounds = cube.Collider.bounds;
                     Vector2 size = playerHalfSize + new Vector2(bounds.extents.x, bounds.extents.z);
-                    if (RunnerRules.SweptHit(new Vector2(previousPlayerX, playerZ), new Vector2(playerX, playerZ),
+                    if (RunnerRules.SweptHit(playerFrom, playerTo,
                         new Vector2(bounds.center.x, bounds.center.z),
-                        new Vector2(bounds.center.x, bounds.center.z - travel), size, out float time))
+                        new Vector2(bounds.center.x, bounds.center.z - scroll), size, out float time))
                         contacts.Add(new Contact { Cube = cube, Time = time });
                 }
                 PowerUpPickup[] pickups = segment.PowerUps;
@@ -171,12 +215,12 @@ namespace CubeDash
                     if (airborne || pickup == null || !pickup.gameObject.activeInHierarchy || !pickup.Collider.enabled) continue;
                     Bounds bounds = pickup.Collider.bounds;
                     Vector2 size = playerHalfSize + new Vector2(bounds.extents.x, bounds.extents.z);
-                    if (RunnerRules.SweptHit(new Vector2(previousPlayerX, playerZ), new Vector2(playerX, playerZ),
+                    if (RunnerRules.SweptHit(playerFrom, playerTo,
                         new Vector2(bounds.center.x, bounds.center.z),
-                        new Vector2(bounds.center.x, bounds.center.z - travel), size, out float time))
+                        new Vector2(bounds.center.x, bounds.center.z - scroll), size, out float time))
                         powerUpContacts.Add(new PowerUpContact { Pickup = pickup, Time = time });
                 }
-                segment.transform.position += Vector3.back * travel;
+                if (!forward) segment.transform.position += Vector3.back * scroll;
                 furthest = Mathf.Max(furthest, segment.transform.position.z);
             }
 
@@ -201,9 +245,9 @@ namespace CubeDash
             if (magnetRange > 0 && dt > 0)
             {
                 if (magnetTime <= 1)
-                    PullCoins(travel, previousPlayerX, playerX, playerZ, magnetRange, magnetTarget, dt, magnetTime, false);
+                    PullCoins(scroll, playerFrom, playerTo, magnetRange, magnetTarget, dt, magnetTime, false);
                 else if (flightTime <= 1)
-                    PullCoins(travel, previousPlayerX, playerX, playerZ, magnetRange, magnetTarget, dt, flightTime, true);
+                    PullCoins(scroll, playerFrom, playerTo, magnetRange, magnetTarget, dt, flightTime, true);
             }
             contacts.Sort((first, second) =>
             {
@@ -224,7 +268,7 @@ namespace CubeDash
                     if (contact.Cube.Color != playerColor)
                     {
                         LastTruckSmashes++;
-                        if (debris != null) debris.Shatter(contact.Cube, travel * (1 - contact.Time));
+                        if (debris != null) debris.Shatter(contact.Cube, scroll * (1 - contact.Time));
                     }
                     contact.Cube.gameObject.SetActive(false);
                     if (contact.Cube.Color == playerColor) collected++;
@@ -277,23 +321,23 @@ namespace CubeDash
             return hitWrongColor;
         }
 
-        private void PullCoins(float travel, float previousX, float playerX, float playerZ, float range,
+        private void PullCoins(float scroll, Vector2 playerFrom, Vector2 playerTo, float range,
             Vector3 target, float dt, float activationTime, bool laneOnly)
         {
-            Vector2 playerFrom = new Vector2(previousX, playerZ), playerTo = new Vector2(playerX, playerZ);
             foreach (TrackSegment segment in segments)
                 foreach (RunnerCube coin in segment.Cubes)
                 {
                     if (!coin.gameObject.activeInHierarchy || !coin.CoinVisible || coin.Color != playerColor || !coin.Collider.enabled) continue;
-                    Vector3 end = coin.CoinVisual.position, start = end + Vector3.forward * travel;
+                    Vector3 end = coin.CoinVisual.position, start = end + Vector3.forward * scroll;
                     if (!RunnerRules.SweptRange(playerFrom, playerTo, new Vector2(start.x, start.z),
                         new Vector2(end.x, end.z), range, out float enter, out float exit)) continue;
                     enter = Mathf.Max(enter, activationTime);
                     if (laneOnly)
                     {
                         // Use the authored slot's lane, not the coin's moving attraction visual.
-                        Vector2 laneCenter = new Vector2(coin.transform.position.x, playerZ);
-                        if (!RunnerRules.SweptHit(playerFrom, playerTo, laneCenter, laneCenter,
+                        Vector2 laneFrom = new Vector2(coin.transform.position.x, playerFrom.y);
+                        Vector2 laneTo = new Vector2(coin.transform.position.x, playerTo.y);
+                        if (!RunnerRules.SweptHit(playerFrom, playerTo, laneFrom, laneTo,
                             new Vector2(laneWidth * 0.5f, range), out float laneEnter, out float laneExit)) continue;
                         enter = Mathf.Max(enter, laneEnter);
                         exit = Mathf.Min(exit, laneExit);
@@ -306,8 +350,8 @@ namespace CubeDash
                     for (int step = 1; step <= steps; step++)
                     {
                         float next = Mathf.Lerp(enter, exit, step / (float)steps);
-                        Vector3 destination = new Vector3(Mathf.Lerp(previousX, playerX, next), target.y, playerZ);
-                        Vector3 position = Vector3.MoveTowards(pulled + Vector3.back * (travel * (next - cursor)),
+                        Vector3 destination = new Vector3(Mathf.Lerp(playerFrom.x, playerTo.x, next), target.y, Mathf.Lerp(playerFrom.y, playerTo.y, next));
+                        Vector3 position = Vector3.MoveTowards(pulled + Vector3.back * (scroll * (next - cursor)),
                             destination, 30 * dt * (next - cursor));
                         if (RunnerRules.SweptHit(Vector2.Lerp(playerFrom, playerTo, cursor), Vector2.Lerp(playerFrom, playerTo, next),
                             new Vector2(pulled.x, pulled.z), new Vector2(position.x, position.z), Vector2.one * 0.45f,
@@ -325,7 +369,7 @@ namespace CubeDash
                         }
                         pulled = position; cursor = next;
                     }
-                    coin.AttractCoinTo(pulled + Vector3.back * (travel * (1 - cursor)));
+                    coin.AttractCoinTo(pulled + Vector3.back * (scroll * (1 - cursor)));
                 }
         }
 

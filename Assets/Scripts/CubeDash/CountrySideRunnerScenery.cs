@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace CubeDash
 {
-    /// <summary>Scrolls saved countryside tiles from track distance, without generating scenery at runtime.</summary>
+    /// <summary>Recycles saved countryside tiles ahead of a moving player, without generating scenery at runtime.</summary>
     public sealed class CountrySideRunnerScenery : MonoBehaviour
     {
         [SerializeField] private EndlessTrack track;
@@ -35,6 +35,8 @@ namespace CubeDash
             public int[] Indices;
         }
         private float lastDistance = -1;
+        private float lastOrigin;
+        private bool lastForward;
         private Vector4 lastCurve;
         public bool FollowsRoadCurves => followRoadCurves;
         public Transform[] CurvePlants => curvePlants;
@@ -89,17 +91,28 @@ namespace CubeDash
             return z;
         }
 
+        public static float ForwardTilePosition(float distance, int index, int count, float length, float front, float behind)
+        {
+            float home = index * length;
+            // Integer tile laps keep a tile exactly stationary between retirements (no cancellation jitter).
+            float laps = Mathf.Max(0, Mathf.Ceil((Mathf.Max(0, distance) + behind - front - home) / (count * length)));
+            return home + laps * count * length;
+        }
+
         public void SyncDistance()
         {
             if (track == null || tiles.Length == 0) return;
             Vector4 curve = followRoadCurves ? Shader.GetGlobalVector("_CubeDashRoadCurve") : Vector4.zero;
-            if (track.Travelled == lastDistance && curve == lastCurve) return;
+            if (track.Travelled == lastDistance && curve == lastCurve && track.WorldOriginOffset == lastOrigin && track.PlayerMovesForward == lastForward) return;
             lastDistance = track.Travelled; lastCurve = curve;
+            lastOrigin = track.WorldOriginOffset; lastForward = track.PlayerMovesForward;
             for (int i = 0; i < tiles.Length; i++)
             {
                 if (tiles[i] == null) continue;
                 Vector3 position = tiles[i].localPosition;
-                position.z = TilePosition(track.Travelled, i, tiles.Length, tileLength, tileFront, recycleBehind);
+                position.z = track.PlayerMovesForward
+                    ? ForwardTilePosition(track.Travelled, i, tiles.Length, tileLength, tileFront, recycleBehind) - track.WorldOriginOffset
+                    : TilePosition(track.Travelled, i, tiles.Length, tileLength, tileFront, recycleBehind);
                 tiles[i].localPosition = position;
             }
             // Hills are real world geometry, not a camera-following backdrop. Their distance
@@ -108,7 +121,9 @@ namespace CubeDash
             {
                 if (landscapeTiles[i] == null) continue;
                 Vector3 position = landscapeTiles[i].localPosition;
-                position.z = TilePosition(track.Travelled, i, landscapeTiles.Length, landscapeLength, landscapeFront, landscapeRecycleBehind);
+                position.z = track.PlayerMovesForward
+                    ? ForwardTilePosition(track.Travelled, i, landscapeTiles.Length, landscapeLength, landscapeFront, landscapeRecycleBehind) - track.WorldOriginOffset
+                    : TilePosition(track.Travelled, i, landscapeTiles.Length, landscapeLength, landscapeFront, landscapeRecycleBehind);
                 landscapeTiles[i].localPosition = position;
             }
             if (!followRoadCurves) return;

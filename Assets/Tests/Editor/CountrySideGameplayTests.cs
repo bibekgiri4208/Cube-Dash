@@ -139,7 +139,7 @@ namespace CubeDash.Tests
         }
 
         [UnityTest]
-        public IEnumerator CountrySideStartsSteersScrollsPausesResumesAndRestarts()
+        public IEnumerator CountrySideStartsSteersMovesForwardPausesResumesAndRestarts()
         {
             yield return new EnterPlayMode();
             yield return EditorSceneManager.LoadSceneAsyncInPlayMode(CountrySideSceneBuilder.ScenePath, new LoadSceneParameters(LoadSceneMode.Single));
@@ -157,7 +157,8 @@ namespace CubeDash.Tests
             while (Time.time < deadline) yield return null;
             Assert.That(game.Distance, Is.GreaterThan(1));
             Assert.That(game.Player.position.x, Is.GreaterThan(1));
-            Assert.That(scenery.Tiles[0].localPosition.z, Is.LessThan(-1));
+            Assert.That(game.Player.position.z, Is.GreaterThan(1));
+            Assert.That(scenery.Tiles[0].localPosition.z, Is.Zero, "The street is stationary while the player advances.");
             game.TogglePause();
             float pausedDistance = game.Distance; Vector3 pausedTile = scenery.Tiles[0].localPosition;
             deadline = Time.time + 0.15f;
@@ -171,12 +172,14 @@ namespace CubeDash.Tests
             Assert.That(game.Distance, Is.GreaterThan(pausedDistance));
             game.enabled = false;
             int objectCount = scenery.Tiles.Sum(tile => tile.GetComponentsInChildren<Transform>(true).Length);
-            game.Track.Advance(1500, game.Player.position.x, game.Player.position.x, 1,
-                new Vector2(0.575f, 0.575f), game.Player.position.z, false, true, true, out _, out _);
+            game.Player.position += Vector3.forward * 1500;
+            game.Track.AdvanceForward(1500, game.Player.position.x, game.Player.position.x, 1,
+                new Vector2(0.575f, 0.575f), game.Player.position.z, false, true, true, false, false, 8,
+                game.Player.position, 0.1f, out _, out _);
             scenery.SyncDistance();
             Assert.That(Mathf.Abs(scenery.Tiles[0].localPosition.z - scenery.Tiles[1].localPosition.z), Is.EqualTo(284).Within(0.01f));
             Assert.That(scenery.Tiles.Sum(tile => tile.GetComponentsInChildren<Transform>(true).Length), Is.EqualTo(objectCount));
-            Assert.That(game.Track.Segments.Max(segment => segment.transform.position.z), Is.GreaterThan(200));
+            Assert.That(game.Track.Segments.Max(segment => segment.transform.position.z), Is.GreaterThan(game.Player.position.z + 200));
             game.StartRun(); scenery.SyncDistance();
             Physics.SyncTransforms();
             Assert.That(game.Score, Is.Zero); Assert.That(game.Distance, Is.Zero);

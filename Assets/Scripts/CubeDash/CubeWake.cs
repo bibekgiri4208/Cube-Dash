@@ -87,6 +87,11 @@ namespace CubeDash
 
         private void Start() => ResetWake();
 
+        public void ShiftWorldOrigin(float offset)
+        {
+            foreach (Transform piece in pieces) piece.position += Vector3.back * offset;
+        }
+
         private float SampleX(float distance)
         {
             if (distance >= sampleDistance)

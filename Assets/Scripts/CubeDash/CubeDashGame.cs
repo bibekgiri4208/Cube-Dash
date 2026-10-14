@@ -167,7 +167,7 @@ namespace CubeDash
             playerRenderer.sharedMaterial = track.ColorMaterial(playerCubeColor);
             playerColor = playerRenderer.sharedMaterial.color;
             if (wake != null) wake.SetColor(playerColor);
-            track.Reset(fixedSeed == 0 ? System.Environment.TickCount : fixedSeed, playerCubeColor);
+            track.ResetForward(fixedSeed == 0 ? System.Environment.TickCount : fixedSeed, playerCubeColor, playerOrigin.z);
             hud.Initialize(this);
             State = RunState.Ready;
             hud.Show(State);
@@ -194,7 +194,7 @@ namespace CubeDash
                 float x = Mathf.SmoothDamp(oldX, playerOrigin.x + (targetLane - 1) * track.LaneWidth,
                     ref laneVelocity, laneSmoothTime, laneChangeSpeed, dt);
                 float altitude = Mathf.MoveTowards(player.position.y, playerOrigin.y + (Flying ? flightAltitude : 0), dt * 9f);
-                player.position = new Vector3(x, altitude, playerOrigin.z);
+                player.position = new Vector3(x, altitude, player.position.z);
                 // Road-space lean stays the same even when the authored cube face is turned around.
                 playerVisual.localRotation = Quaternion.Lerp(playerVisual.localRotation,
                     Quaternion.Euler(0, laneVelocity * 0.16f, Mathf.Clamp(-laneVelocity * 0.65f, -12f, 12f)) * playerRotation,
@@ -203,10 +203,13 @@ namespace CubeDash
                 Speed = Mathf.MoveTowards(Speed, targetSpeed, acceleration * dt);
                 float travel = Speed * dt;
                 Distance += travel;
+                player.position += Vector3.forward * travel;
+                // Refresh the moving contact centre before sweeping through stationary world hazards.
+                Physics.SyncTransforms();
                 Bounds bounds = playerCollider.bounds;
                 Vector2 halfSize = Trucking && truckPresentation != null ? truckPresentation.ContactHalfSize
                     : new Vector2(bounds.extents.x, bounds.extents.z);
-                bool wrongColor = track.Advance(travel, oldX, x, Difficulty,
+                bool wrongColor = track.AdvanceForward(travel, oldX, x, Difficulty,
                     halfSize, playerCollider.enabled ? bounds.center.z : player.position.z,
                     shields > 0, Flying || altitude > playerOrigin.y + 0.2f, landingProtection || InvincibilityEnabled, Trucking,
                     MagnetActive, magnetRange, player.position, dt,
@@ -227,6 +230,7 @@ namespace CubeDash
                 for (int i = 0; i < track.LastPowerUps.Count; i++) ApplyPowerUp(track.LastPowerUps[i]);
                 if (audioPresentation != null) audioPresentation.PlayTruckImpacts(track.LastTruckSmashes);
                 if (wrongColor) Crash();
+                RebaseWorldIfNeeded();
                 doublePointsTimer = Mathf.Max(0, doublePointsTimer - dt);
             }
             if (State != RunState.Paused) UpdatePlayerAnimation(dt);
@@ -270,12 +274,29 @@ namespace CubeDash
             Vector3 offset = shake > 0 ? new Vector3(Mathf.Sin(Time.unscaledTime * 61),
                 Mathf.Cos(Time.unscaledTime * 47), 0) * shake : Vector3.zero;
             Vector3 target = cameraOrigin + Vector3.right * ((player.position.x - playerOrigin.x) * 0.16f)
-                + Vector3.up * ((player.position.y - playerOrigin.y) * 0.7f);
+                + Vector3.up * ((player.position.y - playerOrigin.y) * 0.7f)
+                + Vector3.forward * (player.position.z - playerOrigin.z);
             cameraFollow = Vector3.Lerp(cameraFollow, target, 1f - Mathf.Exp(-8f * dt));
+            // Match forward travel exactly; smoothing Z would add a speed-dependent camera lag.
+            cameraFollow.z = target.z;
             gameCamera.transform.position = cameraFollow + offset;
             gameCamera.transform.rotation = cameraRotation;
             gameCamera.fieldOfView = Mathf.Lerp(gameCamera.fieldOfView,
                 cameraFov + Mathf.InverseLerp(startSpeed, maximumSpeed, Speed) * 7f, 1f - Mathf.Exp(-3f * dt));
+        }
+
+        private void RebaseWorldIfNeeded()
+        {
+            // Travel normally for kilometres, then shift all run-owned coordinates together in one frame.
+            // This is not per-frame scenery scrolling; it prevents float jitter on endless runs.
+            const float span = 4096;
+            float offset = Mathf.Floor((player.position.z - playerOrigin.z) / span) * span;
+            if (offset <= 0) return;
+            player.position += Vector3.back * offset;
+            cameraFollow += Vector3.back * offset;
+            gameCamera.transform.position += Vector3.back * offset;
+            track.ShiftWorldOrigin(offset);
+            if (wake != null) wake.ShiftWorldOrigin(offset);
         }
 
         private void ReadInput()
@@ -460,7 +481,7 @@ namespace CubeDash
             playerColor = playerRenderer.sharedMaterial.color;
             SetPlayerColor(playerColor, cubeEmission);
             if (wake != null) { wake.SetColor(playerColor); wake.ResetWake(); }
-            track.Reset(fixedSeed == 0 ? System.Environment.TickCount : fixedSeed, playerCubeColor);
+            track.ResetForward(fixedSeed == 0 ? System.Environment.TickCount : fixedSeed, playerCubeColor, playerOrigin.z);
             State = RunState.Running;
             hud.Show(State);
         }
@@ -534,7 +555,7 @@ namespace CubeDash
                 case PowerUpType.Truck:
                     flightTimer = 0;
                     SetFlightPresentation(false);
-                    player.position = new Vector3(player.position.x, playerOrigin.y, playerOrigin.z);
+                    player.position = new Vector3(player.position.x, playerOrigin.y, player.position.z);
                     truckTimer = Mathf.Max(0.1f, truckDuration);
                     landingShieldTimer = 0;
                     timedShieldDuration = 0;

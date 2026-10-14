@@ -265,11 +265,11 @@ namespace CubeDash.Tests
             Assert.That(game.Player.position.y, Is.GreaterThan(3));
             RunnerCube center = PlaceCube(game, 0, CubeColor.Red, 5);
             RunnerCube side = PlaceCube(game, 1, CubeColor.Red, 5);
-            side.transform.position = new Vector3(game.Track.LaneWidth, 0.95f, 5);
+            side.transform.position = new Vector3(game.Track.LaneWidth, 0.95f, game.Player.position.z + 5);
             RunnerCube hazard = PlaceCube(game, 2, CubeColor.Blue, 4);
             PowerUpPickup bonus = game.Track.Segments[1].PowerUps[0];
             bonus.Configure(PowerUpType.Shield, game.Track.PowerUpMaterial(PowerUpType.Shield));
-            bonus.transform.position = new Vector3(0, 1.35f, 3); bonus.gameObject.SetActive(true);
+            bonus.transform.position = new Vector3(0, 1.35f, game.Player.position.z + 3); bonus.gameObject.SetActive(true);
             for (float elapsed = 0; elapsed < 0.2f; elapsed += Time.deltaTime) yield return null;
             Assert.That(game.Score, Is.EqualTo(2)); Assert.That(center.gameObject.activeSelf, Is.False);
             Assert.That(side.gameObject.activeSelf, Is.True);
@@ -290,7 +290,7 @@ namespace CubeDash.Tests
             Assert.That(game.MagnetActive, Is.False);
             center = PlaceCube(game, 0, CubeColor.Red, 5);
             side = PlaceCube(game, 1, CubeColor.Red, 5);
-            side.transform.position = new Vector3(game.Track.LaneWidth, 0.95f, 5);
+            side.transform.position = new Vector3(game.Track.LaneWidth, 0.95f, game.Player.position.z + 5);
             for (float elapsed = 0; elapsed < 0.3f; elapsed += Time.deltaTime) yield return null;
             Assert.That(game.Score, Is.EqualTo(6), "The plane keeps its lane-only attraction after Magnet expires.");
             Assert.That(side.gameObject.activeSelf, Is.True);
@@ -335,7 +335,7 @@ namespace CubeDash.Tests
         private static RunnerCube PlaceCube(CubeDashGame game, int index, CubeColor color, float z)
         {
             RunnerCube cube = game.Track.Segments[1].Cubes[index];
-            cube.Configure(color, game.Track.ColorMaterial(color)); cube.transform.position = new Vector3(0, 0.575f, z);
+            cube.Configure(color, game.Track.ColorMaterial(color)); cube.transform.position = new Vector3(0, 0.575f, game.Player.position.z + z);
             cube.gameObject.SetActive(true); return cube;
         }
         [UnityTearDown]

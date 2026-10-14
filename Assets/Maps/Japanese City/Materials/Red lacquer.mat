@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Red lacquer
-  m_Shader: {fileID: 4800000, guid: 2934da08ce7b4d6cab5f20b3ec9b48a1, type: 3}
+  m_Shader: {fileID: 4800000, guid: 6ef16fd5be8aa2f44a40da90d36cbb1f, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -29,15 +29,18 @@ Material:
     - _CoastalWetness: 0
     - _DetailScale: 0.65
     - _DetailType: 0
+    - _EmissionStrength: 0
     - _Metallic: 0
     - _MicroNormalStrength: 0.015
+    - _OcclusionStrength: 0.88
     - _SceneryStagger: 0.55
     - _ShoreX: 7
-    - _Smoothness: 0.08
+    - _Smoothness: 0.18
+    - _SurfaceType: 0
     - _TideDistance: 0.85
     - _TidePeriod: 40
     m_Colors:
-    - _BaseColor: {r: 0.84705883, g: 0.24313726, b: 0.21568628, a: 1}
+    - _BaseColor: {r: 0.84705883, g: 0.24313718, b: 0.21568617, a: 1}
     - _BiomeBoundary: {r: 0, g: 42, b: 1, a: 42}
     - _EndTint: {r: 0.5, g: 0.61, b: 0.6, a: 1}
     - _LandEnd: {r: 0, g: 42, b: 18, a: 0}
@@ -46,5 +49,6 @@ Material:
     - _NeighborSurface: {r: 0, g: 1, b: 0.2, a: 0}
     - _SceneryRise: {r: 0, g: 0, b: 80, a: 1.25}
     - _SecondaryColor: {r: 0.79369414, g: 0.2278196, b: 0.20209804, a: 0.93700004}
+    - _ShadeColor: {r: 0.89, g: 0.91, b: 0.97, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

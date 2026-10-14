@@ -140,6 +140,7 @@ namespace CubeDash.Editor
                 var volume = new GameObject("Japanese City Clear Day", typeof(Volume)).GetComponent<Volume>();
                 volume.isGlobal = true; volume.priority = 100; volume.sharedProfile = profile;
                 EditorUtility.SetDirty(profile);
+                JapaneseCityLighting.ApplyToScene(scene);
                 AssetDatabase.SaveAssets(); EditorSceneManager.MarkSceneDirty(scene);
                 if (!EditorSceneManager.SaveScene(scene)) throw new InvalidOperationException("Could not save Japanese City.");
                 Debug.Log("Japanese City saved: eight pooled sakura streets, authentic Japanese signs, shopfronts, utility wires, lanterns, vending machines, shelters and a clear blue sky. Gameplay, road, camera, HUD and other maps preserved.");
