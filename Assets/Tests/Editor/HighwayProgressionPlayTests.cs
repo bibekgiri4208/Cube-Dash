@@ -26,6 +26,7 @@ namespace CubeDash.Tests
             game.StartRun();
             game.TogglePause();
             EndlessTrack track = game.Track;
+            track.Reset(7321, game.PlayerCubeColor);
             int count = track.GetComponentsInChildren<Transform>(true).Length;
             var visual = new HighwayPresentation();
             try
@@ -55,7 +56,6 @@ namespace CubeDash.Tests
             var variants = new[] { new HashSet<string>(), new HashSet<string>(), new HashSet<string>(), new HashSet<string>() };
             for (int step = 0; step < 60; step++)
             {
-                track.Advance(42, 0, 0, 1, Vector2.one * 0.45f, 0, false, false, true, false, out _, out _);
                 foreach (TrackSegment segment in track.Segments)
                     foreach (RunnerCube cube in segment.Cubes)
                         if (cube.gameObject.activeSelf && !cube.CoinVisible)
@@ -64,6 +64,7 @@ namespace CubeDash.Tests
                             if (cube.Hazard == HighwayHazard.Truck || cube.Hazard == HighwayHazard.Van) trafficSeen++;
                             variants[(int)cube.Hazard].Add(cube.GetComponent<MeshFilter>().sharedMesh.name);
                         }
+                track.Advance(42, 0, 0, 1, Vector2.one * 0.45f, 0, false, false, true, false, out _, out _);
                 if (step == 12) RenderPreviewIfRequested(game.GameCamera);
             }
             Assert.That(trafficSeen, Is.GreaterThan(0));

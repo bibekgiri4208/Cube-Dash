@@ -161,7 +161,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0b54bda2338d4a69adf33804b95f3a52, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.BiomeScenery
   details: {fileID: 7051449416687839436}
   layouts:
@@ -173,6 +173,8 @@ MonoBehaviour:
   - {fileID: 4300000, guid: 13e048f6ab2877d4ea902fe099a16a05, type: 2}
   - {fileID: 4300000, guid: 0daf6b69b5f0572458a1f31bfd9203f2, type: 2}
   - {fileID: 4300000, guid: a8f2e0b3d1d0be04aabc5512acc5807c, type: 2}
+  entranceLayouts: []
+  exitLayouts: []
   variety: {fileID: 4500549966282275149}
   varietyLayouts:
   - {fileID: 4300000, guid: 2f0fd08c556c30d488e3973ab4de77fe, type: 2}
@@ -193,7 +195,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 692ec157e1f891c42a0524c3dbf8e33a, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.CityFlyover
   deck: {fileID: 3010023658661911106}
   profiles:
@@ -2288,7 +2290,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ea386cf5bec90da4b983880322ff4047, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.BiomeBoundaryBlend
   regions:
   - Ground:
@@ -2398,7 +2400,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6a9ecfee8666d05449e8782603aca4e0, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: CubeDash::CubeDash.SceneryRise
   scenery:
   - {fileID: 397055623529134041}
@@ -2765,6 +2767,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 9063375989145255589, guid: 30d606b484a670d499a100bd9f89006a, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: 48af3dc650ff376448b448a014d55404, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2843,6 +2849,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 9063375989145255589, guid: 30d606b484a670d499a100bd9f89006a, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: 48af3dc650ff376448b448a014d55404, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3100,6 +3110,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 9063375989145255589, guid: 30d606b484a670d499a100bd9f89006a, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: 80e6c2e5a707e0e4fb8389ab71800a93, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3772,6 +3786,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 9063375989145255589, guid: 30d606b484a670d499a100bd9f89006a, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: 80e6c2e5a707e0e4fb8389ab71800a93, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3927,6 +3945,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 9063375989145255589, guid: 30d606b484a670d499a100bd9f89006a, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: 80e6c2e5a707e0e4fb8389ab71800a93, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -4005,6 +4027,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 9063375989145255589, guid: 30d606b484a670d499a100bd9f89006a, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: 48af3dc650ff376448b448a014d55404, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
