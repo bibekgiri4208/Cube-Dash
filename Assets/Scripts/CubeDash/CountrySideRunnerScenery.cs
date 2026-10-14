@@ -14,6 +14,11 @@ namespace CubeDash
         [SerializeField] private bool followRoadCurves = false;
         [SerializeField] private Transform[] curvePlants = new Transform[0];
         [SerializeField] private Renderer[] curvedSurfaces = new Renderer[0];
+        [Header("World-space landscape travel")]
+        [SerializeField] private Transform[] landscapeTiles = new Transform[0];
+        [SerializeField, Min(1)] private float landscapeLength = 568;
+        [SerializeField] private float landscapeFront = 700;
+        [SerializeField] private float landscapeRecycleBehind = -200;
         private Vector3[] plantHomes;
         private HighwayPresentation presentation;
         private float lastDistance = -1;
@@ -21,6 +26,8 @@ namespace CubeDash
         public bool FollowsRoadCurves => followRoadCurves;
         public Transform[] CurvePlants => curvePlants;
         public Renderer[] CurvedSurfaces => curvedSurfaces;
+        public Transform[] LandscapeTiles => landscapeTiles;
+        public float LandscapeLength => landscapeLength;
 
         public EndlessTrack Track => track;
         public Transform[] Tiles => tiles;
@@ -64,6 +71,15 @@ namespace CubeDash
                 Vector3 position = tiles[i].localPosition;
                 position.z = TilePosition(track.Travelled, i, tiles.Length, tileLength, tileFront, recycleBehind);
                 tiles[i].localPosition = position;
+            }
+            // Hills are real world geometry, not a camera-following backdrop. Their distance
+            // supplies parallax naturally; recycle only after the whole silhouette is behind us.
+            for (int i = 0; i < landscapeTiles.Length; i++)
+            {
+                if (landscapeTiles[i] == null) continue;
+                Vector3 position = landscapeTiles[i].localPosition;
+                position.z = TilePosition(track.Travelled, i, landscapeTiles.Length, landscapeLength, landscapeFront, landscapeRecycleBehind);
+                landscapeTiles[i].localPosition = position;
             }
             if (!followRoadCurves) return;
             CachePlantHomes();

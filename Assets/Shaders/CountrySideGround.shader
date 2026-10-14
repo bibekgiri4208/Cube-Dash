@@ -27,11 +27,21 @@ Shader "CubeDash/Countryside Ground"
                 half _DetailStrength;
             CBUFFER_END
             struct Attributes { float4 positionOS : POSITION; float3 normalOS : NORMAL; half4 color : COLOR; UNITY_VERTEX_INPUT_INSTANCE_ID };
-            struct Varyings { float4 positionCS : SV_POSITION; float3 positionWS : TEXCOORD0; half3 normalWS : TEXCOORD1; half4 color : COLOR; half fog : TEXCOORD2; UNITY_VERTEX_INPUT_INSTANCE_ID UNITY_VERTEX_OUTPUT_STEREO };
+            struct Varyings { float4 positionCS : SV_POSITION; float3 positionWS : TEXCOORD0; half3 normalWS : TEXCOORD1; half4 color : COLOR; half fog : TEXCOORD2; float2 groundUV : TEXCOORD3; UNITY_VERTEX_INPUT_INSTANCE_ID UNITY_VERTEX_OUTPUT_STEREO };
+            float GroundNoise(float2 p)
+            {
+                float2 cell = floor(p), f = frac(p); f = f * f * (3 - 2 * f);
+                float a = frac(sin(dot(cell, float2(127.1,311.7))) * 43758.5453);
+                float b = frac(sin(dot(cell + float2(1,0), float2(127.1,311.7))) * 43758.5453);
+                float c = frac(sin(dot(cell + float2(0,1), float2(127.1,311.7))) * 43758.5453);
+                float d = frac(sin(dot(cell + 1, float2(127.1,311.7))) * 43758.5453);
+                return lerp(lerp(a,b,f.x), lerp(c,d,f.x), f.y);
+            }
             Varyings Vert(Attributes input)
             {
                 Varyings output; UNITY_SETUP_INSTANCE_ID(input); UNITY_TRANSFER_INSTANCE_ID(input, output); UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
                 output.positionWS = TransformObjectToWorld(input.positionOS.xyz);
+                output.groundUV = input.positionOS.xz;
                 output.normalWS = TransformObjectToWorldNormal(input.normalOS);
                 CubeDashBendVertex(output.positionWS, output.normalWS);
                 output.positionCS = TransformWorldToHClip(output.positionWS);
@@ -42,8 +52,11 @@ Shader "CubeDash/Countryside Ground"
                 UNITY_SETUP_INSTANCE_ID(input); UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 half3 normal = normalize(input.normalWS);
                 Light sun = GetMainLight(TransformWorldToShadowCoord(input.positionWS));
-                half noise = frac(sin(dot(floor(CubeDashUnbend(input.positionWS).xz * 5), float2(12.9898,78.233))) * 43758.5453);
-                half3 albedo = input.color.rgb * (1 + (noise - 0.5h) * _DetailStrength);
+                // Object-anchored detail travels with the saved turf instead of sliding underneath it.
+                half coarse = GroundNoise(input.groundUV * 0.27);
+                half fine = GroundNoise(input.groundUV * 7);
+                half grass = GroundNoise(input.groundUV * float2(35, 9));
+                half3 albedo = input.color.rgb * (0.82h + coarse * 0.26h + (fine - 0.5h) * 0.14h + (grass - 0.5h) * _DetailStrength);
                 half3 light = SampleSH(normal) * 0.7h + sun.color * saturate(dot(normal, sun.direction)) * sun.shadowAttenuation * 0.8h;
                 return half4(MixFog(albedo * light, input.fog), 1);
             }

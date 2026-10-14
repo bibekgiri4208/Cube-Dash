@@ -144,6 +144,59 @@ namespace CubeDash.Editor
                 foreach (float x in new[] { -width * 0.48f, width * 0.48f })
                     for (int y = 0; y < 7; y++) g.Box(new Vector3(x, 0.7f + y * 0.45f, front), new Vector3(0.28f, 0.28f, 0.10f), 5);
             }
+            // Individually modeled cedar siding, roof structure, shutters and entry details.
+            foreach (float side in new[] { -1f, 1f })
+            {
+                for (int plank = 0; plank < 24; plank++)
+                    g.Box(new Vector3(Mathf.Lerp(-width * 0.48f, width * 0.48f, plank / 23f), 0.91f, side * (depth * 0.5f + 0.055f)),
+                        new Vector3(width / 24f - 0.018f, 0.72f, 0.075f), 2);
+                for (int rafter = 0; rafter < 18; rafter++)
+                {
+                    float x = Mathf.Lerp(-width * 0.48f, width * 0.48f, rafter / 17f);
+                    g.Beam(new Vector3(x, wallTop - 0.12f, side * (depth * 0.5f - 0.12f)),
+                        new Vector3(x, ridge - 1.60f, side * roofDepth * 0.5f), 0.095f, 2);
+                }
+                // Side-wall horizontal weatherboards and a low foundation course.
+                for (int board = 0; board < 5; board++)
+                    g.Box(new Vector3(side * (width * 0.5f + 0.035f), 0.52f + board * 0.15f, 0), new Vector3(0.07f, 0.13f, depth), 2);
+                for (int stone = 0; stone < 9; stone++)
+                    g.Box(new Vector3(Mathf.Lerp(-width * 0.46f, width * 0.46f, stone / 8f), 0.18f, side * (depth * 0.5f + 0.13f)),
+                        new Vector3(width / 9 - 0.045f, 0.25f, 0.18f), 5);
+            }
+            if (!storehouse)
+            {
+                foreach (float x in new[] { -3.46f, -1.43f, 1.43f, 3.46f })
+                {
+                    g.Box(new Vector3(x, 1.9f, front - 0.10f), new Vector3(0.32f, 1.5f, 0.10f), 2);
+                    for (int slat = 0; slat < 8; slat++)
+                        g.Box(new Vector3(x, 1.28f + slat * 0.18f, front - 0.17f), new Vector3(0.29f, 0.035f, 0.035f), 1);
+                }
+                foreach (float x in new[] { -2.45f, 2.45f })
+                {
+                    g.Box(new Vector3(x, 1.06f, front - 0.24f), new Vector3(1.93f, 0.12f, 0.36f), 2);
+                    g.Box(new Vector3(x, 2.69f, front - 0.15f), new Vector3(1.96f, 0.12f, 0.27f), 1);
+                }
+                // Raised entry canopy, overlapping tile strips and timber brackets.
+                for (int row = 0; row < 5; row++)
+                    g.Box(new Vector3(0, 2.99f - row * 0.07f, front - 0.25f - row * 0.25f), new Vector3(2.25f, 0.09f, 0.32f), 3);
+                foreach (float x in new[] { -0.95f, 0.95f })
+                    g.Beam(new Vector3(x, 2.36f, front), new Vector3(x, 2.70f, front - 1.15f), 0.10f, 2);
+                foreach (float x in new[] { -0.12f, 0.12f })
+                    g.Box(new Vector3(x, 1.51f, front - 0.15f), new Vector3(0.04f, 0.22f, 0.07f), 2);
+                g.Box(new Vector3(-1.07f, 2.28f, front - 0.19f), new Vector3(0.28f, 0.55f, 0.09f), 2);
+                for (int mark = 0; mark < 3; mark++)
+                    g.Box(new Vector3(-1.07f, 2.12f + mark * 0.14f, front - 0.245f), new Vector3(0.12f, 0.055f, 0.025f), 4);
+            }
+            else
+            {
+                // Kura fireproof plaster bands and iron-strapped double doors.
+                foreach (float side in new[] { -1f, 1f })
+                    for (int band = 0; band < 3; band++)
+                        g.Box(new Vector3(0, 0.60f + band * 0.28f, side * (depth * 0.5f + 0.10f)), new Vector3(width, 0.045f, 0.06f), 5);
+                foreach (float x in new[] { -0.42f, 0.42f })
+                    foreach (float y in new[] { 0.95f, 2.1f })
+                        g.Box(new Vector3(x, y, front - 0.145f), new Vector3(0.63f, 0.075f, 0.04f), 1);
+            }
             return g.Finish(storehouse ? "Japanese kura - plaster storehouse and kawara roof" : "Japanese minka - timber, shoji, engawa and curved kawara roof");
         }
 
