@@ -77,6 +77,7 @@ namespace CubeDash.Editor
                 MainMenuAssetStoreTrees.ApplyToScene(scene);
                 MainMenuAssetStoreGroundCover.ApplyToScene(scene);
                 MainMenuSakuraBlossoms.ApplyToScene(scene);
+                if (AssetDatabase.LoadAssetAtPath<Texture2D>(MainMenuSakuraPetals.TexturePath) != null) MainMenuSakuraPetals.ApplyToScene(scene);
             }
             MainMenuCameraMotion.ApplyToScene(scene);
             if (AssetDatabase.LoadAssetAtPath<AudioClip>(MainMenuMusic.ClipPath) != null) MainMenuMusic.ApplyToScene(scene);
