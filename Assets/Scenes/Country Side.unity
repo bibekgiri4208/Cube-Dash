@@ -26461,6 +26461,11 @@ MonoBehaviour:
   - {fileID: 244517270}
   - {fileID: 244517269}
   - {fileID: 244517267}
+  batchRigidScenery: 1
+  instanceNativePlants: 0
+  plantInstancingTemplates:
+  - {fileID: 2100000, guid: 2db9797f8b7c4d94db989ebda8e70172, type: 2}
+  - {fileID: 2100000, guid: 4a821d9e102b29a4c9df29e8460ef821, type: 2}
   landscapeTiles:
   - {fileID: 1448721923}
   - {fileID: 446575572}

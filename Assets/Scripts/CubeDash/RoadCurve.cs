@@ -26,6 +26,26 @@ namespace CubeDash
             Sample(distance + sample, phase, out float path, out float endSlope);
             return (path - origin - slope * sample + (endSlope - slope) * (ahead - sample)) * strength;
         }
+        /// <summary>One shared origin/end sample for a whole scenery update, with identical curve math.</summary>
+        public readonly struct Sampler
+        {
+            private readonly float distance, phase, strength, origin, slope, farPath, farSlope;
+            public Sampler(float distance, float phase, float strength)
+            {
+                this.distance = distance; this.phase = phase; this.strength = strength;
+                Sample(distance, phase, out origin, out slope);
+                Sample(distance + MaximumLookAhead, phase, out farPath, out farSlope);
+            }
+            public float Offset(float z)
+            {
+                float ahead = Mathf.Max(0, z - 6);
+                if (ahead == 0 || strength == 0) return 0;
+                if (ahead >= MaximumLookAhead)
+                    return (farPath - origin - slope * MaximumLookAhead + (farSlope - slope) * (ahead - MaximumLookAhead)) * strength;
+                Sample(distance + ahead, phase, out float path, out _);
+                return (path - origin - slope * ahead) * strength;
+            }
+        }
         public static void Apply(float distance, float phase, float strength, float originZ)
         {
             Sample(distance, phase, out float path, out float slope);
