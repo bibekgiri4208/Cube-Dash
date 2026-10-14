@@ -54,7 +54,7 @@ namespace CubeDash.Editor
             EditorSceneManager.MarkSceneDirty(scene);
         }
 
-        private static void RefreshCurveReferences(Transform environment, CountrySideRunnerScenery scenery)
+        internal static void RefreshCurveReferences(Transform environment, CountrySideRunnerScenery scenery)
         {
             // Preserve native wind/LOD materials. Only rigid, baked artwork is prepared by HighwayPresentation.
             var plants = environment.GetComponentsInChildren<Transform>(true).Where(item => PrefabUtility.IsAnyPrefabInstanceRoot(item.gameObject)
