@@ -81,6 +81,7 @@ namespace CubeDash.Editor
             Set(shop, "cubePreview", cube.gameObject); Set(shop, "carPreview", car);
             var layout = menu.gameObject.AddComponent<MenuEconomyLayout>();
             Set(layout, "safeArea", safe); Set(layout, "canvas", canvas); Set(layout, "shopMotion", menu.ShopPanel.GetComponent<MenuPanelMotion>());
+            MainMenuWalletPolish.ApplyToScene(scene);
             EditorSceneManager.MarkSceneDirty(scene);
         }
 
