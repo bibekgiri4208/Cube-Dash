@@ -231,9 +231,11 @@ namespace CubeDash.Editor
                 for (int petal = 0; petal < 45; petal++)
                 {
                     float x = side * (6.2f + (float)random.NextDouble() * 4.2f), z = (float)random.NextDouble() * 42;
+                    // Retain the deterministic RNG sequence, but never bake frozen airborne petals again.
+                    if (petal % 6 == 0) { random.NextDouble(); continue; }
                     g.Anchor = new Vector2(x, z);
-                    g.Add(blossom, 16 + petal % 2, new Vector3(x, 0.24f + (petal % 6 == 0 ? 2 + (float)random.NextDouble() * 7 : 0), z),
-                        new Vector3(0.13f, 0.025f, 0.22f), Quaternion.Euler(petal % 6 == 0 ? 40 : 0, petal * 137, 0));
+                    g.Add(blossom, 16 + petal % 2, new Vector3(x, 0.24f, z),
+                        new Vector3(0.13f, 0.025f, 0.22f), Quaternion.Euler(0, petal * 137, 0));
                 }
             }
             if (layout == 5) Footbridge(g);

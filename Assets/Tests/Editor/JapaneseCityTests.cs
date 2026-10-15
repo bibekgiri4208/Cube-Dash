@@ -87,11 +87,11 @@ namespace CubeDash.Tests
             Assert.That(profile.TryGet<DepthOfField>(out var depth), Is.True);
             Assert.That(depth.mode.value, Is.EqualTo(DepthOfFieldMode.Off));
             Assert.That(profile.TryGet<Vignette>(out var vignette), Is.True);
-            Assert.That(vignette.intensity.value, Is.EqualTo(0.075f).Within(0.001f));
+            Assert.That(vignette.intensity.value, Is.EqualTo(0.11f).Within(0.001f));
             Assert.That(profile.TryGet<Bloom>(out var bloom), Is.True);
             Assert.That(bloom.intensity.value, Is.LessThan(0.3f)); Assert.That(bloom.threshold.value, Is.GreaterThan(1));
             Assert.That(profile.TryGet<ColorAdjustments>(out var grade), Is.True); Assert.That(grade.contrast.value, Is.InRange(6, 18));
-            Assert.That(profile.TryGet<Tonemapping>(out var tone), Is.True); Assert.That(tone.mode.value, Is.EqualTo(TonemappingMode.Neutral));
+            Assert.That(profile.TryGet<Tonemapping>(out var tone), Is.True); Assert.That(tone.mode.value, Is.EqualTo(TonemappingMode.ACES));
             Assert.That(profile.components.Count, Is.EqualTo(7), "City-local lighting grade, not shared graphics defaults.");
             var lettering = AssetDatabase.LoadAssetAtPath<Material>(JapaneseCityBuilder.ArtPath + "/Materials/Lettering.mat");
             Assert.That(AssetDatabase.GetAssetPath(lettering.GetTexture("_BaseMap")), Is.EqualTo(JapaneseCityBuilder.ArtPath + "/Japanese Glyphs.png"));

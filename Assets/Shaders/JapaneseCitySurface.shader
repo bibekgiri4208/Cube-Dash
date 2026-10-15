@@ -4,7 +4,10 @@ Shader "CubeDash/Japanese City Surface"
     {
         _BaseColor ("Surface color", Color) = (1, 1, 1, 1)
         _ShadeColor ("Lower surface tint", Color) = (0.85, 0.88, 0.96, 1)
-        _SurfaceType ("0 Solid / 1 Wood / 2 Plaster / 3 Glass / 4 Blossom / 5 Paving / 6 Metal / 7 Lantern", Float) = 0
+        _SurfaceType ("0 Solid / 1 Wood / 2 Plaster / 3 Glass / 4 Blossom / 5 Paving / 6 Metal / 7 Lantern / 8 Tile / 9 Asphalt / 10 Paint / 11 Fabric", Float) = 0
+        _SurfaceMap ("Packed mineral grain / mottling / fibre", 2D) = "gray" {}
+        _DetailStrength ("Surface texture contrast", Range(0, 1)) = 0
+        _ReliefStrength ("Fine surface relief", Range(0, 0.15)) = 0
         _Smoothness ("Smoothness", Range(0, 1)) = 0.18
         _Metallic ("Metallic", Range(0, 1)) = 0
         _OcclusionStrength ("Baked crevice shading", Range(0, 1)) = 0
@@ -19,9 +22,11 @@ Shader "CubeDash/Japanese City Surface"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
         #include "RoadCurve.hlsl"
+        TEXTURE2D(_SurfaceMap); SAMPLER(sampler_SurfaceMap);
         CBUFFER_START(UnityPerMaterial)
             half4 _BaseColor, _ShadeColor;
             float _SurfaceType, _Smoothness, _Metallic, _OcclusionStrength, _EmissionStrength;
+            float _DetailStrength, _ReliefStrength;
             float4 _SceneryRise;
             float _SceneryStagger;
         CBUFFER_END
@@ -41,6 +46,7 @@ Shader "CubeDash/Japanese City Surface"
             float3 normal : TEXCOORD1;
             float3 metres : TEXCOORD2;
             half occlusion : TEXCOORD3;
+            float2 surfaceUV : TEXCOORD4;
             UNITY_VERTEX_INPUT_INSTANCE_ID
         };
         Varyings Vert(Attributes input)
@@ -50,7 +56,12 @@ Shader "CubeDash/Japanese City Surface"
             o.world = TransformObjectToWorld(input.positionOS.xyz);
             o.normal = TransformObjectToWorldNormal(input.normalOS);
             // Local coordinates travel with the saved mesh, including across floating-origin resets.
-            o.metres = input.positionOS.xyz;
+            float4x4 objectToWorld = GetObjectToWorldMatrix();
+            float3 objectScale = float3(length(objectToWorld._m00_m10_m20), length(objectToWorld._m01_m11_m21), length(objectToWorld._m02_m12_m22));
+            o.metres = input.positionOS.xyz * objectScale;
+            float3 axis = abs(input.normalOS);
+            o.surfaceUV = axis.y > max(axis.x, axis.z) ? o.metres.xz :
+                axis.x > axis.z ? o.metres.zy : o.metres.xy;
             o.occlusion = lerp(1, input.color.r, _OcclusionStrength);
             float delay = (saturate(input.anchor.y / 42) * 0.75 + frac(abs(input.anchor.x) * 0.137) * 0.25) * _SceneryStagger;
             float reveal = smoothstep(0, 1, saturate((_CubeDashEnvironmentTime - _SceneryRise.y - delay) / max(0.1, _SceneryRise.w)));
@@ -58,12 +69,6 @@ Shader "CubeDash/Japanese City Surface"
             CubeDashBendVertex(o.world, o.normal);
             o.positionCS = TransformWorldToHClip(o.world);
             return o;
-        }
-        float Hash(float2 p) { return frac(sin(dot(p, float2(127.1, 311.7))) * 43758.5453); }
-        float Noise(float2 p)
-        {
-            float2 c = floor(p), f = frac(p); f = f * f * (3 - 2 * f);
-            return lerp(lerp(Hash(c), Hash(c + float2(1, 0)), f.x), lerp(Hash(c + float2(0, 1)), Hash(c + 1), f.x), f.y);
         }
         half4 DepthFrag(Varyings input) : SV_Target { return 0; }
         half4 NormalFrag(Varyings input) : SV_Target
@@ -98,12 +103,63 @@ Shader "CubeDash/Japanese City Surface"
                 float3 normal = normalize(input.normal);
                 float3 view = GetWorldSpaceNormalizeViewDir(input.world);
                 half3 albedo = _BaseColor.rgb;
-                float grain = Noise(input.metres.xz * 3 + input.metres.y * 0.7);
                 float detailFade = 1 - smoothstep(30, 120, distance(input.world, _WorldSpaceCameraPos));
+                // Metre-scaled planar mapping remains attached to the pooled mesh and needs no new UVs.
+                float2 uv = input.surfaceUV;
+                half3 grain = SAMPLE_TEXTURE2D(_SurfaceMap, sampler_SurfaceMap, uv * 2).rgb;
+                // 3.5 m divides the 42 m pooled sections exactly, avoiding a texture seam at recycling joins.
+                half macro = SAMPLE_TEXTURE2D(_SurfaceMap, sampler_SurfaceMap, uv / 3.5).g;
+                float relief = 0, roughness = 0;
                 if (_SurfaceType > 0.5 && _SurfaceType < 1.5)
-                    albedo *= 0.95 + 0.05 * sin(input.metres.y * 23 + grain * 3) * detailFade;
+                {
+                    half fibre = SAMPLE_TEXTURE2D(_SurfaceMap, sampler_SurfaceMap, uv * float2(1.5, 0.08)).b;
+                    float rings = sin(uv.x * 85 + fibre * 7 + macro * 3);
+                    albedo *= 1 + ((fibre - 0.5) * 0.34 + rings * 0.065) * _DetailStrength * detailFade;
+                    relief = fibre * 0.7; roughness = fibre - 0.5;
+                }
                 if (_SurfaceType > 1.5 && _SurfaceType < 2.5)
-                    albedo *= 1 + (grain - 0.5) * 0.055 * detailFade;
+                {
+                    albedo *= 1 + ((macro - 0.5) * 0.15 + (grain.r - 0.5) * 0.16 * detailFade) * _DetailStrength;
+                    relief = grain.r * 0.35;
+                    float foot = 1 - smoothstep(0, 1.2, input.metres.y);
+                    albedo *= 1 - foot * 0.09 * _DetailStrength;
+                }
+                if (_SurfaceType > 4.5 && _SurfaceType < 5.5)
+                {
+                    albedo *= 1 + ((macro - 0.5) * 0.19 + (grain.r - 0.5) * 0.19 * detailFade) * _DetailStrength;
+                    relief = grain.r * 0.5; roughness = macro - 0.5;
+                }
+                if (_SurfaceType > 7.5 && _SurfaceType < 8.5)
+                {
+                    albedo *= 1 + ((macro - 0.5) * 0.24 + (grain.r - 0.5) * 0.15 * detailFade) * _DetailStrength;
+                    relief = grain.r * 0.4; roughness = macro - 0.5;
+                }
+                if (_SurfaceType > 8.5 && _SurfaceType < 9.5)
+                {
+                    // Fine aggregate, broad resurfacing variation and soft rubber wear, not painted-on cracks.
+                    float lane = input.metres.x - clamp(round(input.metres.x / 2.6), -1, 1) * 2.6;
+                    float trackX = abs(abs(lane) - 0.68);
+                    float rubber = exp(-trackX * trackX * 6) * (0.7 + macro * 0.3);
+                    albedo *= 1 + ((grain.r - 0.5) * 0.24 * detailFade + (macro - 0.5) * 0.16 - rubber * 0.09) * _DetailStrength;
+                    relief = grain.r * 0.4; roughness = grain.r - 0.5;
+                }
+                if (_SurfaceType > 9.5 && _SurfaceType < 10.5)
+                {
+                    albedo *= 1 + (grain.r - 0.5) * 0.1 * _DetailStrength * detailFade;
+                    relief = grain.r * 0.15;
+                }
+                if (_SurfaceType > 10.5 && _SurfaceType < 11.5)
+                {
+                    albedo *= 1 + (grain.b - 0.5) * 0.23 * _DetailStrength * detailFade;
+                    relief = grain.b * 0.25;
+                }
+                // Screen-space surface gradient: derivative-filtered height, bounded to retain low-poly silhouettes.
+                float3 dpdx = ddx(input.world), dpdy = ddy(input.world);
+                float3 rx = cross(dpdy, normal), ry = cross(normal, dpdx);
+                float determinant = dot(dpdx, rx);
+                float3 gradient = (ddx(relief) * rx + ddy(relief) * ry) * sign(determinant) / max(abs(determinant), 0.00001);
+                float reliefFade = 1 - smoothstep(12, 55, distance(input.world, _WorldSpaceCameraPos));
+                normal = normalize(normal - clamp(gradient, -3, 3) * _ReliefStrength * reliefFade);
                 // Gentle facade/foliage gradients, not a uniform bright ambient wash.
                 float height = _SurfaceType > 3.5 && _SurfaceType < 4.5
                     ? saturate((input.metres.y - 1.8) / 5.5) : saturate(input.metres.y / 9);
@@ -119,17 +175,17 @@ Shader "CubeDash/Japanese City Surface"
                 // as a reliable sky/bounce floor rather than a stale or empty ambient SH sample.
                 half3 hemisphere = lerp(unity_AmbientEquator.rgb,
                     normal.y >= 0 ? unity_AmbientSky.rgb : unity_AmbientGround.rgb, abs(normal.y));
-                data.bakedGI = max(SampleSH(normal), hemisphere * 0.7);
+                data.bakedGI = max(SampleSH(normal), hemisphere);
                 data.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS); data.shadowMask = 1;
                 SurfaceData surface = (SurfaceData)0;
                 surface.albedo = albedo; surface.metallic = _Metallic; surface.specular = 0.04;
-                surface.smoothness = _Smoothness; surface.normalTS = half3(0, 0, 1);
+                surface.smoothness = saturate(_Smoothness + roughness * 0.12 * _DetailStrength); surface.normalTS = half3(0, 0, 1);
                 surface.occlusion = input.occlusion; surface.alpha = 1;
                 surface.emission = _BaseColor.rgb * _EmissionStrength;
                 if (_SurfaceType > 2.5 && _SurfaceType < 3.5)
                 {
                     float3 reflected = reflect(-view, normal);
-                    half3 reflection = lerp(half3(0.17, 0.25, 0.39), half3(0.48, 0.71, 1), saturate(reflected.y * 1.5 + 0.35));
+                    half3 reflection = lerp(unity_AmbientGround.rgb * 0.35, unity_AmbientSky.rgb, saturate(reflected.y * 1.5 + 0.35));
                     float fresnel = 0.12 + 0.42 * pow(1 - saturate(dot(normal, view)), 4);
                     float band = smoothstep(0.68, 0.72, frac((input.metres.y + input.metres.z * 0.26) * 0.16));
                     surface.emission += reflection * (fresnel + band * 0.09) * input.occlusion;

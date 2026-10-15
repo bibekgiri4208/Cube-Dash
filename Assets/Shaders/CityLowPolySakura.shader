@@ -5,6 +5,8 @@ Shader "CubeDash/City Low Poly Sakura"
         _BaseColor ("Vertex palette tint", Color) = (1, 1, 1, 1)
         _Smoothness ("Matte surface", Range(0, 1)) = 0.08
         _WindStrength ("Gentle whole-tree flex", Range(0, 0.12)) = 0.055
+        _SurfaceMap ("Timber grain", 2D) = "gray" {}
+        _BarkDetail ("Timber only texture", Range(0, 1)) = 0
     }
     SubShader
     {
@@ -12,9 +14,10 @@ Shader "CubeDash/City Low Poly Sakura"
         HLSLINCLUDE
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+        TEXTURE2D(_SurfaceMap); SAMPLER(sampler_SurfaceMap);
         CBUFFER_START(UnityPerMaterial)
             half4 _BaseColor;
-            float _Smoothness, _WindStrength;
+            float _Smoothness, _WindStrength, _BarkDetail;
         CBUFFER_END
         float _CubeDashEnvironmentTime;
         struct Attributes
@@ -30,6 +33,7 @@ Shader "CubeDash/City Low Poly Sakura"
             float3 world : TEXCOORD0;
             float3 normal : TEXCOORD1;
             half4 color : TEXCOORD2;
+            float2 timberUV : TEXCOORD3;
             UNITY_VERTEX_INPUT_INSTANCE_ID
             UNITY_VERTEX_OUTPUT_STEREO
         };
@@ -48,6 +52,7 @@ Shader "CubeDash/City Low Poly Sakura"
             o.world = TransformObjectToWorld(position);
             o.normal = TransformObjectToWorldNormal(input.normalOS);
             o.positionCS = TransformWorldToHClip(o.world); o.color = input.color;
+            o.timberUV = abs(input.normalOS.x) > abs(input.normalOS.z) ? input.positionOS.zy : input.positionOS.xy;
             return o;
         }
         half4 DepthFrag(Varyings input) : SV_Target { return 0; }
@@ -93,6 +98,9 @@ Shader "CubeDash/City Low Poly Sakura"
                 data.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS); data.shadowMask = 1;
                 SurfaceData surface = (SurfaceData)0;
                 surface.albedo = input.color.rgb * _BaseColor.rgb;
+                half fibre = SAMPLE_TEXTURE2D(_SurfaceMap, sampler_SurfaceMap, input.timberUV * float2(2, 0.12)).b;
+                float fade = 1 - smoothstep(25, 85, distance(input.world, _WorldSpaceCameraPos));
+                surface.albedo *= 1 + (fibre - 0.5) * 0.4 * _BarkDetail * fade;
                 surface.specular = 0.04; surface.smoothness = _Smoothness;
                 surface.normalTS = half3(0, 0, 1); surface.occlusion = input.color.a; surface.alpha = 1;
                 half4 color = UniversalFragmentPBR(data, surface);

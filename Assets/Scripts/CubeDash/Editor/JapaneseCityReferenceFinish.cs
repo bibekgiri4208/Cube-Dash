@@ -116,6 +116,7 @@ namespace CubeDash.Editor
             if (!EditorSceneManager.SaveScene(scene)) throw new InvalidOperationException("Could not save City reference finish.");
             JapaneseCityStreetRepair.ApplyFromCommandLine();
             JapaneseCityLowPolySakura.ApplyFromCommandLine();
+            JapaneseCityArtFinish.ApplyFromCommandLine();
             Debug.Log("City reference finish saved: warm charcoal road, ivory markings, mint/ivory barriers, pedestrian rails and wide paths. City-specific low-poly sakura and tree clearance applied. Gameplay, Main Menu and source pack preserved.");
         }
 

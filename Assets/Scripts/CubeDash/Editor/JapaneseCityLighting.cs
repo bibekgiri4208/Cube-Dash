@@ -86,22 +86,24 @@ namespace CubeDash.Editor
             }
             var data = new SerializedObject(track.Environment); var a = data.FindProperty("atmospheres").GetArrayElementAtIndex(0);
             void ColorField(string field, string hex) => a.FindPropertyRelative(field).colorValue = Hex(hex);
-            ColorField("Horizon", "B0CFF3"); ColorField("Zenith", "176BE3"); ColorField("Ground", "9AA9BE");
-            ColorField("Sun", "FFF0DB"); ColorField("AmbientSky", "A3BFDF");
-            ColorField("AmbientEquator", "8C9CB5"); ColorField("AmbientGround", "766C7E");
-            a.FindPropertyRelative("SunIntensity").floatValue = 1.85f; data.ApplyModifiedPropertiesWithoutUndo();
+            ColorField("Horizon", "B8CDDB"); ColorField("Zenith", "327AB3"); ColorField("Ground", "85898D");
+            ColorField("Sun", "FFE8C8"); ColorField("AmbientSky", "9EB2C4");
+            ColorField("AmbientEquator", "7D8E9F"); ColorField("AmbientGround", "6D6568");
+            a.FindPropertyRelative("SunIntensity").floatValue = 2.15f; data.ApplyModifiedPropertiesWithoutUndo();
             var sun = (Light)data.FindProperty("sunlight").objectReferenceValue;
-            sun.transform.rotation = Quaternion.Euler(49, -34, 0); sun.shadows = LightShadows.Soft;
+            sun.transform.rotation = Quaternion.Euler(42, -48, 0); sun.shadows = LightShadows.Soft;
             sun.shadowStrength = 1;
             JapaneseCityStreetRepair.ConfigureShadows(sun);
-            var fill = (Light)data.FindProperty("skyFill").objectReferenceValue; if (fill != null) fill.intensity = 0.1f;
+            var fill = (Light)data.FindProperty("skyFill").objectReferenceValue; if (fill != null) fill.intensity = 0.065f;
             RenderSettings.ambientMode = AmbientMode.Trilight; RenderSettings.ambientIntensity = 1;
             RenderSettings.fog = true; RenderSettings.fogMode = FogMode.Linear;
-            RenderSettings.fogStartDistance = 85; RenderSettings.fogEndDistance = 420;
+            RenderSettings.fogStartDistance = 100; RenderSettings.fogEndDistance = 350;
             var sky = AssetDatabase.LoadAssetAtPath<Material>(JapaneseCityBuilder.ArtPath + "/Fuji Sky.mat");
             sky.SetColor("_HorizonColor", a.FindPropertyRelative("Horizon").colorValue);
             sky.SetColor("_ZenithColor", a.FindPropertyRelative("Zenith").colorValue);
-            sky.SetColor("_GroundColor", a.FindPropertyRelative("Ground").colorValue); EditorUtility.SetDirty(sky);
+            sky.SetColor("_GroundColor", a.FindPropertyRelative("Ground").colorValue);
+            sky.SetColor("_SunColor", a.FindPropertyRelative("Sun").colorValue);
+            sky.SetVector("_SunDirection", -sun.transform.forward); EditorUtility.SetDirty(sky);
             RenderSettings.skybox = sky; track.Environment.ApplyDistance(0, 0);
             var profile = AssetDatabase.LoadAssetAtPath<VolumeProfile>(JapaneseCityBuilder.ArtPath + "/Clear Day.asset");
             if (profile == null) throw new InvalidOperationException("Missing City-local volume.");
@@ -111,15 +113,16 @@ namespace CubeDash.Editor
                 return effect;
             }
             Effect<DepthOfField>().mode.Override(DepthOfFieldMode.Off);
-            Effect<Vignette>().intensity.Override(0.075f);
-            var bloom = Effect<Bloom>(); bloom.intensity.Override(0.18f); bloom.threshold.Override(1.15f); bloom.scatter.Override(0.55f);
-            var grade = Effect<ColorAdjustments>(); grade.postExposure.Override(0.45f); grade.contrast.Override(8); grade.saturation.Override(5);
-            var white = Effect<WhiteBalance>(); white.temperature.Override(5); white.tint.Override(1);
-            var tone = Effect<Tonemapping>(); tone.mode.Override(TonemappingMode.Neutral);
-            var split = Effect<SplitToning>(); split.shadows.Override(new Color(0.47f, 0.49f, 0.54f));
-            split.highlights.Override(new Color(0.54f, 0.515f, 0.48f)); split.balance.Override(5);
+            var vignette = Effect<Vignette>(); vignette.intensity.Override(0.11f); vignette.smoothness.Override(0.38f);
+            var bloom = Effect<Bloom>(); bloom.intensity.Override(0.12f); bloom.threshold.Override(1.25f); bloom.scatter.Override(0.55f);
+            var grade = Effect<ColorAdjustments>(); grade.postExposure.Override(0.35f); grade.contrast.Override(12); grade.saturation.Override(-3);
+            var white = Effect<WhiteBalance>(); white.temperature.Override(-2); white.tint.Override(0);
+            var tone = Effect<Tonemapping>(); tone.mode.Override(TonemappingMode.ACES);
+            var split = Effect<SplitToning>(); split.shadows.Override(new Color(0.465f, 0.49f, 0.525f));
+            split.highlights.Override(new Color(0.525f, 0.51f, 0.485f)); split.balance.Override(10);
             EditorUtility.SetDirty(profile);
             foreach (var effect in profile.components) EditorUtility.SetDirty(effect);
+            JapaneseCityArtFinish.ApplyToScene(scene);
         }
 
         private static Color Hex(string value) { ColorUtility.TryParseHtmlString("#" + value, out var color); return color; }
