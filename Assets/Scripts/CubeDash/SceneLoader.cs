@@ -15,7 +15,6 @@ namespace CubeDash
         [SerializeField] private RectTransform card = null;
         [SerializeField] private Slider progressBar = null;
         [SerializeField] private Text loadingText = null;
-        [SerializeField] private Text destinationText = null;
         [SerializeField] private Text percentage = null;
         [SerializeField] private CanvasGroup visibility = null;
         [SerializeField, Min(0)] private float minimumDisplaySeconds = 0.7f;
@@ -59,7 +58,6 @@ namespace CubeDash
         private void Begin(string sceneName)
         {
             visibility.alpha = 1;
-            destinationText.text = sceneName == "Main Menu" ? "RETURNING TO MAIN MENU" : "ENTERING " + (sceneName == "Level" ? "DYNAMIC MAP" : sceneName.ToUpperInvariant());
             SetProgress(0);
             BlockNavigation();
             SceneManager.sceneLoaded += SceneLoaded;
@@ -116,7 +114,7 @@ namespace CubeDash
             safeArea.anchorMax = new Vector2(area.xMax / size.x, area.yMax / size.y);
             safeArea.offsetMin = safeArea.offsetMax = Vector2.zero;
             Canvas.ForceUpdateCanvases();
-            card.sizeDelta = new Vector2(Mathf.Min(980, Mathf.Max(240, safeArea.rect.width - 64)), 180);
+            card.sizeDelta = new Vector2(Mathf.Min(1400, Mathf.Max(240, safeArea.rect.width - 64)), 92);
         }
 
         private void SetProgress(float value)

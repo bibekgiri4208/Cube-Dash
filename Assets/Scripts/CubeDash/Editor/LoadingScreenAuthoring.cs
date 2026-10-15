@@ -37,26 +37,21 @@ namespace CubeDash.Editor
                 aspect.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent; aspect.aspectRatio = sprite.rect.width / sprite.rect.height;
 
                 var safe = Rect("Safe Area", root.transform); Stretch(safe);
-                var card = Rect("Loading Card", safe);
+                var card = Rect("Loading Progress", safe);
                 card.anchorMin = card.anchorMax = new Vector2(0.5f, 0); card.pivot = new Vector2(0.5f, 0);
-                card.anchoredPosition = new Vector2(0, 44); card.sizeDelta = new Vector2(980, 180);
-                Panel(card, LevelMenuTheme.Paper, 4, 20);
-                var title = Label("Loading Text", card, font, "LOADING...", 42, TextAnchor.MiddleLeft);
+                card.anchoredPosition = new Vector2(0, 44); card.sizeDelta = new Vector2(1400, 92);
+                var title = Label("Loading Text", card, font, "LOADING...", 36, TextAnchor.MiddleLeft);
                 title.rectTransform.anchorMin = new Vector2(0, 1); title.rectTransform.anchorMax = new Vector2(1, 1);
-                title.rectTransform.pivot = new Vector2(0.5f, 1); title.rectTransform.anchoredPosition = new Vector2(-68, -20);
-                title.rectTransform.sizeDelta = new Vector2(-204, 58);
-                var destination = Label("Destination", card, font, "ENTERING MAP", 22, TextAnchor.MiddleLeft);
-                destination.rectTransform.anchorMin = new Vector2(0, 1); destination.rectTransform.anchorMax = new Vector2(1, 1);
-                destination.rectTransform.pivot = new Vector2(0.5f, 1); destination.rectTransform.anchoredPosition = new Vector2(-48, -80);
-                destination.rectTransform.sizeDelta = new Vector2(-164, 36);
-                var percentage = Label("Progress Percentage", card, font, "0%", 38, TextAnchor.MiddleRight);
+                title.rectTransform.pivot = new Vector2(0.5f, 1); title.rectTransform.anchoredPosition = new Vector2(-60, 0);
+                title.rectTransform.sizeDelta = new Vector2(-120, 48);
+                var percentage = Label("Progress Percentage", card, font, "0%", 32, TextAnchor.MiddleRight);
                 percentage.rectTransform.anchorMin = percentage.rectTransform.anchorMax = new Vector2(1, 1);
-                percentage.rectTransform.pivot = new Vector2(1, 1); percentage.rectTransform.anchoredPosition = new Vector2(-32, -23);
-                percentage.rectTransform.sizeDelta = new Vector2(118, 54);
+                percentage.rectTransform.pivot = new Vector2(1, 1); percentage.rectTransform.anchoredPosition = Vector2.zero;
+                percentage.rectTransform.sizeDelta = new Vector2(118, 48);
 
                 var bar = Rect("Loading Slider", card);
                 bar.anchorMin = new Vector2(0, 0); bar.anchorMax = new Vector2(1, 0); bar.pivot = new Vector2(0.5f, 0);
-                bar.anchoredPosition = new Vector2(0, 26); bar.sizeDelta = new Vector2(-64, 28);
+                bar.anchoredPosition = Vector2.zero; bar.sizeDelta = new Vector2(0, 24);
                 var track = Panel(bar, LevelMenuTheme.Cream, 3, 8); track.raycastTarget = false;
                 var area = Rect("Fill Area", bar); Stretch(area); area.offsetMin = new Vector2(5, 5); area.offsetMax = new Vector2(-5, -5);
                 var fill = Rect("Fill", area); Stretch(fill);
@@ -66,7 +61,7 @@ namespace CubeDash.Editor
                 slider.navigation = new Navigation { mode = Navigation.Mode.None };
                 var loader = root.GetComponent<SceneLoader>();
                 Set(loader, "artwork", artwork); Set(loader, "safeArea", safe); Set(loader, "card", card);
-                Set(loader, "progressBar", slider); Set(loader, "loadingText", title); Set(loader, "destinationText", destination);
+                Set(loader, "progressBar", slider); Set(loader, "loadingText", title);
                 Set(loader, "percentage", percentage); Set(loader, "visibility", root.GetComponent<CanvasGroup>());
                 if (PrefabUtility.SaveAsPrefabAsset(root, PrefabPath) == null) throw new InvalidOperationException("Could not save Loading Screen.");
                 AssetDatabase.SaveAssets();
@@ -91,7 +86,9 @@ namespace CubeDash.Editor
         private static Text Label(string name, Transform parent, Font font, string text, int size, TextAnchor alignment)
         {
             var label = Rect(name, parent).gameObject.AddComponent<MenuLabelText>(); label.font = font;
-            label.text = text; label.fontSize = size; label.alignment = alignment; label.color = LevelMenuTheme.Ink;
+            label.text = text; label.fontSize = size; label.alignment = alignment; label.color = LevelMenuTheme.Cream;
+            var outline = label.gameObject.AddComponent<Outline>(); outline.effectColor = LevelMenuTheme.Ink;
+            outline.effectDistance = new Vector2(2, -2);
             label.resizeTextForBestFit = true; label.resizeTextMinSize = 14; label.resizeTextMaxSize = size;
             label.raycastTarget = false; return label;
         }

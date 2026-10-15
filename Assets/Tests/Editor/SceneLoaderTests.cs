@@ -36,9 +36,12 @@ namespace CubeDash.Tests
             Assert.That(loader.ProgressBar.navigation.mode, Is.EqualTo(Navigation.Mode.None));
             Assert.That(loader.ProgressBar.handleRect, Is.Null);
             Assert.That(loader.ProgressBar.fillRect.GetComponent<MenuPanelGraphic>().color, Is.EqualTo(LevelMenuTheme.Accent));
-            Assert.That(root.transform.Find("Safe Area/Loading Card/Loading Text").GetComponent<Text>().text, Does.StartWith("LOADING"));
+            var progress = root.transform.Find("Safe Area/Loading Progress");
+            Assert.That(progress.GetComponent<Graphic>(), Is.Null, "The loading bar must not be inside a visible menu card.");
+            Assert.That(progress.Find("Destination"), Is.Null);
+            Assert.That(progress.Find("Loading Text").GetComponent<Text>().text, Does.StartWith("LOADING"));
             foreach (Graphic graphic in root.GetComponentsInChildren<Graphic>(true))
-                if (graphic.transform.name != "Opaque Input Blocker" && graphic.transform.name != "Loading Card")
+                if (graphic.transform.name != "Opaque Input Blocker")
                     Assert.That(graphic.raycastTarget, Is.False, graphic.name);
         }
 
@@ -158,8 +161,8 @@ namespace CubeDash.Tests
                 typeof(SceneLoader).GetField("lastSize", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(loader, Vector2.zero);
                 typeof(SceneLoader).GetMethod("Layout", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(loader, null);
                 Canvas.ForceUpdateCanvases();
-                var card = loader.transform.Find("Safe Area/Loading Card").GetComponent<RectTransform>();
-                Assert.That(loader.ProgressBar.GetComponent<RectTransform>().rect.width, Is.LessThan(card.rect.width));
+                var card = loader.transform.Find("Safe Area/Loading Progress").GetComponent<RectTransform>();
+                Assert.That(loader.ProgressBar.GetComponent<RectTransform>().rect.width, Is.EqualTo(card.rect.width).Within(0.01f));
                 for (int i = 0; i < 4; i++) camera.Render();
                 RenderTexture.active = target; image.ReadPixels(new Rect(0, 0, width, height), 0, 0); image.Apply();
                 File.WriteAllBytes(prefix + "-" + suffix + ".png", image.EncodeToPNG());
