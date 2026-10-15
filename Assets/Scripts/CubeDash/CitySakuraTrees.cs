@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace CubeDash
 {
-    /// <summary>Moves saved native tree roots with the cosmetic road bend/reveal, retaining pack wind and LODs.</summary>
+    /// <summary>Moves saved tree roots with the cosmetic road bend/reveal, retaining their materials and LODs.</summary>
     public sealed class CitySakuraTrees : MonoBehaviour
     {
         [SerializeField] private Renderer streets;

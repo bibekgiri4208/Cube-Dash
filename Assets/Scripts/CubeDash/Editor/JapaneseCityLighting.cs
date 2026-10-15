@@ -92,7 +92,8 @@ namespace CubeDash.Editor
             a.FindPropertyRelative("SunIntensity").floatValue = 1.85f; data.ApplyModifiedPropertiesWithoutUndo();
             var sun = (Light)data.FindProperty("sunlight").objectReferenceValue;
             sun.transform.rotation = Quaternion.Euler(49, -34, 0); sun.shadows = LightShadows.Soft;
-            sun.shadowStrength = 1; sun.shadowBias = 0.025f; sun.shadowNormalBias = 0.16f;
+            sun.shadowStrength = 1;
+            JapaneseCityStreetRepair.ConfigureShadows(sun);
             var fill = (Light)data.FindProperty("skyFill").objectReferenceValue; if (fill != null) fill.intensity = 0.1f;
             RenderSettings.ambientMode = AmbientMode.Trilight; RenderSettings.ambientIntensity = 1;
             RenderSettings.fog = true; RenderSettings.fogMode = FogMode.Linear;

@@ -111,7 +111,10 @@ Shader "CubeDash/Japanese City Surface"
                 albedo *= lerp(0.86, 1, input.occlusion);
                 InputData data = (InputData)0;
                 data.positionWS = input.world; data.normalWS = normal; data.viewDirectionWS = view;
-                data.shadowCoord = TransformWorldToShadowCoord(input.world);
+                VertexPositionInputs shadowInput = (VertexPositionInputs)0;
+                shadowInput.positionWS = input.world;
+                shadowInput.positionCS = TransformWorldToHClip(input.world);
+                data.shadowCoord = GetShadowCoord(shadowInput);
                 // These pooled meshes have no baked light probes. Use the scene's current trilight
                 // as a reliable sky/bounce floor rather than a stale or empty ambient SH sample.
                 half3 hemisphere = lerp(unity_AmbientEquator.rgb,
@@ -157,11 +160,7 @@ Shader "CubeDash/Japanese City Surface"
                     float3 direction = _LightDirection;
                 #endif
                 o.positionCS = TransformWorldToHClip(ApplyShadowBias(o.world, normalize(o.normal), direction));
-                #if UNITY_REVERSED_Z
-                    o.positionCS.z = min(o.positionCS.z, UNITY_NEAR_CLIP_VALUE * o.positionCS.w);
-                #else
-                    o.positionCS.z = max(o.positionCS.z, UNITY_NEAR_CLIP_VALUE * o.positionCS.w);
-                #endif
+                o.positionCS = ApplyShadowClamping(o.positionCS);
                 return o;
             }
             ENDHLSL

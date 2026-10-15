@@ -58,6 +58,7 @@ Shader "CubeDash/Japanese City Sakura"
         }
         half4 Petal(Varyings input)
         {
+            UNITY_SETUP_INSTANCE_ID(input);
             half4 texel = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv);
             clip(texel.a - _Cutoff); return texel;
         }
@@ -97,7 +98,10 @@ Shader "CubeDash/Japanese City Sakura"
                 InputData data = (InputData)0;
                 data.positionWS = input.world; data.normalWS = normal;
                 data.viewDirectionWS = GetWorldSpaceNormalizeViewDir(input.world);
-                data.shadowCoord = TransformWorldToShadowCoord(input.world);
+                VertexPositionInputs shadowInput = (VertexPositionInputs)0;
+                shadowInput.positionWS = input.world;
+                shadowInput.positionCS = TransformWorldToHClip(input.world);
+                data.shadowCoord = GetShadowCoord(shadowInput);
                 // Scene-driven sky/bounce, like the City's plaster/paving. Thin petals gather
                 // more diffuse skylight than opaque masonry, without an emissive shade floor.
                 half3 hemisphere = lerp(unity_AmbientEquator.rgb,
@@ -134,12 +138,12 @@ Shader "CubeDash/Japanese City Sakura"
                 #else
                     float3 direction = _LightDirection;
                 #endif
-                o.positionCS = TransformWorldToHClip(ApplyShadowBias(o.world, normalize(o.normal), direction));
-                #if UNITY_REVERSED_Z
-                    o.positionCS.z = min(o.positionCS.z, UNITY_NEAR_CLIP_VALUE * o.positionCS.w);
-                #else
-                    o.positionCS.z = max(o.positionCS.z, UNITY_NEAR_CLIP_VALUE * o.positionCS.w);
-                #endif
+                // Petal cards are two-sided. Bias toward the light-facing side, not an arbitrary
+                // imported card normal, to avoid dark self-shadow stripes on back-facing petals.
+                float3 normal = normalize(o.normal);
+                normal *= dot(normal, direction) < 0 ? -1 : 1;
+                o.positionCS = TransformWorldToHClip(ApplyShadowBias(o.world, normal, direction));
+                o.positionCS = ApplyShadowClamping(o.positionCS);
                 return o;
             }
             ENDHLSL

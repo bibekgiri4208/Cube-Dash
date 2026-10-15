@@ -114,7 +114,9 @@ namespace CubeDash.Editor
             if (changed != 96) throw new InvalidOperationException("Expected exactly 96 native blossom LOD renderers, found " + changed);
             AssetDatabase.SaveAssets(); EditorSceneManager.MarkSceneDirty(scene);
             if (!EditorSceneManager.SaveScene(scene)) throw new InvalidOperationException("Could not save City reference finish.");
-            Debug.Log("City reference finish saved: cream rectangular paths, dark outer access strips, warm charcoal road, ivory markings, mint/ivory barriers and black pedestrian rails. Sakura petals use non-emissive City PBR lighting. Gameplay, native trees, bark, Main Menu and source pack preserved.");
+            JapaneseCityStreetRepair.ApplyFromCommandLine();
+            JapaneseCityLowPolySakura.ApplyFromCommandLine();
+            Debug.Log("City reference finish saved: warm charcoal road, ivory markings, mint/ivory barriers, pedestrian rails and wide paths. City-specific low-poly sakura and tree clearance applied. Gameplay, Main Menu and source pack preserved.");
         }
 
         private static Color Hex(string hex) { ColorUtility.TryParseHtmlString("#" + hex, out Color color); return color; }

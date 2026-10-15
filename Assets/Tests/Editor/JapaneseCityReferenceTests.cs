@@ -54,6 +54,9 @@ namespace CubeDash.Tests
             Vector3[] vertices = mesh.vertices;
             foreach (int surface in new[] { 22, 23, 24 })
                 foreach (int i in mesh.GetTriangles(surface)) Assert.That(Mathf.Abs(vertices[i].x), Is.GreaterThan(6.8f));
+            var paving = new[] { 22, 23, 24 }.SelectMany(mesh.GetTriangles).Select(i => Mathf.Abs(vertices[i].x)).ToArray();
+            Assert.That(paving.Max(), Is.EqualTo(JapaneseCityStreetRepair.PavingEdge - 0.012f).Within(0.001f));
+            Assert.That(paving.Max() - paving.Min(), Is.GreaterThan(10f), "Widen outward, never into the driving lanes or dark access path.");
             var path = mesh.GetTriangles(28).Select(i => vertices[i]).ToArray();
             Assert.That(path.Min(v => Mathf.Abs(v.x)), Is.EqualTo(5.05f).Within(0.001f));
             Assert.That(path.Max(v => Mathf.Abs(v.x)), Is.EqualTo(6.65f).Within(0.001f));
@@ -62,7 +65,7 @@ namespace CubeDash.Tests
         }
 
         [Test]
-        public void SakuraUsesOriginalPetalTextureButCityPbrNotMenuGlow()
+        public void ArchivedCutoutMaterialStillUsesOriginalPetalTextureButCityPbrNotMenuGlow()
         {
             var material = AssetDatabase.LoadAssetAtPath<Material>(JapaneseCityReferenceFinish.BlossomPath);
             Assert.That(material.shader.name, Is.EqualTo("CubeDash/Japanese City Sakura"));
@@ -75,7 +78,7 @@ namespace CubeDash.Tests
         }
 
         [Test]
-        public void SakuraGpuRespondsToSunlightAndDoesNotGlowInDarkness()
+        public void ArchivedCutoutShaderRespondsToSunlightAndDoesNotGlowInDarkness()
         {
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             var cameraObject = new GameObject("Sakura lighting probe", typeof(Camera));

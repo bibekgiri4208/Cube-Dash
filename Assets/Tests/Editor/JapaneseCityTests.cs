@@ -172,13 +172,13 @@ namespace CubeDash.Tests
         }
 
         [Test]
-        public void CityUsesNativeMenuSakuraWithLodsClearRoadAndNoRuntimeColliders()
+        public void CityUsesDedicatedLowPolySakuraWithLodsClearRoadAndNoRuntimeColliders()
         {
             Scene scene = EditorSceneManager.OpenPreviewScene(JapaneseCityBuilder.ScenePath);
             try
             {
                 var track = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<EndlessTrack>(true)).Single();
-                var blossom = AssetDatabase.LoadAssetAtPath<Material>(JapaneseCityReferenceFinish.BlossomPath);
+                var blossom = AssetDatabase.LoadAssetAtPath<Material>(JapaneseCityLowPolySakura.CanopyPath);
                 Assert.That(blossom, Is.Not.Null);
                 int total = 0;
                 foreach (var segment in track.Segments)
@@ -193,15 +193,15 @@ namespace CubeDash.Tests
                     {
                         total++;
                         string source = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(tree.gameObject);
-                        Assert.That(JapaneseCitySidewalks.Species.Any(n => source == MainMenuAssetStoreTrees.PrefabPath + n + ".prefab"), Is.True, source);
+                        Assert.That(Enumerable.Range(0, JapaneseCityLowPolySakura.Variants).Any(v => source == JapaneseCityLowPolySakura.PrefabPath(v)), Is.True, source);
                         Assert.That(tree.GetComponent<LODGroup>().GetLODs().Length, Is.GreaterThanOrEqualTo(3));
                         Assert.That(tree.GetComponentsInChildren<Transform>(true).All(t => GameObjectUtility.GetStaticEditorFlags(t.gameObject) == 0), Is.True, "Pooled/bent trees must not be statically batched in builds.");
                         Assert.That(tree.GetComponentsInChildren<MeshRenderer>(true).SelectMany(r => r.sharedMaterials), Does.Contain(blossom));
-                        Assert.That(tree.GetComponentsInChildren<MeshFilter>(true).All(f => AssetDatabase.GetAssetPath(f.sharedMesh).StartsWith("Assets/Idyllic Fantasy Nature/")), Is.True);
+                        Assert.That(tree.GetComponentsInChildren<MeshFilter>(true).All(f => AssetDatabase.GetAssetPath(f.sharedMesh).StartsWith(JapaneseCityLowPolySakura.ArtPath + "/")), Is.True);
                         Bounds bounds = JapaneseCitySidewalks.BoundsOfTree(tree.gameObject, true);
                         Assert.That(bounds.min.y, Is.EqualTo(0.225f).Within(0.003f));
                         Assert.That(bounds.size.y, Is.InRange(3, 7.41f));
-                        Assert.That(bounds.min.x > 5.9f || bounds.max.x < -5.9f, Is.True, "Every native LOD stays outside the road: " + bounds);
+                        Assert.That(bounds.min.x > 5.9f || bounds.max.x < -5.9f, Is.True, "Every solid-geometry LOD stays outside the road: " + bounds);
                     }
                 }
                 Assert.That(total, Is.EqualTo(32));
@@ -242,7 +242,7 @@ namespace CubeDash.Tests
         }
 
         [Test]
-        public void NativeSakuraFollowsBendRiseAndOriginShiftWithoutCumulativeDrift()
+        public void LowPolySakuraFollowsBendRiseAndOriginShiftWithoutCumulativeDrift()
         {
             Scene scene = EditorSceneManager.OpenPreviewScene(JapaneseCityBuilder.ScenePath);
             Vector4 curve = Shader.GetGlobalVector("_CubeDashRoadCurve"), origin = Shader.GetGlobalVector("_CubeDashRoadOrigin");
@@ -290,6 +290,8 @@ namespace CubeDash.Tests
             JapaneseCityBuilder.ApplyFromCommandLine();
             JapaneseCitySidewalks.ApplyFromCommandLine();
             JapaneseCityReferenceFinish.ApplyFromCommandLine();
+            JapaneseCityStreetRepair.ApplyFromCommandLine();
+            JapaneseCityLowPolySakura.ApplyFromCommandLine();
             for (int i = 0; i < files.Length; i++) Assert.That(Hash(files[i]), Is.EqualTo(hashes[i]), files[i]);
         }
 
@@ -320,7 +322,7 @@ namespace CubeDash.Tests
             Assert.That(game.Track.Environment.CurrentBiome, Is.EqualTo(EnvironmentBiome.City));
             Capture(camera, "curved-road");
             canvas.enabled = true;
-            foreach (string path in new[] { "Assets/Shaders/JapaneseCityLettering.shader", "Assets/Shaders/JapaneseCitySky.shader", "Assets/Shaders/JapaneseCitySurface.shader", "Assets/Shaders/JapaneseCitySakura.shader" })
+            foreach (string path in new[] { "Assets/Shaders/JapaneseCityLettering.shader", "Assets/Shaders/JapaneseCitySky.shader", "Assets/Shaders/JapaneseCitySurface.shader", JapaneseCityLowPolySakura.ShaderPath })
                 Assert.That(ShaderUtil.ShaderHasError(AssetDatabase.LoadAssetAtPath<Shader>(path)), Is.False, path);
             yield return new ExitPlayMode();
         }

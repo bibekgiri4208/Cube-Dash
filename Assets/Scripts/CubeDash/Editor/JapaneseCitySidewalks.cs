@@ -13,7 +13,7 @@ namespace CubeDash.Editor
     /// <summary>Surgically replaces only City pavement and the original faceted sakura.</summary>
     public static class JapaneseCitySidewalks
     {
-        public const string TreesName = "Idyllic Sakura Avenue";
+        public const string TreesName = "City Sakura Avenue";
         public const int OriginalSurfaces = 22;
         public const int SurfaceCount = 29;
         public static readonly string[] Species = { "BlossomTree_01", "BlossomTree_03", "BlossomTree_05" };
@@ -119,7 +119,7 @@ namespace CubeDash.Editor
             AssetDatabase.SaveAssets(); EditorSceneManager.MarkSceneDirty(scene);
             if (!EditorSceneManager.SaveScene(scene)) throw new InvalidOperationException("Could not save City sidewalks and sakura.");
             JapaneseCityReferenceFinish.ApplyFromCommandLine();
-            Debug.Log("City saved: warm staggered stone slabs, recessed joints, precast curbs, drainage strips and inset tree beds; 32 native Idyllic sakura with the Main Menu blossom material, wind and LODs. Shops, lighting, road, gameplay, Main Menu and source pack preserved.");
+            Debug.Log("City saved: stone paving, recessed joints, precast curbs, drainage strips and inset tree beds; 32 City-specific low-poly sakura with wind and LODs. Gameplay, Main Menu and source pack preserved.");
         }
 
         public static bool IsRetiredGeometry(int surface, Vector2 anchor)
@@ -147,7 +147,7 @@ namespace CubeDash.Editor
             return bounds;
         }
 
-        public static Mesh ReplacePavementAndOldTrees(Mesh original, int layout)
+        public static Mesh ReplacePavementAndOldTrees(Mesh original, int layout, float extension = 0)
         {
             var g = new PavementMesh(); Vector3[] vertices = original.vertices, normals = original.normals;
             Vector2[] uv = original.uv, anchors = original.uv3; Color32[] colors = original.colors32;
@@ -174,14 +174,15 @@ namespace CubeDash.Editor
             for (int side = -1; side <= 1; side += 2)
             {
                 g.Anchor = new Vector2(side * 12, 21);
-                g.Box(25, side * 8.84f, 0.035f, 21, 4.16f, 0.33f, 42);
+                g.Box(25, side * (8.84f + extension * 0.5f), 0.035f, 21, 4.16f + extension, 0.33f, 42);
                 g.Box(28, side * 5.85f, -0.04f, 21, 1.6f, 0.08f, 42);
                 for (int row = 0; row < 42; row++)
                 {
                     g.Slab(26, side * 6.7f, row + 0.5f, 0.2f, 0.98f, -0.08f, 0.255f, 0.015f);
-                    for (int column = 0; column < 6; column++)
+                    int columns = Mathf.CeilToInt((4.12f + extension) / (4.12f / 6));
+                    for (int column = 0; column < columns; column++)
                     {
-                        float x0 = 6.8f + column * (4.12f / 6), x1 = Mathf.Min(10.92f, x0 + 4.12f / 6);
+                        float x0 = 6.8f + column * (4.12f / 6), x1 = Mathf.Min(10.92f + extension, x0 + 4.12f / 6);
                         if (x1 - x0 < 0.05f) continue;
                         var pieces = new List<Rect> { Rect.MinMaxRect(x0 + 0.012f, row + 0.012f, x1 - 0.012f, row + 1 - 0.012f) };
                         foreach (float z in new[] { 8.05f, 29.05f })
