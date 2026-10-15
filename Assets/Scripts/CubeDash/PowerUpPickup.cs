@@ -19,6 +19,7 @@ namespace CubeDash
         [SerializeField] private Transform shieldVisual = null;
         [SerializeField] private Transform pointsVisual = null;
         [SerializeField] private Transform magnetVisual = null;
+        [SerializeField] private MeshRenderer auraRenderer = null;
         [SerializeField] private float spinSpeed = 82f;
         [SerializeField] private float bobHeight = 0.09f;
         private BoxCollider box;
@@ -26,8 +27,13 @@ namespace CubeDash
         private float phase;
         private float age;
         private Vector3[] modelHomes;
+        private Vector3[] modelCenters;
+        private MaterialPropertyBlock auraProperties;
+        private static readonly int AuraTint = Shader.PropertyToID("_Tint");
+        private static readonly int AuraPhase = Shader.PropertyToID("_Phase");
 
         public PowerUpType Type => type;
+        public MeshRenderer AuraRenderer => auraRenderer;
 
         public BoxCollider Collider
         {
@@ -72,6 +78,30 @@ namespace CubeDash
                 : Quaternion.Euler(18f, age * spinSpeed + phase * 57f, 42f);
             display.localPosition = (model ? modelHomes[(int)type] : visualHome)
                 + Vector3.up * (Mathf.Sin(age * 2.4f + phase) * bobHeight);
+            TickAura(display);
+        }
+
+        private void TickAura(Transform display)
+        {
+            if (auraRenderer == null) return;
+            if (auraProperties == null) auraProperties = new MaterialPropertyBlock();
+            Color tint;
+            switch (type)
+            {
+                case PowerUpType.DoublePoints: tint = new Color(1f, 0.72f, 0.18f, 0.65f); break;
+                case PowerUpType.FighterPlane: tint = new Color(0.65f, 0.42f, 1f, 0.65f); break;
+                case PowerUpType.Truck: tint = new Color(0.22f, 0.48f, 1f, 0.65f); break;
+                case PowerUpType.Magnet: tint = new Color(1f, 0.19f, 0.12f, 0.65f); break;
+                default: tint = new Color(0.22f, 0.85f, 1f, 0.65f); break;
+            }
+            float pulse = Mathf.Sin(age * 2.4f + phase);
+            float diameter = type == PowerUpType.FighterPlane ? 2.7f : type == PowerUpType.Truck ? 2.5f : 2.1f;
+            Vector3 center = Model(type) != null ? modelCenters[(int)type] : Vector3.zero;
+            auraRenderer.transform.localPosition = transform.InverseTransformPoint(display.TransformPoint(center));
+            auraRenderer.transform.localScale = Vector3.one * (diameter * (1 + pulse * 0.045f));
+            auraProperties.SetColor(AuraTint, tint);
+            auraProperties.SetFloat(AuraPhase, age + phase);
+            auraRenderer.SetPropertyBlock(auraProperties);
         }
 
         private Transform Model(PowerUpType value)
@@ -94,8 +124,29 @@ namespace CubeDash
             if (modelHomes != null) return;
             if (visual != null) visualHome = visual.localPosition;
             modelHomes = new Vector3[5];
+            modelCenters = new Vector3[5];
             for (int i = 0; i < modelHomes.Length; i++)
-                if (Model((PowerUpType)i) != null) modelHomes[i] = Model((PowerUpType)i).localPosition;
+            {
+                Transform model = Model((PowerUpType)i);
+                if (model == null) continue;
+                modelHomes[i] = model.localPosition;
+                bool found = false;
+                Bounds bounds = default;
+                foreach (MeshFilter filter in model.GetComponentsInChildren<MeshFilter>(true))
+                {
+                    if (filter.sharedMesh == null) continue;
+                    Bounds mesh = filter.sharedMesh.bounds;
+                    for (int corner = 0; corner < 8; corner++)
+                    {
+                        Vector3 point = mesh.center + Vector3.Scale(mesh.extents, new Vector3(
+                            (corner & 1) == 0 ? -1 : 1, (corner & 2) == 0 ? -1 : 1, (corner & 4) == 0 ? -1 : 1));
+                        point = model.InverseTransformPoint(filter.transform.TransformPoint(point));
+                        if (!found) { bounds = new Bounds(point, Vector3.zero); found = true; }
+                        else bounds.Encapsulate(point);
+                    }
+                }
+                modelCenters[i] = bounds.center;
+            }
         }
     }
 }

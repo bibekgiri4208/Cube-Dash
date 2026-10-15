@@ -38,8 +38,10 @@ namespace CubeDash.Tests
                     pickup.Configure(type, null);
                     Assert.That(instance.transform.Find("Gem").gameObject.activeSelf, Is.False);
                     int visible = 0;
-                    foreach (Transform child in instance.transform) if (child.gameObject.activeSelf) visible++;
+                    foreach (Transform child in instance.transform)
+                        if (child.gameObject.activeSelf && child != pickup.AuraRenderer.transform) visible++;
                     Assert.That(visible, Is.EqualTo(1), "Exactly one 3D pickup model is shown.");
+                    Assert.That(pickup.AuraRenderer.gameObject.activeSelf, Is.True, "The glow is decoration, not a second pickup model.");
                 }
             }
             finally { Object.DestroyImmediate(instance); }
