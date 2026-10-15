@@ -6,7 +6,7 @@ using Object = UnityEngine.Object;
 
 namespace CubeDash.Editor
 {
-    /// <summary>Saves the reference-derived Supercar, player presentation and manual toggle connection.</summary>
+    /// <summary>Saves the reference-derived Supercar and equipped player presentation.</summary>
     public static class CubeDashSupercar
     {
         private const string Materials = "Assets/Material/Supercar";
@@ -88,11 +88,10 @@ namespace CubeDash.Editor
             if (game == null) throw new InvalidOperationException("The authored Cube Dash level is required.");
             var gameSettings = new SerializedObject(game);
             gameSettings.FindProperty("supercarPresentation").objectReferenceValue = game.Player.GetComponent<PlayerSupercar>();
-            gameSettings.FindProperty("supercarDoublePressWindow").floatValue = 0.35f;
             gameSettings.ApplyModifiedPropertiesWithoutUndo();
             ConnectEngine(game);
             EditorSceneManager.MarkSceneDirty(scene); EditorSceneManager.SaveScene(scene); AssetDatabase.SaveAssets();
-            Debug.Log("Supercar saved: cyan/charcoal faceted body, real wheel openings, wraparound glass, X headlights, five-spoke blue rims, rear wing/fin, red LEDs, twin hollow exhausts and diffuser. Double-Enter manually toggles it; normal speed and cube collision rules are unchanged. Truck/Plane take temporary presentation priority.");
+            Debug.Log("Supercar model saved. Ownership and equipment are managed by the Shop; normal speed and collision rules are unchanged. Truck/Plane take temporary presentation priority.");
         }
 
         [MenuItem("Tools/Cube Dash/Refine Supercar Size and Engine Audio")]

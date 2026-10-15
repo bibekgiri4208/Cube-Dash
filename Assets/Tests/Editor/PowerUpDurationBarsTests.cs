@@ -125,6 +125,7 @@ namespace CubeDash.Tests
         public IEnumerator FlightTruckTimedProtectionAndSupercarSwapCardsAndResetWithoutGrowingUi()
         {
             yield return new EnterPlayMode();
+            using var economy = new EconomyTestScope();
             yield return EditorSceneManager.LoadSceneAsyncInPlayMode(LevelMenuTheme.ScenePath, new LoadSceneParameters(LoadSceneMode.Single));
             yield return null;
             var game = Object.FindAnyObjectByType<CubeDashGame>(); var hud = Object.FindAnyObjectByType<RunnerHud>();
@@ -142,14 +143,14 @@ namespace CubeDash.Tests
             Assert.That(Row(bars, PowerUpDurationRow.Effect.TimedShield).DurationMeter.value, Is.EqualTo(1));
             Invoke(game, "UpdateFlightTimers", 3f); bars.Refresh();
             Assert.That(Row(bars, PowerUpDurationRow.Effect.TimedShield).DurationMeter.value, Is.EqualTo(0.5f).Within(0.001f));
-            game.PressSupercarEnter(1); game.PressSupercarEnter(1.2); bars.Refresh();
+            EconomyTestScope.Equip(game); bars.Refresh();
             Assert.That(Row(bars, PowerUpDurationRow.Effect.Supercar).RemainingLabel.text, Is.EqualTo("ON"));
             Assert.That(Row(bars, PowerUpDurationRow.Effect.Supercar).DurationMeter.value, Is.EqualTo(1));
             Invoke(game, "Crash"); bars.Refresh(); Assert.That(bars.Stack.gameObject.activeSelf, Is.False);
             game.RequestRun(); bars.Refresh(); Assert.That(bars.Stack.gameObject.activeSelf, Is.False);
             for (int i = 0; i < 20; i++) { game.StartRun(); Apply(game, PowerUpType.Magnet); bars.Refresh(); }
             Assert.That(hud.GetComponentsInChildren<Transform>(true).Length, Is.EqualTo(objects));
-            game.StartRun(); bars.Refresh(); Assert.That(bars.Stack.gameObject.activeSelf, Is.False);
+            EconomyTestScope.Equip(game, false); game.StartRun(); bars.Refresh(); Assert.That(bars.Stack.gameObject.activeSelf, Is.False);
         }
 
         [UnityTest]

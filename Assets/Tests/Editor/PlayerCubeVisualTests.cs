@@ -276,8 +276,12 @@ namespace CubeDash.Tests
                 Assert.That(model.Eyes.All(eye => !eye.enabled), Is.True, "No floating eyes beside the plane or truck.");
             }
             game.StartRun();
-            game.PressSupercarEnter(1); Assert.That(game.PressSupercarEnter(1.1), Is.True);
-            Assert.That(model.Body.enabled, Is.False); Assert.That(model.Eyes.All(eye => !eye.enabled), Is.True);
+            using (var economy = new EconomyTestScope())
+            {
+                EconomyTestScope.Equip(game);
+                Assert.That(model.Body.enabled, Is.False); Assert.That(model.Eyes.All(eye => !eye.enabled), Is.True);
+                EconomyTestScope.Equip(game, false);
+            }
             game.StartRun();
             Assert.That(model.Body.enabled, Is.True); Assert.That(model.Eyes.All(eye => eye.enabled), Is.True);
             Assert.That(collider.enabled, Is.True); Assert.That(game.Player.localScale, Is.EqualTo(colliderScale));

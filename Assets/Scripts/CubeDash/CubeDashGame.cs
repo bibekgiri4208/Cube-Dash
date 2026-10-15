@@ -59,9 +59,8 @@ namespace CubeDash
         [SerializeField, Min(0f)] private float truckShieldDuration = 3f;
         [SerializeField, Min(0.1f)] private float magnetDuration = 10f;
         [SerializeField, Min(1f)] private float magnetRange = 8f;
-        [Header("Manual Supercar (cosmetic toggle)")]
+        [Header("Equipped cosmetic skin")]
         [SerializeField] private PlayerSupercar supercarPresentation = null;
-        [SerializeField, Range(0.15f, 0.6f)] private float supercarDoublePressWindow = 0.35f;
 
         public RunState State { get; private set; }
         public float Distance { get; private set; }
@@ -103,7 +102,6 @@ namespace CubeDash
         private float timedShieldDuration;
         private float truckTimer;
         private float magnetTimer;
-        private readonly DoublePressInput supercarEnter = new DoublePressInput();
         public bool SupercarEnabled { get; private set; }
         public bool InvincibilityEnabled { get; private set; }
         private bool cheatedRun;
@@ -171,6 +169,16 @@ namespace CubeDash
             hud.Initialize(this);
             State = RunState.Ready;
             hud.Show(State);
+            RefreshEquippedSkin();
+        }
+
+        private void OnEnable() { GameEconomy.Changed += RefreshEquippedSkin; RefreshEquippedSkin(); }
+
+        private void RefreshEquippedSkin()
+        {
+            if (playerRenderer == null) return;
+            SupercarEnabled = GameEconomy.SupercarEquipped;
+            RefreshGroundPresentation();
         }
 
         private void Start()
@@ -219,6 +227,7 @@ namespace CubeDash
                 Score += collected * (doublePointsTimer > 0 ? 2 : 1);
                 if (collected > 0)
                 {
+                    if (!cheatedRun) GameEconomy.AddCoins(collected);
                     absorptionPulse = 1f;
                     pickupAge = 0;
                     hud.NotifyCollection(collected);
@@ -344,7 +353,6 @@ namespace CubeDash
                 if (keyboard.escapeKey.wasPressedThisFrame || keyboard.pKey.wasPressedThisFrame) { TogglePause(); return; }
                 if (keyboard.rKey.wasPressedThisFrame && State != RunState.Ready) { RequestRun(); return; }
                 bool enter = keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame;
-                if (enter && State == RunState.Running) PressSupercarEnter(Time.unscaledTimeAsDouble);
                 if (keyboard.spaceKey.wasPressedThisFrame || (enter && State != RunState.Running))
                 {
                     if (State != RunState.Running) hud.ConfirmSelection();
@@ -392,7 +400,8 @@ namespace CubeDash
             if (hud != null) hud.RefreshCheatStatus();
             if (gameCamera != null && gameCamera.TryGetComponent(out RunnerGraphics graphics))
                 graphics.Tick(0, RunState.Ready, 0);
-            supercarEnter.Reset(); SupercarEnabled = false;
+            GameEconomy.Changed -= RefreshEquippedSkin;
+            SupercarEnabled = false;
             if (supercarPresentation != null) supercarPresentation.ResetPresentation();
             if (playerRenderer != null) RefreshGroundPresentation();
             if (audioPresentation != null) audioPresentation.ResetSounds();
@@ -413,17 +422,6 @@ namespace CubeDash
             InvincibilityEnabled = !InvincibilityEnabled;
             if (State == RunState.Running || State == RunState.Paused) cheatedRun |= InvincibilityEnabled;
             if (hud != null) hud.RefreshCheatStatus();
-        }
-
-        /// <summary>Called for Enter press edges only; menu confirmations never arm the in-run toggle.</summary>
-        public bool PressSupercarEnter(double now)
-        {
-            if (State != RunState.Running || supercarPresentation == null) { supercarEnter.Reset(); return false; }
-            if (!supercarEnter.Press(now, supercarDoublePressWindow)) return false;
-            SupercarEnabled = !SupercarEnabled;
-            RefreshGroundPresentation();
-            hud.NotifySupercar(SupercarEnabled);
-            return true;
         }
 
         /// <summary>Player-facing start/retry; opted-in scenes prepare a run behind a frozen 3, 2, 1 countdown.</summary>
@@ -476,13 +474,14 @@ namespace CubeDash
             timedShieldDuration = 0;
             truckTimer = 0;
             magnetTimer = 0;
-            SupercarEnabled = false; supercarEnter.Reset();
+            SupercarEnabled = GameEconomy.SupercarEquipped;
             playerRenderer.enabled = true;
             if (cubeVisualPresentation != null) cubeVisualPresentation.SyncEyes();
             playerCollider.enabled = true;
             if (flightPresentation != null) flightPresentation.ResetPresentation();
             if (truckPresentation != null) truckPresentation.ResetPresentation();
             if (supercarPresentation != null) supercarPresentation.ResetPresentation();
+            RefreshGroundPresentation();
             if (wake != null) wake.SetVisible(true);
             gameCamera.transform.position = cameraOrigin;
             cameraFollow = cameraOrigin;
@@ -513,7 +512,6 @@ namespace CubeDash
             }
             else return;
             ResetGamepadStick();
-            supercarEnter.Reset();
             if (collectionAudio != null)
             {
                 if (State == RunState.Paused) collectionAudio.Pause();
@@ -532,8 +530,6 @@ namespace CubeDash
             timedShieldDuration = 0;
             truckTimer = 0;
             magnetTimer = 0;
-            SupercarEnabled = false; supercarEnter.Reset();
-            if (supercarPresentation != null) supercarPresentation.ResetPresentation();
             if (wasFlying) SetFlightPresentation(false);
             SetTruckPresentation(false);
             if (flightPresentation != null) flightPresentation.ResetPresentation();

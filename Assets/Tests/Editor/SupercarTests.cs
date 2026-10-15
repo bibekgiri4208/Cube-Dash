@@ -15,18 +15,6 @@ namespace CubeDash.Tests
     public sealed class SupercarTests
     {
         [Test]
-        public void DoublePressPairsQuickEdgesButNotSlowPressesOrOverlappingTriples()
-        {
-            var input = new DoublePressInput();
-            Assert.That(input.Press(1), Is.False); Assert.That(input.Press(1.2), Is.True);
-            Assert.That(input.Press(1.3), Is.False); Assert.That(input.Press(1.5), Is.True);
-            Assert.That(input.Press(2), Is.False); Assert.That(input.Press(3), Is.False);
-            input.Reset(); Assert.That(input.Press(3.1), Is.False);
-            Assert.That(input.Press(2.1), Is.False, "Clock reversal cannot complete a stale pair.");
-            Assert.That(input.Press(2.2), Is.True);
-        }
-
-        [Test]
         public void SavedCarHasReferenceDetailsAndValidFacetedGeometryWithoutExtraColliders()
         {
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/CubeDash/Supercar.prefab");
@@ -77,11 +65,7 @@ namespace CubeDash.Tests
             }
         }
 
-        private static void Toggle(CubeDashGame game, double time)
-        {
-            Assert.That(game.PressSupercarEnter(time), Is.False);
-            Assert.That(game.PressSupercarEnter(time + 0.15), Is.True);
-        }
+        private static void Toggle(CubeDashGame game, double time) => EconomyTestScope.Equip(game, !GameEconomy.SupercarEquipped);
 
         private static void Apply(CubeDashGame game, PowerUpType type)
             => typeof(CubeDashGame).GetMethod("ApplyPowerUp", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(game, new object[] { type });
@@ -89,13 +73,14 @@ namespace CubeDash.Tests
             => typeof(CubeDashGame).GetMethod(method, BindingFlags.Instance | BindingFlags.NonPublic).Invoke(game, new object[] { time });
 
         [UnityTest]
-        public IEnumerator ManualToggleKeepsNormalRulesAndColliderAndHasNoTimerOrSpeedBoost()
+        public IEnumerator PurchasedSkinKeepsNormalRulesAndColliderAndHasNoTimerOrSpeedBoost()
         {
             yield return new EnterPlayMode();
+            using var economy = new EconomyTestScope();
             yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/Level.unity", new LoadSceneParameters(LoadSceneMode.Single));
             yield return null;
             CubeDashGame game = Object.FindAnyObjectByType<CubeDashGame>();
-            Assert.That(game.PressSupercarEnter(0), Is.False, "Ready/menu presses do not arm the toggle.");
+            Assert.That(game.SupercarEnabled, Is.False, "The car must be owned and equipped first.");
             game.StartRun(); Clear(game); game.enabled = false;
             BoxCollider collider = game.Player.GetComponent<BoxCollider>(); Vector3 size = collider.size, center = collider.center;
             float speed = game.Speed; int count = game.Player.GetComponentsInChildren<Transform>(true).Length;
@@ -115,38 +100,38 @@ namespace CubeDash.Tests
             Assert.That(game.Track.Advance(3, 0, 0, 0, Vector2.one * 0.575f, 0, out collected), Is.True, "Supercar does not provide Truck protection.");
             Toggle(game, 15); Assert.That(game.SupercarEnabled, Is.False);
             Assert.That(game.Player.Find("Cube Visual").GetComponent<Renderer>().enabled, Is.True);
-            Toggle(game, 16); game.StartRun(); Assert.That(game.SupercarEnabled, Is.False);
-            Assert.That(game.SupercarPresentation.Car.gameObject.activeSelf, Is.False);
+            Toggle(game, 16); game.StartRun(); Assert.That(game.SupercarEnabled, Is.True);
+            Assert.That(game.SupercarPresentation.Car.gameObject.activeSelf, Is.True);
             Assert.That(game.Player.GetComponentsInChildren<Transform>(true).Length, Is.EqualTo(count));
         }
 
         [UnityTest]
-        public IEnumerator PauseFreezesWheelsAndPressPairsCannotCrossMenuOrRestartBoundaries()
+        public IEnumerator PauseFreezesWheelsAndEquippedSkinSurvivesRestart()
         {
             yield return new EnterPlayMode();
+            using var economy = new EconomyTestScope();
             yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/Level.unity", new LoadSceneParameters(LoadSceneMode.Single));
             yield return null;
             CubeDashGame game = Object.FindAnyObjectByType<CubeDashGame>(); game.StartRun(); Clear(game);
             Toggle(game, 1); game.ChangeLane(1); yield return null; yield return null;
             Quaternion wheel = game.SupercarPresentation.Wheels[0].localRotation;
             Assert.That(Quaternion.Angle(wheel, Quaternion.identity), Is.GreaterThan(0.1f));
-            game.PressSupercarEnter(3); game.TogglePause();
+            game.TogglePause();
             Vector3 position = game.SupercarPresentation.Car.localPosition;
-            Assert.That(game.PressSupercarEnter(3.1), Is.False);
             yield return null; yield return null;
             Assert.That(game.SupercarPresentation.Wheels[0].localRotation, Is.EqualTo(wheel));
             Assert.That(game.SupercarPresentation.Car.localPosition, Is.EqualTo(position));
-            game.TogglePause(); Assert.That(game.PressSupercarEnter(3.2), Is.False);
-            Assert.That(game.SupercarEnabled, Is.True); Assert.That(game.PressSupercarEnter(3.3), Is.True);
-            Assert.That(game.SupercarEnabled, Is.False);
-            game.PressSupercarEnter(4); game.StartRun(); Clear(game);
-            Assert.That(game.PressSupercarEnter(4.1), Is.False); Assert.That(game.SupercarEnabled, Is.False);
+            game.TogglePause(); Assert.That(game.SupercarEnabled, Is.True);
+            game.StartRun(); Clear(game);
+            Assert.That(game.SupercarEnabled, Is.True);
+            Assert.That(GameEconomy.SupercarEquipped, Is.True);
         }
 
         [UnityTest]
-        public IEnumerator TruckAndPlaneTakePriorityThenRestoreTheSelectedCarAndCrashClearsIt()
+        public IEnumerator TruckAndPlaneTakePriorityThenRestoreTheEquippedCarAndCrashKeepsTheSkin()
         {
             yield return new EnterPlayMode();
+            using var economy = new EconomyTestScope();
             yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/Level.unity", new LoadSceneParameters(LoadSceneMode.Single));
             yield return null;
             CubeDashGame game = Object.FindAnyObjectByType<CubeDashGame>(); game.StartRun(); Clear(game); game.enabled = false;
@@ -164,15 +149,16 @@ namespace CubeDash.Tests
             Assert.That(game.SupercarPresentation.Car.gameObject.activeSelf, Is.True);
             Assert.That(game.Player.GetComponent<BoxCollider>().enabled, Is.True);
             typeof(CubeDashGame).GetMethod("Crash", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(game, null);
-            Assert.That(game.State, Is.EqualTo(CubeDashGame.RunState.GameOver)); Assert.That(game.SupercarEnabled, Is.False);
-            Assert.That(game.SupercarPresentation.Car.gameObject.activeSelf, Is.False);
-            Assert.That(game.PressSupercarEnter(3), Is.False); game.StartRun(); Assert.That(game.PressSupercarEnter(3.1), Is.False);
+            Assert.That(game.State, Is.EqualTo(CubeDashGame.RunState.GameOver)); Assert.That(game.SupercarEnabled, Is.True);
+            Assert.That(game.SupercarPresentation.Car.gameObject.activeSelf, Is.True);
+            game.StartRun(); Assert.That(game.SupercarEnabled, Is.True);
         }
 
         [UnityTest]
         public IEnumerator EngineFollowsCarSelectionSpeedPausePowerUpPriorityAndCleanup()
         {
             yield return new EnterPlayMode();
+            using var economy = new EconomyTestScope();
             yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/Level.unity", new LoadSceneParameters(LoadSceneMode.Single));
             yield return null;
             CubeDashGame game = Object.FindAnyObjectByType<CubeDashGame>(); game.StartRun(); Clear(game);
@@ -209,19 +195,20 @@ namespace CubeDash.Tests
             Toggle(game, 3); yield return null; game.StartRun(); Clear(game);
             Assert.That(audio.SupercarActive, Is.False);
             Assert.That(audio.SupercarSource.pitch, Is.EqualTo(1));
-            Toggle(game, 4); yield return null;
+            yield return null;
             typeof(CubeDashGame).GetMethod("Crash", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(game, null);
             Assert.That(audio.SupercarActive, Is.False); Assert.That(audio.SupercarSource.volume, Is.Zero);
-            game.StartRun(); Clear(game); Toggle(game, 5); yield return null;
+            game.StartRun(); Clear(game); yield return null;
             game.enabled = false;
             Assert.That(audio.SupercarActive, Is.False);
             Assert.That(game.GetComponentsInChildren<AudioSource>(true).Length, Is.EqualTo(sources));
         }
 
         [UnityTest]
-        public IEnumerator EnterAndNumpadEnterUsePressEdgesAndDoNotSwallowSameFrameSteering()
+        public IEnumerator EnterAndNumpadEnterNeverChangeSkinsOrSwallowSameFrameSteering()
         {
             yield return new EnterPlayMode();
+            using var economy = new EconomyTestScope();
             yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/Level.unity", new LoadSceneParameters(LoadSceneMode.Single));
             yield return null;
             CubeDashGame game = Object.FindAnyObjectByType<CubeDashGame>(); game.StartRun(); Clear(game); game.enabled = false;
@@ -240,10 +227,14 @@ namespace CubeDash.Tests
                 InputSystem.QueueStateEvent(keyboard, new KeyboardState()); InputSystem.Update();
                 InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.NumpadEnter, Key.D)); InputSystem.Update();
                 Assert.That(keyboard.numpadEnterKey.wasPressedThisFrame, Is.True); read.Invoke(game, null);
-                Assert.That(game.SupercarEnabled, Is.True);
+                Assert.That(game.SupercarEnabled, Is.False, "Enter cannot grant an unowned skin.");
                 Assert.That(typeof(CubeDashGame).GetField("targetLane", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(game), Is.EqualTo(2));
                 InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.NumpadEnter)); InputSystem.Update(); read.Invoke(game, null);
-                Assert.That(game.SupercarEnabled, Is.True, "Holding Enter cannot trigger repeated toggles.");
+                Assert.That(game.SupercarEnabled, Is.False, "Holding Enter cannot toggle a skin.");
+                EconomyTestScope.Equip(game);
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState()); InputSystem.Update();
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Enter)); InputSystem.Update(); read.Invoke(game, null);
+                Assert.That(game.SupercarEnabled, Is.True, "Enter cannot unequip the purchased skin either.");
             }
             finally
             {

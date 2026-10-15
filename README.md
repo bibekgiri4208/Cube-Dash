@@ -11,7 +11,7 @@ The separate playable **`Assets/Scenes/Country Side.unity`** uses the same runne
 
 - **Level and all six maps:** press Play or choose a map from the Main Menu; an automatic **3, 2, 1** countdown replaces the old start screen. Retries/restarts use the same countdown. Country Side now shares the highway, curves, themed UI and skybox system while retaining its linked Japanese countryside artwork.
 - Move with **A/D**, **Left/Right**, gamepad **left stick**, or **D-pad left/right**.
-- While running, **double-press Enter** (or numpad Enter) to toggle **Supercar ↔ Cube**.
+- Buy the **Epic Supercar for 100 coins** in Main Menu > Shop, then **Equip** it. **Unequip** returns to the cube; Enter no longer changes skins.
   Two distinct presses within **0.35 seconds** count; holding the key does not toggle repeatedly.
 - **Collect gold 3D coins:** each coin disappears and awards **1 point**.
 - **Avoid obstacle cubes:** touching an obstacle ends the run.
@@ -83,14 +83,19 @@ In **Level**, active power-ups appear as separate compact cards stacked on the *
    and become collectible again after it expires.
 
 The five bonus types share the existing pooled pickup slots and unchanged spawn frequency.
-**Supercar** is a separate, manually toggled cosmetic mode: no pickup, duration, cooldown, extra
+**Supercar** is a saved, purchasable Epic cosmetic skin: no pickup, duration, cooldown, extra
 speed or obstacle immunity. Normal cube collision/color rules, scoring and the player's collider
 remain unchanged. The reference car stays cyan/charcoal; the HUD's existing color objective and
 matching-color wake still identify the player's gameplay color. Magnet, Shield and Double Points
 continue to work. Truck and Fighter Plane temporarily take visual priority, then restore a selected
-Supercar when they expire. You can toggle the selection during those power-ups. Pause freezes the
-car's wheels/steering and engine audio; restart or game over clears the selection and pending Enter presses. Menu
-confirmation presses never arm the in-run double-press.
+Supercar when they expire. Pause freezes the car's wheels/steering and engine audio. Equipment
+survives game over, retries, map changes and relaunches, and replaces the Main Menu cube preview.
+
+Each physically collected coin adds one coin to the saved wallet immediately, independently of
+Double Points score. Coins survive leaving/restarting a map. Runs using testing invincibility stop
+earning wallet coins. The wallet appears at the Main Menu's top-left and the Shop's bottom-left.
+Buying unlocks the car; **Equip/Unequip** are separate, free actions. New wallets start at zero.
+`GameEconomy` saves balance, ownership and equipment in local PlayerPrefs, not an online account.
 
 The hand-built, reference-derived car includes a low faceted body with real wheel openings,
 cyan shoulder/bonnet panels, a tapered charcoal hood, smoked curved glazing, white X LEDs,
@@ -100,8 +105,7 @@ not an exact export of the original model. The saved model is `Assets/Prefab/Cub
 with body/wheel meshes under `Assets/3D Models` and materials under `Assets/Material/Supercar`.
 `PlayerCube.prefab` contains the inactive `Supercar Visual` and `PlayerSupercar` wheel/body animation.
 **Tools > Cube Dash > Add Reference Supercar** (`CubeDash.Editor.CubeDashSupercar.ApplyFromCommandLine`)
-rebakes/reconnects only the car, player prefab and game reference. The saved level is ready to play;
-**Game Manager > Supercar Double Press Window** adjusts the input interval.
+rebakes/reconnects only the car, player prefab and game reference.
 The player car is now **20% smaller**, with unchanged collision bounds and road-height placement.
 Its separate, original six-second `Assets/Audio/SupercarEngineLoop.wav` adds an exhaust growl with
 speed-responsive pitch and a small steering rev. It fades in, pauses/resumes with gameplay, stops

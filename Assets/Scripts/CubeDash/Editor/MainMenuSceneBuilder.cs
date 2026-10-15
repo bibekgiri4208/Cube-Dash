@@ -85,6 +85,7 @@ namespace CubeDash.Editor
             MainMenuMapSelection.ApplyToScene(scene);
             MainMenuQuitConfirmation.ApplyToScene(scene);
             MainMenuUiAnimations.ApplyToScene(scene);
+            MainMenuEconomyAuthoring.ApplyToScene(scene);
             AssetDatabase.SaveAssets();
             EditorSceneManager.MarkSceneDirty(scene);
             if (!EditorSceneManager.SaveScene(scene)) throw new IOException("Could not save Main Menu.");

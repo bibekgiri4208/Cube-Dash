@@ -24,7 +24,7 @@ namespace CubeDash.Tests
         }
 
         [Test]
-        public void ShopHasThreeEmptyEditableRarityCollectionsAndNoInventedSkinsOrPurchaseControls()
+        public void ShopHasEditableRarityCollectionsAndTheRequestedEpicSupercar()
         {
             var scene = EditorSceneManager.OpenPreviewScene("Assets/Scenes/Main Menu.unity");
             try
@@ -38,15 +38,16 @@ namespace CubeDash.Tests
                     Transform section = card.Find(rarity + " Skins"); Assert.That(section, Is.Not.Null);
                     Assert.That(section.Find("Rarity heading/Rarity label").GetComponent<Text>().text, Is.EqualTo(rarity.ToUpperInvariant()));
                     Transform slots = section.Find("Skin viewport/Skin slots"); Assert.That(slots, Is.Not.Null);
-                    Assert.That(slots.childCount, Is.Zero, "These are empty sections, not placeholder skin products.");
-                    Assert.That(slots.GetComponent<GridLayoutGroup>().constraintCount, Is.EqualTo(2));
+                    Assert.That(slots.childCount, Is.EqualTo(rarity == "Epic" ? 1 : 0));
+                    Assert.That(slots.GetComponent<GridLayoutGroup>().constraintCount, Is.EqualTo(rarity == "Epic" ? 1 : 2));
                     Assert.That(section.Find("Skin viewport").GetComponent<ScrollRect>().content, Is.SameAs(slots));
                     Assert.That(section.Find("Empty state/Empty title").GetComponent<Text>().text, Is.EqualTo("NO SKINS YET"));
                 }
                 Button[] controls = menu.ShopPanel.GetComponentsInChildren<Button>(true);
-                Assert.That(controls.Length, Is.EqualTo(1)); Assert.That(controls[0].name, Is.EqualTo("BACK"));
-                Assert.That(controls[0].onClick.GetPersistentTarget(0), Is.SameAs(menu));
-                Assert.That(controls[0].onClick.GetPersistentMethodName(0), Is.EqualTo("ClosePanels"));
+                Assert.That(controls.Length, Is.EqualTo(2));
+                var back = controls.Single(button => button.name == "BACK");
+                Assert.That(back.onClick.GetPersistentTarget(0), Is.SameAs(menu));
+                Assert.That(back.onClick.GetPersistentMethodName(0), Is.EqualTo("ClosePanels"));
             }
             finally { EditorSceneManager.ClosePreviewScene(scene); }
         }
@@ -159,9 +160,9 @@ namespace CubeDash.Tests
                 Assert.That(menu.ShopPanel.activeSelf, Is.True); Assert.That(menu.OptionsPanel.activeSelf, Is.False);
                 Assert.That(EventSystem.current.currentSelectedGameObject.transform.IsChildOf(menu.ShopPanel.transform), Is.True);
                 AssertHeadingRenders(menu.ShopPanel);
-                AssertPointerRoutesTo(menu.ShopPanel.GetComponentInChildren<Button>(), menu);
+                AssertPointerRoutesTo(menu.ShopPanel.transform.Find("Card/BACK").GetComponent<Button>(), menu);
                 CaptureIfRequested(menu, "shop");
-                menu.ShopPanel.GetComponentInChildren<Button>().onClick.Invoke();
+                menu.ShopPanel.transform.Find("Card/BACK").GetComponent<Button>().onClick.Invoke();
                 yield return WaitForPanelClosed(menu.ShopPanel);
                 Assert.That(menu.ShopPanel.activeSelf, Is.False); Assert.That(EventSystem.current.currentSelectedGameObject.name, Is.EqualTo("SHOP"));
                 menu.OpenOptions(); yield return null;
@@ -247,7 +248,7 @@ namespace CubeDash.Tests
                 ExecuteEvents.Execute(shop.gameObject, pointer, ExecuteEvents.pointerDownHandler);
                 ExecuteEvents.Execute(shop.gameObject, pointer, ExecuteEvents.pointerClickHandler);
                 Assert.That(menu.ShopPanel.activeSelf, Is.True);
-                menu.ShopPanel.GetComponentInChildren<Button>().onClick.Invoke();
+                menu.ShopPanel.transform.Find("Card/BACK").GetComponent<Button>().onClick.Invoke();
                 Assert.That(EventSystem.current.currentSelectedGameObject, Is.SameAs(shop.gameObject));
                 menu.ClosePanels();
                 Assert.That(EventSystem.current.currentSelectedGameObject, Is.SameAs(shop.gameObject), "Closing nothing must not jump to Start.");

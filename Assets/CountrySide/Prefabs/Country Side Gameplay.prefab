@@ -15816,7 +15816,6 @@ MonoBehaviour:
   magnetDuration: 10
   magnetRange: 8
   supercarPresentation: {fileID: 2620288108707034356}
-  supercarDoublePressWindow: 0.35
 --- !u!82 &8259699854651196612
 AudioSource:
   m_ObjectHideFlags: 0

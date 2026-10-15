@@ -15,8 +15,15 @@ namespace CubeDash
         private Vector3 cardScale, shadowScale;
         private float progress, from, target, age;
         private bool initialized;
+        private float layoutScale = 1;
         public bool Closing => Playing && target == 0;
         public bool Playing { get; private set; }
+        public void SetLayoutScale(float value)
+        {
+            value = Mathf.Clamp(value, 0.1f, 1);
+            if (layoutScale == value) return;
+            Initialize(); layoutScale = value; Apply();
+        }
 
         private void Initialize()
         {
@@ -57,7 +64,7 @@ namespace CubeDash
         {
             group.alpha = progress;
             Vector2 offset = new Vector2(0, -28 * (1 - progress));
-            float scale = Mathf.Lerp(0.95f, 1, progress);
+            float scale = Mathf.Lerp(0.95f, 1, progress) * layoutScale;
             card.anchoredPosition = cardPosition + offset; card.localScale = cardScale * scale;
             if (shadow != null) { shadow.anchoredPosition = shadowPosition + offset; shadow.localScale = shadowScale * scale; }
         }
