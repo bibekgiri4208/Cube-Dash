@@ -117,6 +117,7 @@ namespace CubeDash.Editor
             JapaneseCityStreetRepair.ApplyFromCommandLine();
             JapaneseCityLowPolySakura.ApplyFromCommandLine();
             JapaneseCityArtFinish.ApplyFromCommandLine();
+            JapaneseCityTraffic.ApplyFromCommandLine();
             Debug.Log("City reference finish saved: warm charcoal road, ivory markings, mint/ivory barriers, pedestrian rails and wide paths. City-specific low-poly sakura and tree clearance applied. Gameplay, Main Menu and source pack preserved.");
         }
 

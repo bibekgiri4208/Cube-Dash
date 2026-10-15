@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c51f381ee2674e10a51c639ff5279149, type: 3}
+  m_Name: City JDM Traffic
+  m_EditorClassIdentifier: CubeDash::CubeDash.HighwayHazardVisuals
+  compactObstacle: {fileID: 4300000, guid: 654d18a3bfd26f641a6fb5de902b3069, type: 2}
+  compactVariants:
+  - {fileID: 4300000, guid: 1f2f0ebb9f301764797e9895668250b3, type: 2}
+  - {fileID: 4300000, guid: 2a248668cddbcd947853cdfa67d115a0, type: 2}
+  barrier: {fileID: 4300000, guid: fd4e2b3bc3e75034e997bbcfd4f70dd5, type: 2}
+  van: {fileID: 4300000, guid: 7da50f95e85a53a43ae23245c96c0cb5, type: 2}
+  truck: {fileID: 4300000, guid: 1df001ff71cc8a64f88a1ba9e93c0ee9, type: 2}
+  barrierVariants:
+  - {fileID: 4300000, guid: 9313a13c8d382a24ca67c21ab0b0929e, type: 2}
+  - {fileID: 4300000, guid: fa52be9433d0aed42a8a439dba6fd935, type: 2}
+  vanVariants:
+  - {fileID: 4300000, guid: d850620d1c5730d4c92f69829404e2ba, type: 2}
+  - {fileID: 4300000, guid: 3a43b7d7c21b2674387d7507c43969da, type: 2}
+  truckVariants:
+  - {fileID: 4300000, guid: 9daa7c346b1b0aa4ba9d12152a399c02, type: 2}
+  materials:
+  - {fileID: 2100000, guid: 5ee71f70b01a31c4baa9e967b31a5bbb, type: 2}
+  - {fileID: 2100000, guid: 670808a7abd197a419f82f894b0276b7, type: 2}
+  - {fileID: 2100000, guid: cd56d5e2395805b44a4ddf352fdd530a, type: 2}
+  - {fileID: 2100000, guid: b47afdf1a4b78094982b409459ef3493, type: 2}
+  - {fileID: 2100000, guid: c861234334ffa0546b01eceb74dfb6b2, type: 2}
+  - {fileID: 2100000, guid: 0c3a88bbc88d8f94682894249245eb8b, type: 2}
+  - {fileID: 2100000, guid: 47b455742dde3c1409998cdceb9f98a6, type: 2}
+  - {fileID: 2100000, guid: 4b9b2f5591a17a34b82edbe08ed95f5d, type: 2}
+  - {fileID: 2100000, guid: 646c3006656bd324485fb965deb1d2f5, type: 2}
+  overrideVehiclePaint: 1
+  vanPaint: {r: 0.9, g: 0.86, b: 0.74, a: 1}
+  truckPaint: {r: 1, g: 1, b: 1, a: 1}

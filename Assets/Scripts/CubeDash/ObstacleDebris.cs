@@ -7,6 +7,8 @@ namespace CubeDash
     {
         [SerializeField] private Transform[] pieces = new Transform[0];
         [SerializeField] private MeshRenderer[] renderers = new MeshRenderer[0];
+        [Tooltip("Optional map-local model fragments. Null retains the shared highway breakup library.")]
+        [SerializeField] private ObstacleBreakupCatalog catalogOverride = null;
         private Vector3[] velocities;
         private float[] lifetimes;
         private Vector3[] spins, extents;
@@ -32,7 +34,7 @@ namespace CubeDash
             spins = new Vector3[pieces.Length]; extents = new Vector3[pieces.Length];
             bounce = new float[pieces.Length]; drag = new float[pieces.Length]; ground = new float[pieces.Length];
             filters = new MeshFilter[pieces.Length]; tint = new MaterialPropertyBlock();
-            catalog = Resources.Load<ObstacleBreakupCatalog>(ObstacleBreakupCatalog.ResourcePath);
+            catalog = catalogOverride != null ? catalogOverride : Resources.Load<ObstacleBreakupCatalog>(ObstacleBreakupCatalog.ResourcePath);
             if (catalog == null || catalog.Fallback == null || catalog.Materials.Length != 9)
                 throw new System.InvalidOperationException("Missing baked Resources/ObstacleBreakups model fragments.");
             for (int i = 0; i < pieces.Length; i++)

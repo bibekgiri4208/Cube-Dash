@@ -32,6 +32,8 @@ namespace CubeDash
         [Header("Highway progression")]
         [SerializeField] private bool patternedEncounters = true;
         [SerializeField, Range(0, 1)] private float roadCurveStrength = 1f;
+        [Tooltip("Optional map-local traffic art. Null retains the shared highway models and collision categories.")]
+        [SerializeField] private HighwayHazardVisuals hazardVisuals = null;
         private HighwayPatterns patterns;
         private HighwayPresentation presentation;
         private float curvePhase;
@@ -55,7 +57,7 @@ namespace CubeDash
         public void PreparePresentation(Transform player)
         {
             if (!Application.isPlaying || presentation != null) return;
-            presentation = new HighwayPresentation();
+            presentation = new HighwayPresentation(hazardVisuals);
             presentation.Prepare(transform);
             presentation.Prepare(player);
             foreach (TrackSegment segment in segments)

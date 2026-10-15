@@ -129,7 +129,7 @@ namespace CubeDash.Editor
 
         private static void BakeOcclusion(Mesh mesh)
         {
-            var usedLayers = new HashSet<int>(Object.FindObjectsByType<Collider>(FindObjectsInactive.Include, FindObjectsSortMode.None).Select(c => c.gameObject.layer));
+            var usedLayers = new HashSet<int>(Object.FindObjectsByType<Collider>(FindObjectsInactive.Include).Select(c => c.gameObject.layer));
             int layer = Enumerable.Range(8, 24).Reverse().First(i => !usedLayers.Contains(i));
             var root = new GameObject("Temporary City AO bake") { hideFlags = HideFlags.HideAndDontSave };
             try

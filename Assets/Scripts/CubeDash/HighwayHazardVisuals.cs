@@ -15,7 +15,14 @@ namespace CubeDash
         [SerializeField] private Mesh[] vanVariants = new Mesh[0];
         [SerializeField] private Mesh[] truckVariants = new Mesh[0];
         [SerializeField] private Material[] materials = new Material[0];
+        [Tooltip("Use authored vehicle body colors instead of the obstacle's gameplay tint. Non-vehicle hazards are unaffected.")]
+        [SerializeField] private bool overrideVehiclePaint = false;
+        [SerializeField] private Color vanPaint = Color.white;
+        [SerializeField] private Color truckPaint = Color.white;
         public Material[] Materials => materials;
+        public Color PaintFor(HighwayHazard type, Color gameplayTint)
+            => overrideVehiclePaint && type == HighwayHazard.Van ? vanPaint
+                : overrideVehiclePaint && type == HighwayHazard.Truck ? truckPaint : gameplayTint;
         // Cube remains the serialized compact collision category, not a visible cube model.
         private Mesh[] Variants(HighwayHazard type) => type == HighwayHazard.Cube ? compactVariants : type == HighwayHazard.Barrier ? barrierVariants : type == HighwayHazard.Van ? vanVariants : type == HighwayHazard.Truck ? truckVariants : null;
         public int VariantCount(HighwayHazard type) => 1 + (Variants(type)?.Length ?? 0);

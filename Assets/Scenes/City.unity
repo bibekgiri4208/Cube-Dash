@@ -3590,6 +3590,7 @@ MonoBehaviour:
   environment: {fileID: 197067927}
   patternedEncounters: 1
   roadCurveStrength: 1
+  hazardVisuals: {fileID: 11400000, guid: d1e692f7ca6ea1443a7b1d74aaed93da, type: 2}
 --- !u!4 &197067926
 Transform:
   m_ObjectHideFlags: 0
@@ -14839,6 +14840,7 @@ MonoBehaviour:
   - {fileID: 587337491}
   - {fileID: 530652909}
   - {fileID: 317415814}
+  catalogOverride: {fileID: 11400000, guid: 32d40fd504fefeb44ad90b521572241e, type: 2}
 --- !u!4 &1147700690
 Transform:
   m_ObjectHideFlags: 0

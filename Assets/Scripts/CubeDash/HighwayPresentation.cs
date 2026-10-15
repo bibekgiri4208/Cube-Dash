@@ -30,10 +30,10 @@ namespace CubeDash
                 for (int variant = 0; variant < visualAssets.VariantCount((HighwayHazard)i); variant++) HazardMesh(cube, (HighwayHazard)i, variant);
         }
 
-        public HighwayPresentation()
+        public HighwayPresentation(HighwayHazardVisuals visualOverride = null)
         {
             if (shader == null) throw new InvalidOperationException("Missing Resources/CubeDashCurvedLit shader.");
-            visualAssets = Resources.Load<HighwayHazardVisuals>(HighwayHazardVisuals.ResourcePath);
+            visualAssets = visualOverride != null ? visualOverride : Resources.Load<HighwayHazardVisuals>(HighwayHazardVisuals.ResourcePath);
             if (visualAssets == null || visualAssets.MeshFor(HighwayHazard.Cube) == null || visualAssets.MeshFor(HighwayHazard.Barrier) == null || visualAssets.MeshFor(HighwayHazard.Van) == null || visualAssets.MeshFor(HighwayHazard.Truck) == null
                 || visualAssets.Materials.Length != 9)
                 throw new InvalidOperationException("Missing or incomplete baked Resources/HighwayHazards art.");
@@ -101,7 +101,7 @@ namespace CubeDash
         public void ConfigureHazard(RunnerCube cube, HighwayHazard type, int variant = 0)
         {
             Material paint = cube.GetComponent<Renderer>().sharedMaterial;
-            Color color = paint.GetColor("_BaseColor");
+            Color color = visualAssets.PaintFor(type, paint.GetColor("_BaseColor"));
             if (!hazardPalettes.TryGetValue(color, out Material[] palette))
             {
                 palette = (Material[])visualAssets.Materials.Clone();

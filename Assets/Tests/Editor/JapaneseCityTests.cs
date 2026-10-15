@@ -329,7 +329,7 @@ namespace CubeDash.Tests
 
         private static void Capture(Camera camera, string name)
         {
-            foreach (var trees in Object.FindObjectsByType<CitySakuraTrees>(FindObjectsSortMode.None)) trees.SyncPresentation();
+            foreach (var trees in Object.FindObjectsByType<CitySakuraTrees>()) trees.SyncPresentation();
             var previous = camera.targetTexture; var active = RenderTexture.active; bool async = ShaderUtil.allowAsyncCompilation;
             var target = new RenderTexture(1440, 1080, 24); var image = new Texture2D(1440, 1080, TextureFormat.RGB24, false);
             try
