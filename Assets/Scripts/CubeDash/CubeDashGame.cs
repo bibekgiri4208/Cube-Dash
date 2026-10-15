@@ -180,6 +180,7 @@ namespace CubeDash
 
         private void Update()
         {
+            if (SceneLoader.IsLoading) return;
             ReadInput();
             float dt = Time.deltaTime;
             TickStartCountdown(dt);

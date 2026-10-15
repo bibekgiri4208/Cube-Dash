@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace CubeDash
@@ -71,6 +70,7 @@ namespace CubeDash
 
         private void Update()
         {
+            if (SceneLoader.IsLoading) return;
             if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) ClosePanels();
             if (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame) ClosePanels();
         }
@@ -83,18 +83,18 @@ namespace CubeDash
 
         public void StartMap(string sceneName)
         {
-            if (loading || string.IsNullOrWhiteSpace(sceneName)) return;
+            if (loading || SceneLoader.IsLoading || string.IsNullOrWhiteSpace(sceneName)) return;
             if (!Application.CanStreamedLevelBeLoaded(sceneName))
             {
                 Debug.LogWarning("This map is not yet available: " + sceneName);
                 return;
             }
+            if (!SceneLoader.Load(sceneName)) return;
             GetComponentInChildren<MainMenuEntrance>()?.Complete();
             loading = true;
             if (startButton != null) startButton.interactable = false;
             if (mapPanel != null) mapPanel.GetComponent<CanvasGroup>().interactable = false;
             if (music != null) music.Stop();
-            SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
         }
 
         public void OpenShop()

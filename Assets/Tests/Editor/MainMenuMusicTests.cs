@@ -116,7 +116,7 @@ namespace CubeDash.Tests
                 menu.StartGame(); Assert.That(source.isPlaying, Is.True, "Map selection keeps menu music playing.");
                 menu.StartMap(menu.GameplayScene); Assert.That(source.isPlaying, Is.False);
                 deadline = Time.realtimeSinceStartup + 30;
-                while (SceneManager.GetActiveScene().name != "Level" && Time.realtimeSinceStartup < deadline) yield return null;
+                while ((SceneManager.GetActiveScene().name != "Level" || SceneLoader.IsLoading) && Time.realtimeSinceStartup < deadline) yield return null;
                 Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("Level"));
                 Assert.That(source == null, Is.True, "Menu music must not persist into gameplay.");
             }

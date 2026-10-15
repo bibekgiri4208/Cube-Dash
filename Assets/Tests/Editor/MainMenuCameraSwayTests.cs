@@ -87,7 +87,7 @@ namespace CubeDash.Tests
             finally { Time.timeScale = oldTimeScale; if (sway != null) sway.enabled = false; }
             var menu = Object.FindAnyObjectByType<MainMenuController>(); menu.StartMap(menu.GameplayScene);
             float loadDeadline = Time.realtimeSinceStartup + 30;
-            while (SceneManager.GetActiveScene().name != "Level" && Time.realtimeSinceStartup < loadDeadline) yield return null;
+            while ((SceneManager.GetActiveScene().name != "Level" || SceneLoader.IsLoading) && Time.realtimeSinceStartup < loadDeadline) yield return null;
             yield return null;
             Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("Level"));
             Assert.That(Object.FindAnyObjectByType<MainMenuCameraSway>(), Is.Null);

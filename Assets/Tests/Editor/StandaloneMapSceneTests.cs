@@ -154,7 +154,7 @@ namespace CubeDash.Tests
         private static IEnumerator WaitForScene(string name)
         {
             float deadline = Time.realtimeSinceStartup + 30;
-            while (SceneManager.GetActiveScene().name != name && Time.realtimeSinceStartup < deadline) yield return null;
+            while ((SceneManager.GetActiveScene().name != name || SceneLoader.IsLoading) && Time.realtimeSinceStartup < deadline) yield return null;
             yield return null; Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo(name));
         }
         private static T Find<T>(Scene scene) where T : Component => scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<T>(true)).Single();

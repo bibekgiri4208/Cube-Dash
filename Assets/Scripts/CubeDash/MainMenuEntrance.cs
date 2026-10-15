@@ -25,7 +25,7 @@ namespace CubeDash
             }
             age = 0; warmupFrames = 2; Playing = true; Apply();
         }
-        private void Update() => Tick(Time.unscaledDeltaTime);
+        private void Update() { if (!SceneLoader.IsLoading) Tick(Time.unscaledDeltaTime); }
         private void Tick(float dt)
         {
             if (!Playing) return;

@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace CubeDash
@@ -171,9 +170,8 @@ namespace CubeDash
         /// <summary>In-game Quit returns to the landing scene without closing the application or Editor Play mode.</summary>
         public void QuitGame()
         {
-            if (returningToMenu) return;
-            returningToMenu = true;
-            SceneManager.LoadSceneAsync("Main Menu", LoadSceneMode.Single);
+            if (returningToMenu || SceneLoader.IsLoading) return;
+            if (SceneLoader.Load("Main Menu")) returningToMenu = true;
         }
 
         public void MoveLeft() => game.ChangeLane(-1);

@@ -152,7 +152,7 @@ namespace CubeDash.Tests
             Capture(game, "gameover");
             hud.QuitGame();
             float deadline = Time.realtimeSinceStartup + 30;
-            while (SceneManager.GetActiveScene().name != "Main Menu" && Time.realtimeSinceStartup < deadline) yield return null;
+            while ((SceneManager.GetActiveScene().name != "Main Menu" || SceneLoader.IsLoading) && Time.realtimeSinceStartup < deadline) yield return null;
             yield return null;
             Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("Main Menu"));
             var menu = Object.FindAnyObjectByType<MainMenuController>(); menu.StartGame();

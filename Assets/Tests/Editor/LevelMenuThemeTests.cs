@@ -219,7 +219,7 @@ namespace CubeDash.Tests
             Assert.That(quit.gameObject.activeInHierarchy, Is.True);
             quit.onClick.Invoke(); quit.onClick.Invoke();
             float deadline = Time.realtimeSinceStartup + 20;
-            while (SceneManager.GetActiveScene().name != "Main Menu" && Time.realtimeSinceStartup < deadline) yield return null;
+            while ((SceneManager.GetActiveScene().name != "Main Menu" || SceneLoader.IsLoading) && Time.realtimeSinceStartup < deadline) yield return null;
             yield return null;
             Assert.That(Application.isPlaying, Is.True);
             Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("Main Menu"));
@@ -232,7 +232,7 @@ namespace CubeDash.Tests
             Assert.That(menu.CurrentPanel, Is.SameAs(menu.MapPanel));
             menu.MapPanel.transform.Find("Card/City").GetComponent<Button>().onClick.Invoke();
             deadline = Time.realtimeSinceStartup + 20;
-            while (SceneManager.GetActiveScene().name != "City" && Time.realtimeSinceStartup < deadline) yield return null;
+            while ((SceneManager.GetActiveScene().name != "City" || SceneLoader.IsLoading) && Time.realtimeSinceStartup < deadline) yield return null;
             yield return null;
             Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("City"));
             Assert.That(Object.FindAnyObjectByType<CubeDashGame>().CountdownActive, Is.True);
@@ -249,7 +249,7 @@ namespace CubeDash.Tests
             var quit = hud.transform.Find("Safe Area/Menu Overlay/Menu Card/Quit").gameObject;
             hud.SetInputMode(true); EventSystem.current.SetSelectedGameObject(quit); hud.ConfirmSelection();
             float deadline = Time.realtimeSinceStartup + 20;
-            while (SceneManager.GetActiveScene().name != "Main Menu" && Time.realtimeSinceStartup < deadline) yield return null;
+            while ((SceneManager.GetActiveScene().name != "Main Menu" || SceneLoader.IsLoading) && Time.realtimeSinceStartup < deadline) yield return null;
             yield return null;
             Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("Main Menu"));
             Assert.That(Application.isPlaying, Is.True);
@@ -270,7 +270,7 @@ namespace CubeDash.Tests
             Assert.That(quit.gameObject.activeInHierarchy, Is.True);
             quit.onClick.Invoke(); quit.onClick.Invoke();
             float deadline = Time.realtimeSinceStartup + 20;
-            while (SceneManager.GetActiveScene().name != "Main Menu" && Time.realtimeSinceStartup < deadline) yield return null;
+            while ((SceneManager.GetActiveScene().name != "Main Menu" || SceneLoader.IsLoading) && Time.realtimeSinceStartup < deadline) yield return null;
             yield return null;
             Assert.That(Application.isPlaying, Is.True); Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("Main Menu"));
             Assert.That(Object.FindAnyObjectByType<CubeDashGame>(), Is.Null);
