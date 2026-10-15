@@ -29,6 +29,7 @@ namespace CubeDash
         [SerializeField] private Text collectionFeedback = null;
         [SerializeField] private Text powerUpStatus = null;
         [SerializeField] private Text cheatStatus = null;
+        [SerializeField] private PauseSoundMenu soundMenu = null;
         [Header("Main-menu ribbon presentation (scene opt-in)")]
         [SerializeField] private bool ribbonTheme = false;
         [SerializeField] private GameObject countdownOverlay = null;
@@ -72,10 +73,13 @@ namespace CubeDash
         private Button quitButton;
         private bool returningToMenu;
         public bool UsingGamepad { get; private set; }
+        public bool SoundMenuOpen => soundMenu != null && soundMenu.IsOpen;
+        public void CloseSoundMenu() { if (soundMenu != null) soundMenu.Close(); }
 
         public void Initialize(CubeDashGame controller)
         {
             game = controller;
+            if (soundMenu != null) soundMenu.Initialize(controller);
             if (powerUpBars != null) powerUpBars.Initialize(controller);
             if (!ribbonTheme) speed.color = new Color(1f, 0.78f, 0.25f);
             scoreColor = distance.color;
@@ -186,31 +190,34 @@ namespace CubeDash
 
         public void ConfirmSelection()
         {
+            if (SoundMenuOpen) { soundMenu.Confirm(); return; }
             if (game.CountdownActive && game.State == CubeDashGame.RunState.Ready) return;
             if (game.State == CubeDashGame.RunState.Running) return;
             GameObject selected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
             Button button = selected != null ? selected.GetComponent<Button>() : null;
             if (button != null && button.gameObject.activeInHierarchy && button.IsInteractable() &&
                 (button == primaryButton || button == retryButton || button == quitButton ||
-                 button == pauseQuitButton || button.gameObject == secondaryButton)) button.onClick.Invoke();
+                  button == pauseQuitButton || (soundMenu != null && button == soundMenu.SoundButton) ||
+                  button.gameObject == secondaryButton)) button.onClick.Invoke();
             else PrimaryAction();
         }
 
         public void CycleMenuSelection()
         {
+            if (SoundMenuOpen) { soundMenu.CycleSelection(); return; }
             if (EventSystem.current == null || game.State == CubeDashGame.RunState.Running) return;
             if (game.State != CubeDashGame.RunState.Paused) { FocusPrimary(); return; }
             GameObject current = EventSystem.current.currentSelectedGameObject;
-            GameObject next;
-            if (current == primaryButton.gameObject) next = secondaryButton;
-            else if (current == secondaryButton) next = pauseQuit != null ? pauseQuit : primaryButton.gameObject;
-            else next = primaryButton.gameObject;
+            Selectable selected = current != null ? current.GetComponent<Selectable>() : null;
+            Selectable nextControl = selected != null ? selected.navigation.selectOnDown : null;
+            GameObject next = nextControl != null ? nextControl.gameObject : primaryButton.gameObject;
             EventSystem.current.SetSelectedGameObject(next);
         }
 
         private void FocusPrimary()
         {
             if (EventSystem.current == null) return;
+            if (SoundMenuOpen) { soundMenu.FocusMusic(); return; }
             if (ribbonTheme && game.State == CubeDashGame.RunState.Ready)
             {
                 EventSystem.current.SetSelectedGameObject(null); return;
@@ -237,6 +244,11 @@ namespace CubeDash
 
         public void Show(CubeDashGame.RunState state)
         {
+            if (soundMenu != null)
+            {
+                soundMenu.Hide();
+                soundMenu.SoundButton.gameObject.SetActive(state == CubeDashGame.RunState.Paused);
+            }
             bool running = state == CubeDashGame.RunState.Running;
             bool ended = state == CubeDashGame.RunState.GameOver;
             entrance = 0;
@@ -322,7 +334,7 @@ namespace CubeDash
             safeRoot.offsetMin = safeRoot.offsetMax = Vector2.zero;
             Canvas.ForceUpdateCanvases();
             float width = Mathf.Min(ribbonTheme ? 560 : 540, Mathf.Max(240, safeRoot.rect.width - 32));
-            card.sizeDelta = new Vector2(width, ribbonTheme ? 440 : 360);
+            card.sizeDelta = new Vector2(width, soundMenu != null ? 532 : ribbonTheme ? 440 : 360);
             heading.rectTransform.sizeDelta = new Vector2(width - 30, 86);
             description.rectTransform.sizeDelta = new Vector2(width - 36, 40);
             float objectiveY = safeRoot.rect.width < 780 ? -184 : ribbonTheme ? -60 : -42;
@@ -335,6 +347,7 @@ namespace CubeDash
 
         private void LayoutRibbonMenus(float width)
         {
+            if (soundMenu != null) soundMenu.Layout(width);
             foreach (Button button in card.GetComponentsInChildren<Button>(true))
             {
                 button.GetComponent<RectTransform>().sizeDelta = new Vector2(Mathf.Min(420, width - 64), 68);

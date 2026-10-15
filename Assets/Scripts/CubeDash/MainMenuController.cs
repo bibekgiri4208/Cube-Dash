@@ -63,6 +63,7 @@ namespace CubeDash
 
         private void Start()
         {
+            GameAudioSettings.Apply();
             if (music != null && music.clip != null) music.Play();
             if (EventSystem.current != null && startButton != null)
                 EventSystem.current.SetSelectedGameObject(startButton.gameObject);
@@ -180,7 +181,7 @@ namespace CubeDash
         {
             float clamped = Mathf.Clamp01(value);
             ApplyMusicVolume(clamped);
-            PlayerPrefs.SetFloat(MusicVolumePreference, clamped);
+            GameAudioSettings.SetMusicVolume(clamped);
         }
 
         private void ApplyMusicVolume(float value)

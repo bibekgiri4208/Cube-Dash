@@ -6,7 +6,7 @@ Open `Assets/Scenes/Level.unity` and press Play, or choose any of the six maps u
 
 - Uses the same `MenuRibbonGraphic`, `MenuPanelGraphic`, Anton font, pink paper, red accent, cream labels and dark outlines as the Main Menu.
 - Points/best stay top-right, the pause icon stays top-left, and distance stays top-centre in a compact **180 × 72** ribbon (below the corner HUD on narrow layouts). The counter shows only metres, such as **125 m**, with no stage text; gameplay progression is unchanged.
-- Pause: Resume Run, Restart, Quit. Game over: one score, Try Again, Quit. **Both in-game Quit buttons return to Main Menu**, without closing the application or ending Editor Play mode; only the Main Menu's own Quit exits. Button focus uses the same outline/scale feedback as menu ribbons.
+- Pause: Resume Run, Restart, Sound, Quit. Game over: one score, Try Again, Quit. **Both in-game Quit buttons return to Main Menu**, without closing the application or ending Editor Play mode; only the Main Menu's own Quit exits. Button focus uses the same outline/scale feedback as menu ribbons.
 - Power-ups use separate compact pink cards stacked at the left safe-area edge, with red duration meters. Cheat messages keep their matching ribbon. Old instruction lines and geometric motifs remain editable but hidden.
 - All UI is saved under `Canvas/ Safe Area`; runtime does not generate UI objects or replace gameplay/scenery assets.
 
@@ -17,6 +17,18 @@ Open `Assets/Scenes/Level.unity` and press Play, or choose any of the six maps u
 - Restart/Retry buttons, R and gamepad retry prepare a fresh run and display the countdown again. Normal pause/resume during a running game does not insert another countdown.
 - `CubeDashGame.RequestRun()` is the player-facing entry. `StartRun()` remains the immediate programmatic reset for simulations/authoring tests.
 - Countdown and ribbon presentation are scene opt-ins. Country Side's saved scene/prefabs and its original ready/start flow are unchanged.
+
+## Pause sound and map music
+
+All six playable scenes (Dynamic/Level, Country Side, City, Jungle, Desert and Beach) loop `Assets/Audio/Music/Main Menu Bg.mp3`. Each scene owns its music source, so changing maps or returning to Main Menu does not stack loops. Music continues during pause and game over.
+
+**Pause > Sound** opens separate Music and SFX sliders with percentage readouts. Changes apply immediately and survive map changes/relaunches. Music shares `CubeDash.MusicVolume` with Main Menu Options. SFX uses `CubeDash.SfxVolume` and the SFX bus in `Assets/Resources/Game Audio.mixer`, covering coin/power-up pickups, vehicle engines, impacts and biome ambience without changing their source envelopes. The existing Main Menu master volume remains the overall limit.
+
+Mouse, gamepad/D-pad and keyboard navigation work throughout. Left/right adjusts the focused slider; Tab cycles controls. Back, Escape/P or gamepad B/Menu returns to the pause menu with Sound selected, **without resuming**. Confirm on a slider does nothing; confirm on Back closes the panel. Background mouse clicks preserve focus. Paused countdowns and runs remain frozen.
+
+Use **Tools > Cube Dash > Add Pause Sound Controls and Map Music** (`CubeDash.Editor.PauseSoundAuthoring.ApplyFromCommandLine`) to apply the additive upgrade to saved maps. UI is authored in each Canvas, music under its Game Manager, and Country Side uses scene-local prefab overrides; shared world/gameplay prefabs are not rebuilt.
+
+The sound update passed **42/42** audio/input/menu tests, including independent channel mute, saved levels across maps and back to Main Menu, no duplicate music sources, countdown pause, keyboard/controller Back, focus retention, and landscape/portrait rendering. Scene audits excluded unrelated serialized defaults and preserved existing scenery documents.
 
 ## Editing
 

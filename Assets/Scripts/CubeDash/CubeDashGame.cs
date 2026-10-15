@@ -317,6 +317,18 @@ namespace CubeDash
             Keyboard keyboard = Keyboard.current;
             if ((keyboard != null && keyboard.anyKey.wasPressedThisFrame) ||
                 (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)) hud.SetInputMode(false);
+            if (hud.SoundMenuOpen)
+            {
+                if (pad != null && (pad.leftStick.ReadValue().sqrMagnitude > 0.25f || pad.dpad.ReadValue() != Vector2.zero ||
+                    pad.buttonSouth.wasPressedThisFrame || pad.buttonEast.wasPressedThisFrame || pad.startButton.wasPressedThisFrame))
+                    hud.SetInputMode(true);
+                if ((keyboard != null && (keyboard.escapeKey.wasPressedThisFrame || keyboard.pKey.wasPressedThisFrame)) ||
+                    (pad != null && (pad.buttonEast.wasPressedThisFrame || pad.startButton.wasPressedThisFrame))) hud.CloseSoundMenu();
+                else if ((keyboard != null && (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame || keyboard.spaceKey.wasPressedThisFrame)) ||
+                    (pad != null && pad.buttonSouth.wasPressedThisFrame)) hud.ConfirmSelection();
+                else if (keyboard != null && keyboard.tabKey.wasPressedThisFrame) hud.CycleMenuSelection();
+                return;
+            }
             // There is no start button during countdown. Confirm/retry/steering cannot skip it.
             if (CountdownActive && State == RunState.Ready)
             {
