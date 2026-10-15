@@ -32,7 +32,9 @@ namespace CubeDash.Editor
                 var renderer = effect.GetComponent<MeshRenderer>(); renderer.sharedMaterial = material; renderer.enabled = false;
                 renderer.shadowCastingMode = ShadowCastingMode.Off; renderer.receiveShadows = false;
                 var settings = new SerializedObject(effect.GetComponent<SupercarLightTrail>());
-                settings.FindProperty("car").objectReferenceValue = car; settings.ApplyModifiedPropertiesWithoutUndo();
+                settings.FindProperty("car").objectReferenceValue = car;
+                settings.FindProperty("width").floatValue = 0.46f;
+                settings.ApplyModifiedPropertiesWithoutUndo();
                 PrefabUtility.SaveAsPrefabAsset(player, path);
             }
             finally { PrefabUtility.UnloadPrefabContents(player); }

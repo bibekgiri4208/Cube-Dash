@@ -16,7 +16,7 @@ namespace CubeDash
         [SerializeField, Range(0, 1)] private float pickupVolume = 0.55f;
         [SerializeField, Range(0, 1)] private float flightVolume = 0.24f;
         [SerializeField, Range(0, 1)] private float truckVolume = 0.3f;
-        [SerializeField, Range(0, 1)] private float supercarVolume = 0.3f;
+        [SerializeField, Range(0, 1)] private float supercarVolume = 0.55f;
         [SerializeField, Range(0, 1)] private float truckImpactVolume = 0.6f;
         private bool flightActive, truckActive, supercarActive, paused;
         private int nextTruckImpact;
@@ -92,7 +92,9 @@ namespace CubeDash
 
         private static void SetEngine(AudioSource source, bool wanted, ref bool active)
         {
-            if (active == wanted) return;
+            // A selected engine must recover if playback was interrupted by an audio-device/editor reset.
+            // Paused sources never reach this path: Tick returns above while gameplay is paused.
+            if (active == wanted && (!wanted || source == null || source.isPlaying)) return;
             active = wanted;
             if (source == null) return;
             source.volume = 0;

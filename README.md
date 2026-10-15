@@ -86,8 +86,9 @@ The five bonus types share the existing pooled pickup slots and unchanged spawn 
 **Supercar** is a saved, purchasable Epic cosmetic skin: no pickup, duration, cooldown, extra
 speed or obstacle immunity. Normal cube collision/color rules, scoring and the player's collider
 remain unchanged. The reference car stays cyan/charcoal; the HUD's existing color objective
-identifies the player's gameplay color. Its two rear red LEDs leave tapered, glowing red light
-streaks following the driven path, replacing the cube's ground wake. The trails freeze on pause,
+identifies the player's gameplay color. Its two rear red LEDs leave broad, horizontal red light
+ribbons following the driven path, replacing the cube's ground wake. The ribbons stay wide as they
+fade behind the car, rather than tapering into bright threads. The trails freeze on pause,
 hide for Truck/Flight, and clear on crash, retry or unequip. Magnet, Shield and Double Points
 continue to work. Truck and Fighter Plane temporarily take visual priority, then restore a selected
 Supercar when they expire. Pause freezes the car's wheels/steering and engine audio. Equipment
@@ -113,7 +114,8 @@ to the shared gameplay prefab without rebuilding any map or adding trails to sta
 rebakes/reconnects only the car, player prefab and game reference.
 The player car is now **20% smaller**, with unchanged collision bounds and road-height placement.
 Its separate, original six-second `Assets/Audio/SupercarEngineLoop.wav` adds an exhaust growl with
-speed-responsive pitch and a small steering rev. It fades in, pauses/resumes with gameplay, stops
+speed-responsive pitch and a small steering rev. Its car-only level is 0.55 so the exhaust remains
+audible against music; saved master/Music/SFX settings are respected. It fades in, pauses/resumes with gameplay, stops
 when returning to the cube, and yields to Truck/Plane engines before resuming the selected car.
 Restart, game over and disable clear it. Tune **Game Manager > Runner Audio > Supercar Volume**.
 **Tools > Cube Dash > Refine Supercar Size and Engine Audio** reapplies only the scale/audio pass,

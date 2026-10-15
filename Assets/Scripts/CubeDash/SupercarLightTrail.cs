@@ -12,7 +12,7 @@ namespace CubeDash
         [SerializeField] private Vector3 rightLamp = new Vector3(0.68f, 0.553f, -2.335f);
         [SerializeField, Min(0.1f)] private float minimumLength = 2.8f;
         [SerializeField, Min(0.1f)] private float maximumLength = 4.6f;
-        [SerializeField, Min(0.01f)] private float width = 0.22f;
+        [SerializeField, Min(0.01f)] private float width = 0.46f;
         private const int HistorySize = 128, Segments = 64;
         private const float Spacing = 0.08f;
         private readonly Vector3[][] history = { new Vector3[HistorySize], new Vector3[HistorySize] };
@@ -83,9 +83,11 @@ namespace CubeDash
                     Vector3 point = Sample(side, distance - along * length);
                     Vector3 tangent = point - Sample(side, distance - along * length - Spacing);
                     if (tangent.sqrMagnitude < 0.000001f) tangent = car.forward;
-                    Vector3 across = Vector3.Cross(tangent.normalized, (cameraPosition - point).normalized).normalized;
-                    if (across.sqrMagnitude < 0.1f) across = car.right;
-                    Vector3 halfWidth = across * (width * 0.5f * Mathf.Lerp(1, 0.12f, along));
+                    // Flat, horizontal ribbons at lamp height, not camera-facing threads.
+                    tangent.y = 0;
+                    Vector3 across = Vector3.Cross(Vector3.up, tangent.normalized).normalized;
+                    if (across.sqrMagnitude < 0.1f) across = Vector3.right;
+                    Vector3 halfWidth = across * (width * 0.5f * Mathf.Lerp(1, 0.72f, along));
                     int index = (side * (Segments + 1) + row) * 2;
                     vertices[index] = transform.InverseTransformPoint(point - halfWidth);
                     vertices[index + 1] = transform.InverseTransformPoint(point + halfWidth);

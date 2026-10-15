@@ -59,6 +59,15 @@ namespace CubeDash.Tests
                 Assert.That(Vector3.Distance(WorldPoint(trail, 0, 0), WorldPoint(trail, 1, 0)), Is.EqualTo(lampSeparation).Within(0.001f),
                     "Lamp spacing follows each map's authored player scale.");
                 Assert.That(trail.TrailMesh.vertexCount, Is.EqualTo(260));
+                Vector3[] vertices = trail.TrailMesh.vertices;
+                for (int side = 0; side < 2; side++)
+                    foreach (int row in new[] { 0, 32, 48 })
+                    {
+                        int index = (side * 65 + row) * 2;
+                        Vector3 a = trail.transform.TransformPoint(vertices[index]), b = trail.transform.TransformPoint(vertices[index + 1]);
+                        Assert.That(Mathf.Abs(a.y - b.y), Is.LessThan(0.0001f), "Ribbons are horizontal, not camera-facing lines.");
+                        Assert.That(Vector3.Distance(a, b), Is.GreaterThan(0.35f), "A broad red band stays visible along the ribbon.");
+                    }
             }
         }
 

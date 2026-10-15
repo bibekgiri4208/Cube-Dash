@@ -25267,7 +25267,7 @@ MonoBehaviour:
   pickupVolume: 0.55
   flightVolume: 0.24
   truckVolume: 0.3
-  supercarVolume: 0.3
+  supercarVolume: 0.55
   truckImpactVolume: 0.6
 --- !u!114 &1782416643
 MonoBehaviour:

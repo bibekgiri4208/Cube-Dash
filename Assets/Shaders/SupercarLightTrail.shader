@@ -30,11 +30,9 @@ Shader "CubeDash/Supercar Light Trail"
             half4 Frag(Varyings input) : SV_Target
             {
                 half across = abs(input.uv.x * 2 - 1);
-                half halo = 1 - smoothstep(0.05, 1, across);
-                half core = 1 - smoothstep(0, 0.22, across);
-                half fade = pow(saturate(1 - input.uv.y), 1.35);
-                half3 light = lerp(_Tint.rgb, half3(5, 0.22, 0.12), core * 0.65);
-                return half4(MixFogColor(light, half3(0, 0, 0), input.fog), _Tint.a * (halo * 0.35 + core * 0.65) * fade);
+                half ribbon = 1 - smoothstep(0.72, 1, across);
+                half fade = pow(saturate(1 - input.uv.y), 0.85);
+                return half4(MixFogColor(_Tint.rgb, half3(0, 0, 0), input.fog), _Tint.a * ribbon * fade);
             }
             ENDHLSL
         }

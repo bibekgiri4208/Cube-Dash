@@ -205,6 +205,42 @@ namespace CubeDash.Tests
         }
 
         [UnityTest]
+        public IEnumerator EquippedCarEnginePlaysAudiblyOnEveryMapAndRecoversAfterInterruptedPlayback()
+        {
+            yield return new EnterPlayMode();
+            using var economy = new EconomyTestScope();
+            GameEconomy.AddCoins(100); GameEconomy.TryBuySupercar(); GameEconomy.EquipSupercar(true);
+            foreach (string map in CubeDash.Editor.PauseSoundAuthoring.Maps)
+            {
+                yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/" + map + ".unity", new LoadSceneParameters(LoadSceneMode.Single));
+                yield return null;
+                var game = Object.FindAnyObjectByType<CubeDashGame>(); game.enabled = false; game.StartRun(); Clear(game);
+                var audio = game.AudioPresentation; var source = audio.SupercarSource;
+                Assert.That(source, Is.Not.Null, map);
+                Assert.That(source.clip, Is.Not.Null, map); Assert.That(source.clip.name, Is.EqualTo("SupercarEngineLoop"));
+                Assert.That(source.outputAudioMixerGroup.name, Is.EqualTo("SFX"));
+                Assert.That(source.mute, Is.False); Assert.That(source.loop, Is.True); Assert.That(source.spatialBlend, Is.Zero);
+                audio.Tick(1, game.State, false, false, 24, 0, game.SupercarDriving);
+                yield return null;
+                Assert.That(audio.SupercarActive, Is.True, map); Assert.That(source.isPlaying, Is.True, map);
+                Assert.That(source.volume, Is.GreaterThan(0.4f), "The car engine must not be buried under music: " + map);
+                var samples = new float[4096]; Assert.That(source.clip.GetData(samples, 0), Is.True);
+                double energy = 0; foreach (float sample in samples) energy += sample * sample;
+                Assert.That(System.Math.Sqrt(energy / samples.Length), Is.GreaterThan(0.08), "The saved engine clip contains audible exhaust, not silence.");
+                source.Stop(); Assert.That(source.isPlaying, Is.False);
+                audio.Tick(1, game.State, false, false, 24, 0, true);
+                Assert.That(source.isPlaying, Is.True, "Interrupted engines recover while the skin remains equipped.");
+                audio.Tick(1, CubeDashGame.RunState.Paused, false, false, 24, 0, true);
+                Assert.That(source.isPlaying, Is.False);
+                audio.Tick(1, CubeDashGame.RunState.Running, false, false, 24, 0, true);
+                Assert.That(source.isPlaying, Is.True);
+                audio.Tick(1, game.State, false, true, 24, 0, true); Assert.That(source.isPlaying, Is.False);
+                audio.Tick(1, game.State, true, false, 24, 0, true); Assert.That(source.isPlaying, Is.False);
+                audio.Tick(1, game.State, false, false, 24, 0, false); Assert.That(source.isPlaying, Is.False);
+            }
+        }
+
+        [UnityTest]
         public IEnumerator EnterAndNumpadEnterNeverChangeSkinsOrSwallowSameFrameSteering()
         {
             yield return new EnterPlayMode();

@@ -288,7 +288,7 @@ MonoBehaviour:
   rightLamp: {x: 0.68, y: 0.553, z: -2.335}
   minimumLength: 2.8
   maximumLength: 4.6
-  width: 0.22
+  width: 0.46
 --- !u!1 &5750382916090586181
 GameObject:
   m_ObjectHideFlags: 0
