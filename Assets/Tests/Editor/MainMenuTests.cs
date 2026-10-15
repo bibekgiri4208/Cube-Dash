@@ -1,10 +1,14 @@
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
@@ -58,6 +62,8 @@ namespace CubeDash.Tests
                 }
                 Assert.That(controller.ShopPanel.activeSelf, Is.False);
                 Assert.That(controller.OptionsPanel.activeSelf, Is.False);
+                var module = roots.SelectMany(root => root.GetComponentsInChildren<InputSystemUIInputModule>(true)).Single();
+                Assert.That(module.deselectOnBackgroundClick, Is.False, "Background clicks must not strand gamepad navigation.");
                 Assert.That(ShaderUtil.ShaderHasError(Shader.Find("CubeDash/Menu Surface")), Is.False);
                 var camera = roots.SelectMany(root => root.GetComponentsInChildren<Camera>(true)).Single();
                 Assert.That(camera.fieldOfView, Is.EqualTo(50));
@@ -207,6 +213,100 @@ namespace CubeDash.Tests
             Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("City"));
             Assert.That(Object.FindAnyObjectByType<CubeDashGame>(), Is.Not.Null);
             Assert.That(Object.FindAnyObjectByType<MainMenuController>(), Is.Null);
+        }
+
+        [UnityTest]
+        public IEnumerator BackgroundClicksKeepGamepadFocusAcrossMenuAndPanels()
+        {
+            yield return new EnterPlayMode();
+            yield return EditorSceneManager.LoadSceneAsyncInPlayMode(MenuScene, new LoadSceneParameters(LoadSceneMode.Single));
+            yield return null;
+            var menu = Object.FindAnyObjectByType<MainMenuController>();
+            menu.GetComponentInChildren<MainMenuEntrance>()?.Complete();
+            var background = InputSystem.settings.backgroundBehavior;
+            var inputFocus = InputSystem.settings.editorInputBehaviorInPlayMode;
+            InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+            InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+            var pad = InputSystem.AddDevice<Gamepad>("MenuBackgroundClickGamepad");
+            var mouse = InputSystem.AddDevice<Mouse>("MenuBackgroundClickMouse");
+            try
+            {
+                yield return ClickMenuBackground(mouse);
+                Assert.That(EventSystem.current.currentSelectedGameObject.name, Is.EqualTo("START"));
+                yield return PressMenuPad(pad, GamepadButton.DpadDown);
+                Assert.That(EventSystem.current.currentSelectedGameObject.name, Is.EqualTo("SHOP"));
+                yield return PressMenuPad(pad, GamepadButton.South);
+                Assert.That(menu.CurrentPanel, Is.SameAs(menu.ShopPanel));
+                yield return ClickMenuBackground(mouse);
+                yield return PressMenuPad(pad, GamepadButton.South);
+                Assert.That(menu.CurrentPanel, Is.Null, "Submit must still activate the focused Back button.");
+                Assert.That(EventSystem.current.currentSelectedGameObject.name, Is.EqualTo("SHOP"));
+
+                menu.OpenOptions();
+                yield return ClickMenuBackground(mouse);
+                yield return PressMenuPad(pad, GamepadButton.DpadDown);
+                var master = EventSystem.current.currentSelectedGameObject.GetComponent<Slider>();
+                Assert.That(master, Is.Not.Null);
+                Assert.That(master.name, Is.EqualTo("Volume slider"));
+                yield return ClickMenuBackground(mouse);
+                Assert.That(master.GetComponent<MenuSliderFocus>().FocusFrame.enabled, Is.True);
+                yield return PressMenuPad(pad, GamepadButton.DpadDown);
+                Assert.That(EventSystem.current.currentSelectedGameObject.name, Is.EqualTo("Music volume slider"));
+                yield return PressMenuPad(pad, GamepadButton.East);
+                Assert.That(menu.CurrentPanel, Is.Null);
+
+                menu.StartGame();
+                yield return ClickMenuBackground(mouse);
+                GameObject firstMap = EventSystem.current.currentSelectedGameObject;
+                yield return PressMenuPad(pad, GamepadButton.DpadDown);
+                Assert.That(EventSystem.current.currentSelectedGameObject, Is.Not.SameAs(firstMap));
+                Assert.That(EventSystem.current.currentSelectedGameObject.transform.IsChildOf(menu.MapPanel.transform), Is.True);
+                yield return PressMenuPad(pad, GamepadButton.East);
+
+                menu.Quit();
+                yield return ClickMenuBackground(mouse);
+                Assert.That(EventSystem.current.currentSelectedGameObject.name, Is.EqualTo("NO"));
+                yield return PressMenuPad(pad, GamepadButton.DpadLeft);
+                Assert.That(EventSystem.current.currentSelectedGameObject.name, Is.EqualTo("YES"));
+                yield return PressMenuPad(pad, GamepadButton.DpadRight);
+                Assert.That(EventSystem.current.currentSelectedGameObject.name, Is.EqualTo("NO"));
+                yield return PressMenuPad(pad, GamepadButton.South);
+                Assert.That(menu.CurrentPanel, Is.Null);
+                Assert.That(menu.Loading, Is.False);
+            }
+            finally
+            {
+                InputSystem.RemoveDevice(mouse); InputSystem.RemoveDevice(pad);
+                InputSystem.settings.backgroundBehavior = background;
+                InputSystem.settings.editorInputBehaviorInPlayMode = inputFocus;
+            }
+        }
+
+        private static IEnumerator ClickMenuBackground(Mouse mouse)
+        {
+            Vector2 position = new Vector2(Screen.width - 2, Screen.height - 2);
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = position });
+            yield return null; yield return null;
+            var hits = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current) { position = position }, hits);
+            Assert.That(hits.Count == 0 || hits[0].gameObject.GetComponentInParent<Selectable>() == null, Is.True,
+                "The regression click must miss selectable controls.");
+            GameObject selected = EventSystem.current.currentSelectedGameObject;
+            Assert.That(selected, Is.Not.Null);
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = position }.WithButton(MouseButton.Left));
+            yield return null; yield return null;
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = position });
+            yield return null; yield return null;
+            Assert.That(EventSystem.current.currentSelectedGameObject, Is.SameAs(selected),
+                "Clicking the background must preserve the current button, slider or toggle selection.");
+        }
+
+        private static IEnumerator PressMenuPad(Gamepad pad, GamepadButton button)
+        {
+            InputSystem.QueueStateEvent(pad, new GamepadState().WithButton(button));
+            yield return null; yield return null;
+            InputSystem.QueueStateEvent(pad, new GamepadState());
+            yield return null; yield return null;
         }
 
         private static void RenderPreviewIfRequested(MainMenuController menu)

@@ -518,6 +518,9 @@ namespace CubeDash.Editor
                 events.transform.SetParent(parent,false);
             }
             events.firstSelectedGameObject = start.gameObject;
+            // Keep a navigation anchor when mouse clicks miss the menu controls.
+            var module = events.GetComponent<InputSystemUIInputModule>();
+            if (module != null) module.deselectOnBackgroundClick = false;
         }
 
         private static void BuildPanels(RectTransform canvas,MainMenuController controller)

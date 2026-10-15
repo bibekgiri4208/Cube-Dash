@@ -76,6 +76,7 @@ namespace CubeDash.Tests
                 Assert.That(module.move, Is.Not.Null);
                 Assert.That(module.submit, Is.Null);
                 Assert.That(module.cancel, Is.Null);
+                Assert.That(module.deselectOnBackgroundClick, Is.False);
             }
             finally { EditorSceneManager.ClosePreviewScene(scene); }
         }
