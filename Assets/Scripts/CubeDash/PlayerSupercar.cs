@@ -14,9 +14,11 @@ namespace CubeDash
         private float spin, steering, roadPhase, age;
         private bool driving;
         private bool initialized;
+        private SupercarLightTrail lightTrail;
         public Transform Car => car;
         public Transform[] Wheels => wheels;
         public bool Driving => driving;
+        public SupercarLightTrail LightTrail { get { EnsureHomes(); return lightTrail; } }
 
         private void Awake() => EnsureHomes();
 
@@ -25,6 +27,7 @@ namespace CubeDash
             if (initialized) return;
             initialized = true;
             if (car != null) { home = car.localPosition; scale = car.localScale; rotation = car.localRotation; }
+            if (car != null) lightTrail = car.GetComponentInChildren<SupercarLightTrail>(true);
             wheelHomes = new Quaternion[wheels.Length];
             for (int i = 0; i < wheels.Length; i++) wheelHomes[i] = wheels[i] != null ? wheels[i].localRotation : Quaternion.identity;
         }
@@ -61,6 +64,7 @@ namespace CubeDash
         {
             EnsureHomes();
             driving = false; spin = steering = roadPhase = age = 0;
+            if (lightTrail != null) lightTrail.ResetTrail();
             if (car != null)
             {
                 car.gameObject.SetActive(false); car.localPosition = home;

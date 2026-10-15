@@ -85,8 +85,10 @@ In **Level**, active power-ups appear as separate compact cards stacked on the *
 The five bonus types share the existing pooled pickup slots and unchanged spawn frequency.
 **Supercar** is a saved, purchasable Epic cosmetic skin: no pickup, duration, cooldown, extra
 speed or obstacle immunity. Normal cube collision/color rules, scoring and the player's collider
-remain unchanged. The reference car stays cyan/charcoal; the HUD's existing color objective and
-matching-color wake still identify the player's gameplay color. Magnet, Shield and Double Points
+remain unchanged. The reference car stays cyan/charcoal; the HUD's existing color objective
+identifies the player's gameplay color. Its two rear red LEDs leave tapered, glowing red light
+streaks following the driven path, replacing the cube's ground wake. The trails freeze on pause,
+hide for Truck/Flight, and clear on crash, retry or unequip. Magnet, Shield and Double Points
 continue to work. Truck and Fighter Plane temporarily take visual priority, then restore a selected
 Supercar when they expire. Pause freezes the car's wheels/steering and engine audio. Equipment
 survives game over, retries, map changes and relaunches, and replaces the Main Menu cube preview.
@@ -104,6 +106,9 @@ taillights, twin hollow exhausts and diffuser fins. It is reconstructed from the
 not an exact export of the original model. The saved model is `Assets/Prefab/CubeDash/Supercar.prefab`,
 with body/wheel meshes under `Assets/3D Models` and materials under `Assets/Material/Supercar`.
 `PlayerCube.prefab` contains the inactive `Supercar Visual` and `PlayerSupercar` wheel/body animation.
+Its **Supercar Visual > Rear Red Light Trails** child holds `SupercarLightTrail`; tune lamp anchors,
+width and length there. **Tools > Cube Dash > Add Supercar Rear Light Trails** applies the effect
+to the shared gameplay prefab without rebuilding any map or adding trails to stationary menu cars.
 **Tools > Cube Dash > Add Reference Supercar** (`CubeDash.Editor.CubeDashSupercar.ApplyFromCommandLine`)
 rebakes/reconnects only the car, player prefab and game reference.
 The player car is now **20% smaller**, with unchanged collision bounds and road-height placement.

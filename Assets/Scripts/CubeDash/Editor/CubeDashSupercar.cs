@@ -82,6 +82,7 @@ namespace CubeDash.Editor
                 PrefabUtility.SaveAsPrefabAsset(player, playerPath);
             }
             finally { PrefabUtility.UnloadPrefabContents(player); }
+            SupercarLightTrailAuthoring.ApplyFromCommandLine();
             AssetDatabase.SaveAssets();
             var scene = EditorSceneManager.OpenScene("Assets/Scenes/Level.unity");
             CubeDashGame game = Object.FindAnyObjectByType<CubeDashGame>();

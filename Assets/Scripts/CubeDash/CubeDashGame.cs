@@ -251,6 +251,8 @@ namespace CubeDash
                 truckPresentation.Tick(dt, Speed, laneVelocity);
             if (State == RunState.Running && supercarPresentation != null)
                 supercarPresentation.Tick(dt, Speed, laneVelocity);
+            if (State == RunState.Running && SupercarDriving && supercarPresentation != null && supercarPresentation.LightTrail != null)
+                supercarPresentation.LightTrail.Tick(Speed, gameCamera.transform.position);
             hud.UpdateStats();
             if (audioPresentation != null) audioPresentation.Tick(dt, State, Flying, Trucking, Speed, laneVelocity, SupercarDriving);
             if (ambiencePresentation != null) ambiencePresentation.Tick(dt, State, Distance);
@@ -307,6 +309,7 @@ namespace CubeDash
             gameCamera.transform.position += Vector3.back * offset;
             track.ShiftWorldOrigin(offset);
             if (wake != null) wake.ShiftWorldOrigin(offset);
+            if (supercarPresentation != null && supercarPresentation.LightTrail != null) supercarPresentation.LightTrail.ShiftWorldOrigin(offset);
         }
 
         private void ReadInput()
@@ -482,7 +485,6 @@ namespace CubeDash
             if (truckPresentation != null) truckPresentation.ResetPresentation();
             if (supercarPresentation != null) supercarPresentation.ResetPresentation();
             RefreshGroundPresentation();
-            if (wake != null) wake.SetVisible(true);
             gameCamera.transform.position = cameraOrigin;
             cameraFollow = cameraOrigin;
             gameCamera.fieldOfView = cameraFov;
@@ -534,6 +536,7 @@ namespace CubeDash
             SetTruckPresentation(false);
             if (flightPresentation != null) flightPresentation.ResetPresentation();
             State = RunState.GameOver;
+            if (supercarPresentation != null && supercarPresentation.LightTrail != null) supercarPresentation.LightTrail.ResetTrail();
             if (audioPresentation != null) audioPresentation.ResetSounds();
             shake = 0.25f;
             SetPlayerColor(playerColor * 0.7f, 0.1f);
@@ -623,8 +626,8 @@ namespace CubeDash
             playerRenderer.enabled = !Flying && !Trucking && !carVisible;
             if (cubeVisualPresentation != null) cubeVisualPresentation.SyncEyes();
             playerCollider.enabled = !Flying;
-            // Preserve the player's matching-color wake even though the reference car stays cyan.
-            if (wake != null) wake.SetVisible(!Flying && !Trucking);
+            // The equipped car uses its two red LED ribbons instead of the cube's ground wake.
+            if (wake != null) wake.SetVisible(!Flying && !Trucking && !carVisible);
         }
 
         private void OnApplicationFocus(bool focused)

@@ -84,6 +84,7 @@ namespace CubeDash.Tests
             Assert.That(shop.MenuCoins.text, Is.EqualTo("0")); Assert.That(shop.ShopCoins.text, Is.EqualTo("0"));
             shop.PurchaseOrToggle(); Assert.That(GameEconomy.OwnsSupercar, Is.False, "A hidden shop cannot buy.");
             menu.OpenShop(); Assert.That(shop.Action.interactable, Is.False);
+            yield return null; // Let the opening panel's masks and CanvasRenderer geometry update before pointer routing.
             GameEconomy.AddCoins(99); Assert.That(shop.MenuCoins.text, Is.EqualTo("99")); Assert.That(shop.Action.interactable, Is.False);
             GameEconomy.AddCoins(1); Assert.That(shop.Action.interactable, Is.True);
             EventSystem.current.SetSelectedGameObject(shop.Action.gameObject);
