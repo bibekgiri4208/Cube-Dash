@@ -1,9 +1,11 @@
 using System.Collections;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using CubeDash.Editor;
 using NUnit.Framework;
 using UnityEditor;
+using UnityEditor.Events;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -45,7 +47,8 @@ namespace CubeDash.Tests
                     Assert.That(button.onClick.GetPersistentMethodName(0), Is.EqualTo(nameof(MainMenuController.StartMap)));
                     var data = new SerializedObject(button);
                     string target = data.FindProperty("m_OnClick.m_PersistentCalls.m_Calls").GetArrayElementAtIndex(0).FindPropertyRelative("m_Arguments.m_StringArgument").stringValue;
-                    Assert.That(target, Is.EqualTo(MainMenuMapSelection.MapNames[i]));
+                    Assert.That(target, Is.EqualTo(MainMenuMapSelection.SceneNameFor(MainMenuMapSelection.MapNames[i])));
+                    Assert.That(tile.Find("Map name").GetComponent<Text>().text, Is.EqualTo(MainMenuMapSelection.MapNames[i].ToUpperInvariant()));
                     Assert.That(button.GetComponent<ArcadeButton>().LivelyFeedback, Is.True);
                 }
                 Text title = card.Find("Heading").GetComponent<Text>(); title.text = "MY MAPS";
@@ -53,6 +56,57 @@ namespace CubeDash.Tests
                 MainMenuMapSelection.ApplyToScene(scene); MainMenuUiAnimations.ApplyToScene(scene);
                 Assert.That(menu.GetComponentsInChildren<Transform>(true).Length, Is.EqualTo(count));
                 Assert.That(title.text, Is.EqualTo("MY MAPS"));
+                Assert.That(card.Find("Mountain"), Is.Null);
+            }
+            finally { EditorSceneManager.ClosePreviewScene(scene); }
+        }
+
+        [Test]
+        public void DynamicUsesLevelAndStandaloneMountainCannotBeBuiltOrRecreated()
+        {
+            Assert.That(MainMenuMapSelection.MapNames, Does.Contain("Dynamic").And.Not.Contain("Mountain"));
+            Assert.That(MainMenuMapSelection.SceneNameFor("Dynamic"), Is.EqualTo("Level"));
+            Assert.That(StandaloneMapScenes.MapNames, Does.Not.Contain("Mountain").And.Not.Contain("Dynamic"));
+            Assert.That(StandaloneMapScenes.MapBiomes, Is.EqualTo(new[] { EnvironmentBiome.City, EnvironmentBiome.Jungle, EnvironmentBiome.Desert, EnvironmentBiome.Beach }));
+            Assert.That(File.Exists("Assets/Scenes/Mountain.unity"), Is.False);
+            Assert.That(File.Exists("Assets/Scenes/Mountain.unity.meta"), Is.False);
+            Assert.That(EditorBuildSettings.scenes.Any(entry => entry.path == "Assets/Scenes/Mountain.unity"), Is.False);
+            Assert.That(EditorBuildSettings.scenes.Count(entry => entry.enabled && entry.path == StandaloneMapScenes.SourcePath), Is.EqualTo(1));
+            var scene = EditorSceneManager.OpenPreviewScene(StandaloneMapScenes.SourcePath);
+            try
+            {
+                var environment = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<EnvironmentDirector>(true)).Single();
+                Assert.That(environment.HasFixedBiome, Is.False);
+                var track = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<EndlessTrack>(true)).Single();
+                Assert.That(track.Segments.All(segment => segment.Environment.Biomes.All(biome => biome != null)), Is.True,
+                    "Dynamic retains all five biomes, including mountains.");
+            }
+            finally { EditorSceneManager.ClosePreviewScene(scene); }
+        }
+
+        [Test]
+        public void ReapplyingMigratesTheOldMountainCardInPlaceAndKeepsCustomListeners()
+        {
+            var scene = EditorSceneManager.OpenPreviewScene(MainMenuSceneBuilder.ScenePath);
+            try
+            {
+                var menu = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<MainMenuController>(true)).Single();
+                Transform card = menu.MapPanel.transform.Find("Card"), tile = card.Find("Dynamic");
+                var button = tile.GetComponent<Button>(); var rect = tile.GetComponent<RectTransform>();
+                Vector2 position = rect.anchoredPosition, size = rect.sizeDelta;
+                tile.name = "Mountain"; tile.Find("Map name").GetComponent<Text>().text = "MOUNTAIN";
+                UnityEventTools.AddPersistentListener(button.onClick, menu.ClosePanels);
+                int objects = menu.GetComponentsInChildren<Transform>(true).Length, listeners = button.onClick.GetPersistentEventCount();
+                MainMenuMapSelection.ApplyToScene(scene);
+                Assert.That(card.Find("Mountain"), Is.Null); Assert.That(card.Find("Dynamic"), Is.SameAs(tile));
+                Assert.That(tile.Find("Map name").GetComponent<Text>().text, Is.EqualTo("DYNAMIC"));
+                Assert.That(rect.anchoredPosition, Is.EqualTo(position)); Assert.That(rect.sizeDelta, Is.EqualTo(size));
+                Assert.That(menu.GetComponentsInChildren<Transform>(true).Length, Is.EqualTo(objects));
+                Assert.That(button.onClick.GetPersistentEventCount(), Is.EqualTo(listeners));
+                Assert.That(button.onClick.GetPersistentMethodName(listeners - 1), Is.EqualTo(nameof(MainMenuController.ClosePanels)));
+                var data = new SerializedObject(button);
+                Assert.That(data.FindProperty("m_OnClick.m_PersistentCalls.m_Calls").GetArrayElementAtIndex(0)
+                    .FindPropertyRelative("m_Arguments.m_StringArgument").stringValue, Is.EqualTo("Level"));
             }
             finally { EditorSceneManager.ClosePreviewScene(scene); }
         }

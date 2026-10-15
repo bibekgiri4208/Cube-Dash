@@ -12,7 +12,8 @@ namespace CubeDash.Editor
     public static class MainMenuMapSelection
     {
         public const string PanelName = "Start - Map Selection";
-        public static readonly string[] MapNames = { "City", "Jungle", "Mountain", "Desert", "Beach", "Country Side" };
+        public static readonly string[] MapNames = { "City", "Jungle", "Dynamic", "Desert", "Beach", "Country Side" };
+        public static string SceneNameFor(string mapName) => mapName == "Dynamic" ? "Level" : mapName;
 
         [MenuItem("Tools/Cube Dash/Add Main Menu Map Selection")]
         public static void ApplyFromMenu()
@@ -49,7 +50,7 @@ namespace CubeDash.Editor
             var maps = new Button[6]; var rects = new RectTransform[6];
             for (int i = 0; i < maps.Length; i++)
             {
-                bool ready = i == 0 || i == 5;
+                bool ready = i == 0 || i == 2 || i == 5;
                 RectTransform tile = Rect(MapNames[i], card, new Vector2((i % 3 - 1) * 344, 104 - i / 3 * 236), new Vector2(336, 212));
                 rects[i] = tile;
                 var face = Face(tile, new Color(1, 0.91f, 0.92f), 3, 12);
@@ -69,7 +70,7 @@ namespace CubeDash.Editor
                 Face(badge, ready ? LevelMenuTheme.Accent : new Color(0.72f, 0.65f, 0.69f), 0, 5).raycastTarget = false;
                 var status = Label("Availability", badge, font, ready ? "PLAY" : "COMING SOON", 18, ready ? LevelMenuTheme.Cream : LevelMenuTheme.Ink, Vector2.zero, Vector2.zero);
                 Stretch(status.rectTransform, new Vector2(0.04f, 0), new Vector2(0.96f, 1));
-                UnityEventTools.AddStringPersistentListener(button.onClick, menu.StartMap, i == 0 ? "Level" : i == 5 ? "Country Side" : "");
+                UnityEventTools.AddStringPersistentListener(button.onClick, menu.StartMap, ready ? SceneNameFor(MapNames[i]) : "");
             }
             var backRect = Rect("BACK", card, new Vector2(440, -300), new Vector2(200, 58));
             var ribbon = backRect.gameObject.AddComponent<MenuRibbonGraphic>(); ribbon.Primary = true;
@@ -99,9 +100,25 @@ namespace CubeDash.Editor
             var card = menu.MapPanel.transform.Find("Card");
             foreach (string name in MapNames)
             {
-                var tile = card.Find(name); var button = tile.GetComponent<Button>();
-                bool ready = AssetDatabase.LoadAssetAtPath<SceneAsset>("Assets/Scenes/" + name + ".unity") != null;
-                string target = ready ? name : name == "City" ? "Level" : "";
+                var tile = card.Find(name);
+                if (tile == null && name == "Dynamic")
+                {
+                    // Reuse the retired Mountain card, retaining its layout, navigation and extra listeners.
+                    tile = card.Find("Mountain");
+                    if (tile != null)
+                    {
+                        tile.name = name;
+                        tile.Find("Map name").GetComponent<Text>().text = "DYNAMIC";
+                        var preview = new SerializedObject(tile.Find("Map illustration").GetComponent<MapPreviewGraphic>());
+                        preview.FindProperty("map").enumValueIndex = (int)MapPreviewGraphic.Map.Dynamic;
+                        preview.ApplyModifiedPropertiesWithoutUndo();
+                    }
+                }
+                if (tile == null) throw new InvalidOperationException("Missing map card: " + name);
+                var button = tile.GetComponent<Button>();
+                string sceneName = SceneNameFor(name);
+                bool ready = AssetDatabase.LoadAssetAtPath<SceneAsset>("Assets/Scenes/" + sceneName + ".unity") != null;
+                string target = ready ? sceneName : name == "City" ? "Level" : "";
                 ready |= name == "City";
                 button.interactable = ready;
                 var data = new SerializedObject(button); var calls = data.FindProperty("m_OnClick.m_PersistentCalls.m_Calls");

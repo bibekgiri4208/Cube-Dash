@@ -1,21 +1,21 @@
 # Standalone maps
 
-**Main Menu > Start** now loads a separate scene for every map:
+**Main Menu > Start** offers five standalone maps and the original mixed-biome **Dynamic** mode:
 
 | Card | Scene | Retained Level scenery |
 | --- | --- | --- |
 | City | `Assets/Scenes/City.unity` | City neighborhoods, parks and flyovers |
 | Jungle | `Assets/Scenes/Jungle.unity` | Jungle, river and landmarks |
-| Mountain | `Assets/Scenes/Mountain.unity` | Mountains, snow and forests |
+| Dynamic | `Assets/Scenes/Level.unity` | Cycles through City, Jungle, Mountains, Desert and Beach |
 | Desert | `Assets/Scenes/Desert.unity` | Dunes, mesas and cacti |
 | Beach | `Assets/Scenes/Beach.unity` | Coast, palms and islands |
 | Country Side | `Assets/Scenes/Country Side.unity` | Linked Japanese countryside, now with the same highway/UI/sky system |
 
-All scenes are enabled in Build Settings, with Main Menu still first. `Level.unity` is retained as the original mixed-biome runner, not replaced or renamed.
+All listed scenes are enabled in Build Settings, with Main Menu still first. `Level.unity` is retained as the original mixed-biome runner, not replaced or renamed. The separate Mountain scene and its build entry are removed; mountain scenery, transitions and ambience remain available in Dynamic.
 
 ## What stays the same
 
-The five new maps are copies of the saved Level rig, not new gameplay implementations. They retain the same player/collision geometry, camera, three-lane road, shoulders, guardrails, markings, road curves, pooled encounters, coins, power-ups, vehicle presentations, controls and sounds. Difficulty still increases with travelled distance through the same five stages; choosing Mountain or Beach does not start at a later difficulty or reset progression every scenery loop.
+The four fixed-biome maps (City, Jungle, Desert and Beach) are copies of the saved Level rig, not new gameplay implementations. They retain the same player/collision geometry, camera, three-lane road, shoulders, guardrails, markings, road curves, pooled encounters, coins, power-ups, vehicle presentations, controls and sounds. Difficulty still increases with travelled distance through the same five stages; choosing a fixed biome does not start at a later difficulty or reset progression every scenery loop.
 
 All six maps now use the Main Menu-themed Level HUD, compact distance ribbon, independent left-side power-up duration cards, countdown, pause, Game Over, retry and return-to-Main-Menu Quit behavior. Country Side's Japanese nature/architecture remain its distinct environment; see [COUNTRY_SIDE.md](COUNTRY_SIDE.md).
 
@@ -33,13 +33,13 @@ Movement/lighting regression run before the sidewalk/native-sakura upgrade: **41
 
 Each new scene retains only its chosen biome roots and ambience sources. Shared prefab/material/mesh assets are not modified. Track prefab instances are unpacked only within the new scenes so unused scenery can be removed without editing the original track prefab; nested player, pickup and retained environment prefabs remain linked where originally linked.
 
-`EnvironmentDirector` opts into a saved fixed biome only in these five scenes. `EndlessTrack` retains its normal section indices and gameplay progression, but passes that chosen biome to scenery recycling. Lighting/sky/fog and ambience use that same biome at every distance. Saved map sky materials under `Assets/Maps/Skies` also give each scene its appropriate atmosphere before Play.
+`EnvironmentDirector` opts into a saved fixed biome in these four separated scenes. `EndlessTrack` retains its normal section indices and gameplay progression, but passes that chosen biome to scenery recycling. Lighting/sky/fog and ambience use that same biome at every distance. Saved map sky materials under `Assets/Maps/Skies` also give each scene its appropriate atmosphere before Play.
 
 Scenery retains its varied interior layouts and reveal animations. Cross-biome edge dressing, fading terrain/river ends, City entrance/exit flyover ramps and Beach-to-City headlands no longer repeat every eight sections inside a standalone map. Main roads are unchanged. The original Level still uses all those transitions normally.
 
 ## Editing and safe reapplication
 
-Open the individual scene to edit its layout. **Tools > Cube Dash > Separate Level into Five Maps** (`StandaloneMapScenes.ApplyFromCommandLine`) creates missing maps from Level, adds build entries and refreshes the six menu cards. It preserves already-separated scenes and their manual edits; it refuses to overwrite an unrecognized existing scene or orphaned sky asset. It copies Level before editing, so even interrupted authoring does not modify the original Level.
+Open the individual scene to edit its layout. **Tools > Cube Dash > Separate Level into Four Maps** (`StandaloneMapScenes.ApplyFromCommandLine`) creates missing City/Jungle/Desert/Beach maps from Level, adds build entries and refreshes the six menu cards. It uses explicit biome mappings so removing the standalone Mountain cannot shift Desert/Beach to the wrong scenery or atmosphere. It does not recreate a Mountain scene. It preserves already-separated scenes and their manual edits; it refuses to overwrite an unrecognized existing scene or orphaned sky asset. It copies Level before editing, so even interrupted authoring does not modify the original Level.
 
 **Tools > Cube Dash > Add Main Menu Map Selection** refreshes the saved card targets, PLAY badges and navigation without rebuilding the submenu. Navigation follows the displayed three-column desktop/two-column portrait grid. Back/Escape/gamepad Back restore Start focus; selecting a map stops menu music, and in-game Quit returns to Main Menu.
 

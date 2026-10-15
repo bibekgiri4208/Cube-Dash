@@ -12,11 +12,12 @@ namespace CubeDash.Editor
     public static class StandaloneMapScenes
     {
         public const string SourcePath = "Assets/Scenes/Level.unity";
-        public static readonly string[] MapNames = { "City", "Jungle", "Mountain", "Desert", "Beach" };
+        public static readonly string[] MapNames = { "City", "Jungle", "Desert", "Beach" };
+        public static readonly EnvironmentBiome[] MapBiomes = { EnvironmentBiome.City, EnvironmentBiome.Jungle, EnvironmentBiome.Desert, EnvironmentBiome.Beach };
         public static string ScenePath(int index) => "Assets/Scenes/" + MapNames[index] + ".unity";
         public static string SkyPath(int index) => "Assets/Maps/Skies/" + MapNames[index] + " Sky.mat";
 
-        [MenuItem("Tools/Cube Dash/Separate Level into Five Maps")]
+        [MenuItem("Tools/Cube Dash/Separate Level into Four Maps")]
         public static void ApplyFromMenu()
         {
             if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) ApplyFromCommandLine();
@@ -37,7 +38,7 @@ namespace CubeDash.Editor
                     try
                     {
                         var director = Find<EnvironmentDirector>(existing);
-                        if (!director.HasFixedBiome || director.FixedBiome != (EnvironmentBiome)i)
+                        if (!director.HasFixedBiome || director.FixedBiome != MapBiomes[i])
                             throw new InvalidOperationException("Existing scene requires inspection: " + ScenePath(i));
                     }
                     finally { EditorSceneManager.ClosePreviewScene(existing); }
@@ -53,7 +54,7 @@ namespace CubeDash.Editor
                 // Copy first: even interrupted authoring cannot leave the user's original Level dirty.
                 if (!AssetDatabase.CopyAsset(SourcePath, ScenePath(i))) throw new InvalidOperationException("Could not copy Level for " + MapNames[i]);
                 Scene scene = EditorSceneManager.OpenScene(ScenePath(i));
-                ConfigureCopy(scene, (EnvironmentBiome)i);
+                ConfigureCopy(scene, MapBiomes[i]);
                 SaveAtmosphere(scene, i);
                 if (!EditorSceneManager.SaveScene(scene, ScenePath(i))) throw new InvalidOperationException("Could not save " + MapNames[i]);
             }
@@ -74,7 +75,7 @@ namespace CubeDash.Editor
             MainMenuMapSelection.ApplyToScene(menuScene);
             if (!EditorSceneManager.SaveScene(menuScene)) throw new InvalidOperationException("Could not save map selection targets.");
             AssetDatabase.SaveAssets();
-            Debug.Log("Five standalone maps saved from Level: same roads, progression, player and UI; each retains only its chosen biome. Level/Country Side and shared prefabs preserved. All six menu maps enabled.");
+            Debug.Log("Four standalone maps saved from Level: same roads, progression, player and UI; each retains only its chosen biome. Dynamic loads the original mixed-biome Level; no standalone Mountain is authored. Country Side and shared prefabs preserved. All six menu maps enabled.");
         }
 
         private static void ConfigureCopy(Scene scene, EnvironmentBiome biome)
@@ -154,7 +155,7 @@ namespace CubeDash.Editor
             if (AssetDatabase.LoadAssetAtPath<Material>(path) != null) throw new InvalidOperationException("Unassigned map sky requires inspection: " + path);
             var sky = new Material(original) { name = MapNames[index] + " Sky" };
             var director = Find<EnvironmentDirector>(scene);
-            var atmosphere = new SerializedObject(director).FindProperty("atmospheres").GetArrayElementAtIndex(index);
+            var atmosphere = new SerializedObject(director).FindProperty("atmospheres").GetArrayElementAtIndex((int)MapBiomes[index]);
             sky.SetColor("_HorizonColor", atmosphere.FindPropertyRelative("Horizon").colorValue);
             sky.SetColor("_ZenithColor", atmosphere.FindPropertyRelative("Zenith").colorValue);
             sky.SetColor("_GroundColor", atmosphere.FindPropertyRelative("Ground").colorValue);

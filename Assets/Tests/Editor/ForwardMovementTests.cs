@@ -61,7 +61,7 @@ namespace CubeDash.Tests
         public IEnumerator EveryGameplaySceneMovesPlayerAndCameraThroughStationarySections()
         {
             yield return new EnterPlayMode();
-            foreach (string name in new[] { "Level", "City", "Mountain", "Desert", "Beach", "Jungle", "Country Side" })
+            foreach (string name in new[] { "Level", "City", "Desert", "Beach", "Jungle", "Country Side" })
             {
                 yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/" + name + ".unity", new LoadSceneParameters(LoadSceneMode.Single));
                 yield return null;

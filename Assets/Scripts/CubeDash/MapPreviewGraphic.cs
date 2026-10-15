@@ -7,7 +7,7 @@ namespace CubeDash
     [RequireComponent(typeof(CanvasRenderer))]
     public sealed class MapPreviewGraphic : MaskableGraphic
     {
-        public enum Map { City, Jungle, Mountain, Desert, Beach, CountrySide }
+        public enum Map { City, Jungle, Dynamic, Desert, Beach, CountrySide }
         [SerializeField] private Map map;
         public Map Kind => map;
         private VertexHelper mesh;
@@ -39,13 +39,22 @@ namespace CubeDash
                         Polygon(i % 2 == 0 ? green : new Color(0.35f, 0.63f, 0.44f), new Vector2(x - 0.12f, 0.3f), new Vector2(x + 0.12f, 0.3f), new Vector2(x + 0.08f, 0.73f), new Vector2(x - 0.05f, 0.89f), new Vector2(x - 0.12f, 0.57f));
                     }
                     break;
-                case Map.Mountain:
+                case Map.Dynamic:
+                    // A mixed landscape and continuous road distinguish the cycling level from a fixed biome.
+                    Polygon(new Color(0.48f, 0.54f, 0.63f), new Vector2(0.26f, 0.22f), new Vector2(0.74f, 0.22f), new Vector2(0.51f, 0.90f));
+                    Polygon(new Color(1, 0.97f, 0.9f), new Vector2(0.44f, 0.70f), new Vector2(0.58f, 0.70f), new Vector2(0.51f, 0.90f));
                     for (int i = 0; i < 3; i++)
                     {
-                        float x = 0.18f + i * 0.3f, peak = 0.78f + (i % 2) * 0.16f;
-                        Polygon(new Color(0.45f + i * 0.07f, 0.5f, 0.6f), new Vector2(x - 0.23f, 0.2f), new Vector2(x + 0.25f, 0.2f), new Vector2(x, peak));
-                        Polygon(new Color(1, 0.97f, 0.9f), new Vector2(x - 0.055f, peak - 0.15f), new Vector2(x + 0.065f, peak - 0.15f), new Vector2(x, peak));
+                        float x = 0.06f + i * 0.12f;
+                        Box(x, 0.20f, 0.09f, 0.30f + i % 2 * 0.16f, new Color(0.57f, 0.52f, 0.59f));
+                        Box(x + 0.025f, 0.30f, 0.035f, 0.06f, new Color(1, 0.88f, 0.59f));
                     }
+                    Box(0.72f, 0.18f, 0.025f, 0.37f, new Color(0.36f, 0.25f, 0.23f));
+                    Polygon(green, new Vector2(0.60f, 0.39f), new Vector2(0.87f, 0.39f), new Vector2(0.74f, 0.78f));
+                    Polygon(new Color(1, 0.85f, 0.61f), new Vector2(0.55f, 0), new Vector2(1, 0), new Vector2(1, 0.30f), new Vector2(0.78f, 0.23f));
+                    Polygon(new Color(0.3f, 0.69f, 0.76f), new Vector2(0.80f, 0), new Vector2(1, 0), new Vector2(1, 0.24f), new Vector2(0.91f, 0.18f));
+                    Polygon(new Color(0.27f, 0.29f, 0.35f), new Vector2(0.26f, 0), new Vector2(0.74f, 0), new Vector2(0.54f, 0.44f), new Vector2(0.46f, 0.44f));
+                    Box(0.49f, 0.04f, 0.02f, 0.11f, Color.white); Box(0.495f, 0.23f, 0.01f, 0.08f, Color.white);
                     break;
                 case Map.Desert:
                     Box(0, 0, 1, 0.72f, new Color(0.94f, 0.75f, 0.5f));

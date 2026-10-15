@@ -7362,7 +7362,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: MOUNTAIN
+  m_Text: DYNAMIC
 --- !u!222 &110758527
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -45207,7 +45207,7 @@ GameObject:
   - component: {fileID: 718521765}
   - component: {fileID: 718521764}
   m_Layer: 0
-  m_Name: Mountain
+  m_Name: Dynamic
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -45317,7 +45317,7 @@ MonoBehaviour:
           m_ObjectArgumentAssemblyTypeName: 
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: Mountain
+          m_StringArgument: Level
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &718521767

@@ -15,7 +15,7 @@ namespace CubeDash.Editor
         public const string PreviewPath = HighwayHazardArtBuilder.ArtPath + "/Saved Previews";
         public static readonly string[] ScenePaths = {
             "Assets/Scenes/Level.unity", "Assets/Scenes/City.unity", "Assets/Scenes/Jungle.unity",
-            "Assets/Scenes/Mountain.unity", "Assets/Scenes/Desert.unity", "Assets/Scenes/Beach.unity", "Assets/Scenes/Country Side.unity"
+            "Assets/Scenes/Desert.unity", "Assets/Scenes/Beach.unity", "Assets/Scenes/Country Side.unity"
         };
         private const string ObstaclePath = "Assets/Prefab/CubeDash/ObstacleCube.prefab";
         private const string TrackPath = "Assets/Prefab/CubeDash/TrackSegment.prefab";

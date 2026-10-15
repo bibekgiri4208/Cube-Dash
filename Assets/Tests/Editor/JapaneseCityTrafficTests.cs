@@ -67,7 +67,7 @@ namespace CubeDash.Tests
                 Assert.That(local.VariantCount(type), Is.EqualTo(shared.VariantCount(type)), "Keep deterministic variation indices and pattern state.");
                 Assert.That(AssetDatabase.GetAssetPath(shared.MeshFor(type)).StartsWith("Assets/Highway Hazards/"), Is.True);
             }
-            foreach (string name in new[] { "Level", "City", "Jungle", "Mountain", "Desert", "Beach", "Country Side" })
+            foreach (string name in new[] { "Level", "City", "Jungle", "Desert", "Beach", "Country Side" })
             {
                 var scene = EditorSceneManager.OpenPreviewScene("Assets/Scenes/" + name + ".unity");
                 try

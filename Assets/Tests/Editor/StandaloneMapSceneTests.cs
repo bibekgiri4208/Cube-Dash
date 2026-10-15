@@ -19,11 +19,12 @@ namespace CubeDash.Tests
         [UnityTearDown]
         public IEnumerator LeavePlayMode() { if (Application.isPlaying) yield return new ExitPlayMode(); }
 
-        [TestCase(0)] [TestCase(1)] [TestCase(2)] [TestCase(3)] [TestCase(4)]
+        [TestCase(0)] [TestCase(1)] [TestCase(2)] [TestCase(3)]
         public void SavedMapRetainsExactGameplayRoadsCameraAndUiWithOnlyOneBiome(int index)
         {
             Scene source = EditorSceneManager.OpenPreviewScene(StandaloneMapScenes.SourcePath);
             Scene map = EditorSceneManager.OpenPreviewScene(StandaloneMapScenes.ScenePath(index));
+            EnvironmentBiome biome = StandaloneMapScenes.MapBiomes[index];
             try
             {
                 var original = Find<CubeDashGame>(source); var game = Find<CubeDashGame>(map);
@@ -36,7 +37,7 @@ namespace CubeDash.Tests
                 Assert.That(game.UsesStartCountdown, Is.True); Assert.That(Find<RunnerHud>(map).RibbonTheme, Is.True);
                 Assert.That(Find<RunnerHud>(map).PowerUpBars, Is.Not.Null);
                 var director = game.Track.Environment;
-                Assert.That(director.HasFixedBiome, Is.True); Assert.That(director.FixedBiome, Is.EqualTo((EnvironmentBiome)index));
+                Assert.That(director.HasFixedBiome, Is.True); Assert.That(director.FixedBiome, Is.EqualTo(biome));
                 Assert.That(original.Track.Environment.HasFixedBiome, Is.False, "Original Level keeps its five-biome cycle.");
                 Assert.That(game.Track.Segments.Length, Is.EqualTo(original.Track.Segments.Length));
                 var trackData = new SerializedObject(game.Track); var originalData = new SerializedObject(original.Track);
@@ -47,9 +48,9 @@ namespace CubeDash.Tests
                 {
                     TrackSegment segment = game.Track.Segments[s], old = original.Track.Segments[s];
                     Assert.That(segment.Environment.Biomes.Count(root => root != null), Is.EqualTo(1));
-                    Assert.That(segment.Environment.Biomes[index].activeSelf, Is.True);
-                    segment.Environment.Configure(s - 1, director.SegmentsPerBiome, (EnvironmentBiome)index);
-                    Assert.That(segment.Environment.CurrentBiome, Is.EqualTo((EnvironmentBiome)index));
+                    Assert.That(segment.Environment.Biomes[(int)biome].activeSelf, Is.True);
+                    segment.Environment.Configure(s - 1, director.SegmentsPerBiome, biome);
+                    Assert.That(segment.Environment.CurrentBiome, Is.EqualTo(biome));
                     Assert.That(segment.transform.Find("Road") != null || segment.transform.Find("Plane") != null, Is.True);
                     foreach (string name in new[] { "Road", "Plane", "Highway Shoulders", "Highway Guardrails", "Highway Lane Markings" })
                     {
@@ -65,8 +66,8 @@ namespace CubeDash.Tests
                     Assert.That(segment.GetComponent<BiomeBoundaryBlend>().Exit, Is.False);
                 }
                 var ambience = Find<BiomeAmbience>(map);
-                for (int biome = 0; biome < BiomeRules.Count; biome++)
-                    Assert.That(ambience.Source((EnvironmentBiome)biome) != null, Is.EqualTo(biome == index && index != 0));
+                for (int ambienceIndex = 0; ambienceIndex < BiomeRules.Count; ambienceIndex++)
+                    Assert.That(ambience.Source((EnvironmentBiome)ambienceIndex) != null, Is.EqualTo(ambienceIndex == (int)biome && biome != EnvironmentBiome.City));
                 Assert.That(EditorBuildSettings.scenes.Count(entry => entry.enabled && entry.path == StandaloneMapScenes.ScenePath(index)), Is.EqualTo(1));
                 Assert.That(EditorBuildSettings.scenes.Single(entry => entry.path == StandaloneMapScenes.ScenePath(index)).guid.ToString(),
                     Is.EqualTo(AssetDatabase.AssetPathToGUID(StandaloneMapScenes.ScenePath(index))));
@@ -76,32 +77,35 @@ namespace CubeDash.Tests
         }
 
         [UnityTest]
-        public IEnumerator AllFiveMenuMapsLoadCountdownAndPreserveProgressionThroughRecyclingPauseRetryAndQuit()
+        public IEnumerator FixedAndDynamicMapsLoadCountdownAndPreserveProgressionThroughRecyclingPauseRetryAndQuit()
         {
             yield return new EnterPlayMode();
             yield return EditorSceneManager.LoadSceneAsyncInPlayMode(StandaloneMapScenes.SourcePath, new LoadSceneParameters(LoadSceneMode.Single));
             yield return null;
             var source = Object.FindAnyObjectByType<CubeDashGame>(); source.StartRun(); source.TogglePause();
             List<string> expected = Simulate(source.Track, null);
-            for (int index = 0; index < BiomeRules.Count; index++)
+            foreach (string name in MainMenuMapSelection.MapNames.Where(mapName => mapName != "Country Side"))
             {
+                int index = System.Array.IndexOf(StandaloneMapScenes.MapNames, name);
+                EnvironmentBiome? biome = index >= 0 ? StandaloneMapScenes.MapBiomes[index] : (EnvironmentBiome?)null;
                 yield return EditorSceneManager.LoadSceneAsyncInPlayMode(MainMenuSceneBuilder.ScenePath, new LoadSceneParameters(LoadSceneMode.Single));
                 yield return null;
                 var menu = Object.FindAnyObjectByType<MainMenuController>(); menu.StartGame();
-                menu.MapPanel.transform.Find("Card/" + StandaloneMapScenes.MapNames[index]).GetComponent<Button>().onClick.Invoke();
+                menu.MapPanel.transform.Find("Card/" + name).GetComponent<Button>().onClick.Invoke();
                 Assert.That(menu.Loading, Is.True); Assert.That(menu.Music.isPlaying, Is.False);
-                yield return WaitForScene(StandaloneMapScenes.MapNames[index]);
+                yield return WaitForScene(MainMenuMapSelection.SceneNameFor(name));
                 var game = Object.FindAnyObjectByType<CubeDashGame>();
                 Assert.That(game.CountdownActive, Is.True);
                 Assert.That(Object.FindAnyObjectByType<RunnerHud>().CountdownNumber.text, Is.EqualTo("3"));
                 game.StartRun(); game.TogglePause();
-                Assert.That(Simulate(game.Track, (EnvironmentBiome)index), Is.EqualTo(expected), "Map must not change the seeded hazards, coins, power-ups, collisions or curve progression.");
+                Assert.That(game.Track.Environment.HasFixedBiome, Is.EqualTo(biome.HasValue));
+                Assert.That(Simulate(game.Track, biome), Is.EqualTo(expected), "Map must not change the seeded hazards, coins, power-ups, collisions or curve progression.");
                 float frozen = game.Track.Travelled; yield return null;
                 Assert.That(game.Track.Travelled, Is.EqualTo(frozen));
                 game.RequestRun(); Assert.That(game.CountdownActive, Is.True); Assert.That(game.Track.Travelled, Is.Zero);
                 game.StartRun(); game.TogglePause();
-                Assert.That(game.Track.Environment.CurrentBiome, Is.EqualTo((EnvironmentBiome)index));
-                Capture(game, StandaloneMapScenes.MapNames[index]);
+                Assert.That(game.Track.Environment.CurrentBiome, Is.EqualTo(biome ?? EnvironmentBiome.City));
+                Capture(game, name);
                 Object.FindAnyObjectByType<RunnerHud>().QuitGame(); yield return WaitForScene("Main Menu");
                 Assert.That(Object.FindAnyObjectByType<MainMenuController>().Music.isPlaying, Is.True);
             }
