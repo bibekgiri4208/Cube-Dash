@@ -9889,6 +9889,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   map: 2
+  illustration: {fileID: 2800000, guid: 372340472600a8c40931573069dc3364, type: 3}
 --- !u!222 &143669600
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -31943,6 +31944,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   map: 1
+  illustration: {fileID: 2800000, guid: 2b60e53147a9c5949a60e57eb6cca6a3, type: 3}
 --- !u!222 &483442570
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -32099,6 +32101,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   map: 4
+  illustration: {fileID: 2800000, guid: 7a97a1e8242301a4a891d4a38bd5028c, type: 3}
 --- !u!222 &488090258
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -38373,7 +38376,6 @@ RectTransform:
   - {fileID: 470497251}
   - {fileID: 1449351108}
   - {fileID: 2135027911}
-  - {fileID: 2109988868}
   m_Father: {fileID: 1737522476}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
@@ -43037,6 +43039,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   map: 3
+  illustration: {fileID: 2800000, guid: fa82b46763e8c39468d2b3ae568ec6ec, type: 3}
 --- !u!222 &666657828
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -79991,6 +79994,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   map: 0
+  illustration: {fileID: 2800000, guid: 5b2b4b50d249acc4a9923ba71b84ca5f, type: 3}
 --- !u!222 &1142835009
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -132935,6 +132939,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   map: 5
+  illustration: {fileID: 2800000, guid: ca7ad543d6eb0bb408b9d3a22a69aadd, type: 3}
 --- !u!222 &1843981629
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -154886,75 +154891,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2107268886}
   m_Mesh: {fileID: 4300000, guid: ceb338b22d750134ca72c00e7bfba793, type: 2}
---- !u!1 &2109988867
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2109988868}
-  - component: {fileID: 2109988870}
-  - component: {fileID: 2109988869}
-  m_Layer: 0
-  m_Name: Gold Accent
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &2109988868
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2109988867}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 585235123}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 112, y: 27}
-  m_SizeDelta: {x: 40, y: 4}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &2109988869
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2109988867}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1a2353dc9d2d42a599940b1b13193285, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: CubeDash::CubeDash.MenuPanelGraphic
-  m_Material: {fileID: 0}
-  m_Color: {r: 0.87, g: 0.53, b: 0.1, a: 1}
-  m_RaycastTarget: 0
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  cornerRadius: 0
-  borderWidth: 0
-  borderColor: {r: 0, g: 0, b: 0, a: 0}
-  cornerCut: 2
---- !u!222 &2109988870
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2109988867}
-  m_CullTransparentMesh: 1
 --- !u!1001 &2110549885
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -29,6 +29,7 @@ namespace CubeDash.Tests
                 Assert.That(wallet.GetComponent<RectTransform>().sizeDelta, Is.EqualTo(new Vector2(320, 90)));
                 Assert.That(wallet.Find("Gold Star Coins").GetComponent<MenuCoinGraphic>(), Is.Not.Null);
                 Assert.That(wallet.Find("Coin").gameObject.activeSelf, Is.False);
+                Assert.That(wallet.Find("Gold Accent"), Is.Null, "The unwanted yellow accent is removed.");
                 Assert.That(wallet.Find("Caption").GetComponent<Text>().text, Is.EqualTo("YOUR COINS"));
                 Assert.That(shop.MenuCoins.fontSize, Is.EqualTo(38));
                 Assert.That(shop.MenuCoins.resizeTextForBestFit, Is.True);

@@ -41,6 +41,11 @@ namespace CubeDash.Tests
                     bool ready = true;
                     Assert.That(button.interactable, Is.EqualTo(ready));
                     Assert.That(tile.Find("Map illustration").GetComponent<MapPreviewGraphic>().Kind, Is.EqualTo((MapPreviewGraphic.Map)i));
+                    var artwork = tile.Find("Map illustration").GetComponent<MapPreviewGraphic>().Illustration;
+                    Assert.That(artwork, Is.Not.Null);
+                    Assert.That(AssetDatabase.GetAssetPath(artwork), Is.EqualTo(MainMenuMapIllustrations.ImagePath(MainMenuMapSelection.MapNames[i])));
+                    Assert.That(artwork.width, Is.EqualTo(MainMenuMapIllustrations.Width));
+                    Assert.That(artwork.height, Is.EqualTo(MainMenuMapIllustrations.Height));
                     Assert.That(tile.Find("Map illustration").GetComponent<CanvasRenderer>(), Is.Not.Null);
                     Assert.That(tile.Find("Availability badge/Availability").GetComponent<Text>().text, Is.EqualTo(ready ? "PLAY" : "COMING SOON"));
                     Assert.That(button.onClick.GetPersistentTarget(0), Is.SameAs(menu));
@@ -240,7 +245,7 @@ namespace CubeDash.Tests
             Assert.That(menu.ShopPanel.GetComponent<CanvasGroup>().interactable, Is.False);
             Assert.That(menu.CurrentPanel, Is.SameAs(menu.MapPanel));
             typeof(MenuPanelMotion).GetMethod("Tick", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(menu.MapPanel.GetComponent<MenuPanelMotion>(), new object[] { 1f });
-            Capture(menu, "maps-landscape", 1672, 940); Capture(menu, "maps-portrait", 600, 1000);
+            Capture(menu, "maps-landscape", 1672, 940); Capture(menu, "maps-16-10", 1920, 1200); Capture(menu, "maps-portrait", 600, 1000);
             var card = menu.MapPanel.transform.Find("Card").GetComponent<RectTransform>();
             foreach (string name in MainMenuMapSelection.MapNames)
             {
@@ -250,7 +255,7 @@ namespace CubeDash.Tests
                 using (var mesh = new VertexHelper())
                 {
                     typeof(MapPreviewGraphic).GetMethod("OnPopulateMesh", BindingFlags.Instance | BindingFlags.NonPublic, null, new[] { typeof(VertexHelper) }, null).Invoke(preview, new object[] { mesh });
-                    Assert.That(mesh.currentVertCount, Is.GreaterThan(24), name + " needs visible map illustration geometry.");
+                    Assert.That(mesh.currentVertCount, Is.EqualTo(4), name + " displays its actual scene texture, not generic vector artwork.");
                 }
                 foreach (Text text in tile.GetComponentsInChildren<Text>())
                     using (var mesh = new VertexHelper())

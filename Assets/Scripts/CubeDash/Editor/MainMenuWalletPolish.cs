@@ -52,8 +52,8 @@ namespace CubeDash.Editor
             Label(caption, new Vector2(42, 23), new Vector2(180, 22), 15, 13);
             shop.MenuCoins.color = Ink;
             Label(shop.MenuCoins, new Vector2(42, -7), new Vector2(180, 49), 38, 18);
-            var accent = Child("Gold Accent", wallet, new Vector2(112, 27), new Vector2(40, 4));
-            Style(Get<MenuPanelGraphic>(accent), new Color(0.87f, 0.53f, 0.10f), Color.clear, 0, 2);
+            Transform accent = wallet.Find("Gold Accent");
+            if (accent != null) UnityEngine.Object.DestroyImmediate(accent.gameObject);
             EditorSceneManager.MarkSceneDirty(scene);
         }
 

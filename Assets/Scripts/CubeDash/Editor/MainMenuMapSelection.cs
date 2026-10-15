@@ -33,7 +33,11 @@ namespace CubeDash.Editor
         public static void ApplyToScene(Scene scene)
         {
             var menu = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<MainMenuController>(true)).Single();
-            if (menu.MapPanel != null) { UpdateMapTargets(menu); Debug.Log("Updated map targets; existing layout and manual edits preserved."); return; }
+            if (menu.MapPanel != null)
+            {
+                UpdateMapTargets(menu); MainMenuMapIllustrations.ApplyToScene(scene);
+                Debug.Log("Updated map targets and actual scene artwork; existing layout and manual edits preserved."); return;
+            }
             var canvas = menu.GetComponentInChildren<Canvas>(true).transform;
             if (canvas.Find(PanelName) != null) throw new InvalidOperationException("An unassigned map panel requires inspection before replacing it.");
             Font font = AssetDatabase.LoadAssetAtPath<Font>("Assets/MainMenu/Fonts/Anton-Regular.ttf");
@@ -91,6 +95,7 @@ namespace CubeDash.Editor
             var settings = new SerializedObject(menu); settings.FindProperty("mapPanel").objectReferenceValue = panel.gameObject;
             settings.FindProperty("firstMap").objectReferenceValue = maps[0]; settings.ApplyModifiedPropertiesWithoutUndo();
             UpdateMapTargets(menu);
+            MainMenuMapIllustrations.ApplyToScene(scene);
             panel.gameObject.SetActive(false);
             MainMenuUiAnimations.ApplyToScene(scene);
             EditorSceneManager.MarkSceneDirty(scene);
