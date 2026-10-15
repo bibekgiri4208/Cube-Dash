@@ -18,6 +18,9 @@ namespace CubeDash
         [Header("Map selection")]
         [SerializeField] private GameObject mapPanel = null;
         [SerializeField] private Button firstMap = null;
+        [Header("Exit confirmation")]
+        [SerializeField] private GameObject quitPanel = null;
+        [SerializeField] private Button quitCancel = null;
         [SerializeField] private Slider volume = null;
         [SerializeField] private Text volumeReadout = null;
         [SerializeField] private AudioSource music = null;
@@ -35,6 +38,7 @@ namespace CubeDash
         public GameObject ShopPanel => shopPanel;
         public GameObject OptionsPanel => optionsPanel;
         public GameObject MapPanel => mapPanel;
+        public GameObject QuitPanel => quitPanel;
         public Renderer Hero => hero;
         public AudioSource Music => music;
         public const string VolumePreference = "CubeDash.MasterVolume";
@@ -48,6 +52,7 @@ namespace CubeDash
             if (shopPanel != null) shopPanel.SetActive(false);
             if (optionsPanel != null) optionsPanel.SetActive(false);
             if (mapPanel != null) mapPanel.SetActive(false);
+            if (quitPanel != null) quitPanel.SetActive(false);
             float savedVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(VolumePreference, 1));
             AudioListener.volume = savedVolume;
             if (volume != null) volume.SetValueWithoutNotify(savedVolume);
@@ -143,6 +148,7 @@ namespace CubeDash
             if (shopPanel != except) ClosePanel(shopPanel);
             if (optionsPanel != except) ClosePanel(optionsPanel);
             if (mapPanel != except) ClosePanel(mapPanel);
+            if (quitPanel != except) ClosePanel(quitPanel);
         }
 
         private static void ClosePanel(GameObject panel)
@@ -198,6 +204,14 @@ namespace CubeDash
 
         public void Quit()
         {
+            OpenPanel(quitPanel, quitCancel, nameof(Quit));
+        }
+
+        public void ConfirmQuit()
+        {
+            // A stale submit/callback outside the open confirmation must never exit the game.
+            if (quitPanel == null || currentPanel != quitPanel || !quitPanel.activeInHierarchy || loading) return;
+            loading = true;
             PlayerPrefs.Save();
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;

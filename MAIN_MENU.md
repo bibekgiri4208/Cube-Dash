@@ -1,16 +1,26 @@
 # Main menu
 
-Open `Assets/Scenes/Main Menu.unity` and press Play. It is the first enabled build scene; **Start** opens the themed map-selection submenu. All six cards load their own scenes: City, Jungle, Mountain, Desert, Beach and Country Side.
+Open `Assets/Scenes/Main Menu.unity` and press Play. It is the first enabled build scene; **Start** opens the themed map-selection submenu. The six cards are City, Jungle, Dynamic, Desert, Beach and Country Side; Dynamic loads the original mixed-biome `Level` scene.
 
 The reference-inspired scene contains editable 3D parking bays, weathered asphalt, concrete/graffiti wall, warm sconces, layered foliage, neighborhood buildings, overhead wires, a classic sedan, safety props, and a red cube with black eyes. Its low camera and left-hand cut-corner ribbons use the supplied image's composition. This is a recreation, not the image's original models or a pixel-identical reproduction.
 
 - **Shop:** empty **Common**, **Rare**, and **Epic** skin collections. No skins, purchase buttons or equipment actions are added yet.
 - **Options:** independent saved master/music volume sliders with live percentage readouts, and a fullscreen toggle in separate Audio and Display sections.
-- **Quit:** closes the application, or stops Play mode in the Editor.
+- **Quit:** opens **Confirm exit?**; **Yes** closes the application (stops Play mode in the Editor), while **No** cancels.
 - Mouse, keyboard/UI navigation and gamepad are supported. Escape/back closes a panel.
 - Closing Shop or Options returns focus to its main-menu ribbon, not Start. Back, Escape and gamepad Back behave the same; Back/Escape with no panel open leaves the current selection unchanged.
 - Master and Music Volume show a cream-and-red focus frame when selected with a gamepad, keyboard or pointer. Up/down changes the selected control; left/right adjusts its volume. The frame clears when focus moves away or Options closes, without resizing the slider.
 - The Fullscreen checkbox uses the same focus frame, whether checked or unchecked. Gamepad confirm/keyboard submit toggles the tick; moving to Back or closing Options clears its focus frame. Its display-mode callback and checkbox/tick graphics are unchanged.
+
+## Exit confirmation
+
+The saved **Quit - Confirmation** overlay uses the same pink cut-corner card, black outline/offset shadow, Anton lettering, ribbon header and red/pink Yes/No buttons as the rest of the menu. Its dim backdrop blocks pointer clicks on the underlying menu. Keyboard/gamepad navigation stays between the two choices, with **No** selected by default. No, Escape and controller Back close the dialog and return focus to the main Quit ribbon. Opening/cancelling keeps menu music playing and creates no runtime UI objects.
+
+`MainMenuController.Quit` now opens the dialog rather than exiting immediately; only `ConfirmQuit`, invoked by Yes while this dialog is current, saves preferences and requests application exit. Stale Yes callbacks after cancellation or panel switching are ignored. `MenuPanelMotion` supplies the existing reversible fade/lift; `MenuDialogLayout` fits the anchored card/buttons to landscape and portrait canvases without competing with the animation.
+
+Edit **Cube Dash Main Menu > Reference Menu Canvas > Quit - Confirmation > Card**. **Tools > Cube Dash > Add Main Menu Quit Confirmation** (`MainMenuQuitConfirmation.ApplyFromCommandLine`) adds this saved panel without rebuilding other controls or scenery. Reapplication preserves manual dialog edits; full menu regeneration includes it. The existing main Quit callback is retained.
+
+Exit-dialog validation: **38/38 focused Unity checks passed**, covering saved theme/wiring, safe default focus, pointer Yes/No routing, repeated cancellation, Escape/gamepad Back, directional navigation, music, panel switching, responsive rendering, reapplication, existing Shop/Options/map navigation and animation/optimization behavior. A separate automated check actually clicks Yes and verifies that it stops Editor Play mode. Landscape/portrait renders were inspected. Only two existing scene documents change (the controller references and Canvas child list), plus 45 new dialog documents; all 5,746 other documents are unchanged. Three broader ribbon-spacing/geometry assertions also fail with the unchanged pre-dialog scene (two existing spacing checks and a legacy assertion that counts all submenu ribbons as the four main buttons); their unrelated artwork/settings were not altered.
 
 ## UI motion
 
