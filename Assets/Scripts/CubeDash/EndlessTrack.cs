@@ -26,7 +26,7 @@ namespace CubeDash
         [Tooltip("Shield, Double Points, Fighter Plane, Truck, Magnet, in that order.")]
         [SerializeField] private Material[] powerUpMaterials = new Material[5];
         [SerializeField] private ObstacleDebris debris = null;
-        [Tooltip("Chance that a visible row carries a bonus in one of its open lanes.")]
+        [Tooltip("Bonus chance per eligible row. Distance gaps and rare, shared Truck/Flight cooldowns also apply.")]
         [SerializeField, Range(0f, 0.5f)] private float powerUpChance = 0.16f;
         [SerializeField] private EnvironmentDirector environment = null;
         [Header("Highway progression")]
@@ -35,6 +35,7 @@ namespace CubeDash
         [Tooltip("Optional map-local traffic art. Null retains the shared highway models and collision categories.")]
         [SerializeField] private HighwayHazardVisuals hazardVisuals = null;
         private HighwayPatterns patterns;
+        private PowerUpSpawns powerUpSpawns;
         private HighwayPresentation presentation;
         private float curvePhase;
         private float curveOriginZ;
@@ -48,6 +49,7 @@ namespace CubeDash
         private bool firstVisibleRow;
         private float travelled;
         private int nextSectionIndex;
+        private readonly int[] hazardVariants = new int[4];
 
         public float LaneWidth => laneWidth;
         public TrackSegment[] Segments => segments;
@@ -86,6 +88,7 @@ namespace CubeDash
         {
             random = new System.Random(seed);
             patterns = new HighwayPatterns(seed);
+            powerUpSpawns = new PowerUpSpawns(seed);
             curvePhase = RoadCurve.Phase(seed);
             playerColor = color;
             matchingLane = 1;
@@ -98,6 +101,7 @@ namespace CubeDash
             contacts.Clear(); powerUpContacts.Clear(); collectedPowerUps.Clear();
             LastTruckSmashes = 0;
             nextSectionIndex = segments.Length - 1;
+            System.Array.Clear(hazardVariants, 0, hazardVariants.Length);
             if (debris != null) debris.ResetDebris();
             if (environment != null) environment.ResetRun();
             for (int i = 0; i < segments.Length; i++)
@@ -390,13 +394,14 @@ namespace CubeDash
 
         private void Populate(TrackSegment segment, int warmupRows, float difficulty = 0f, float sectionDistance = 0f)
         {
-            int artSection = Mathf.RoundToInt(sectionDistance / RunnerRules.SegmentLength);
             for (int row = 0; row < 3; row++)
             {
                 bool visible = row >= warmupRows;
                 int blockedMask = 0;
                 int collectibleMask = 0;
                 int leadLane = -1;
+                int incomingBlockedMask = previousBlockedMask;
+                int incomingSafeLane = matchingLane;
                 HighwayHazard hazard = HighwayHazard.Cube;
                 if (visible)
                 {
@@ -426,7 +431,9 @@ namespace CubeDash
                         : RunnerRules.ColorForLane(lane, matchingLane, playerColor, swapOthers);
                     cube.Configure(color, ColorMaterial(color), (collectibleMask & bit) != 0);
                     if (presentation != null && (blockedMask & bit) != 0)
-                        presentation.ConfigureHazard(cube, hazard, unchecked(artSection * 17 + row * 7 + lane));
+                        // Cycle each category separately so the shorter opening still shows
+                        // every compact prop. Art never consumes gameplay/spawn randomness.
+                        presentation.ConfigureHazard(cube, hazard, hazardVariants[(int)hazard]++);
                     Vector3 position = segment.CubeHomePosition(row * 3 + lane);
                     position.x = (lane - 1) * laneWidth;
                     // Lead obstacles arrive before rewards, leaving the previous row clear when steering away.
@@ -434,7 +441,13 @@ namespace CubeDash
                     cube.transform.localPosition = position;
                     cube.gameObject.SetActive(visible && ((blockedMask | collectibleMask) & bit) != 0);
                 }
-                PlacePowerUp(segment, row, visible, 7 & ~blockedMask);
+                // Bonuses sit halfway between rows. Do not lure players into a lane still
+                // occupied by the previous vehicle, or require a two-lane dash to reach one.
+                int pickupLanes = 7 & ~blockedMask & ~incomingBlockedMask;
+                for (int lane = 0; lane < 3; lane++)
+                    if (Mathf.Abs(lane - incomingSafeLane) > 1) pickupLanes &= ~(1 << lane);
+                float pickupDistance = sectionDistance + segment.CubeHomePosition(row * 3).z - RunnerRules.PowerUpRowOffset;
+                PlacePowerUp(segment, row, visible, pickupLanes, pickupDistance);
             }
         }
 
@@ -453,7 +466,7 @@ namespace CubeDash
                     environment.HasFixedBiome ? environment.FixedBiome : (EnvironmentBiome?)null);
         }
 
-        private void PlacePowerUp(TrackSegment segment, int row, bool visible, int openMask)
+        private void PlacePowerUp(TrackSegment segment, int row, bool visible, int openMask, float distance)
         {
             PowerUpPickup[] pickups = segment.PowerUps;
             if (row >= pickups.Length) return;
@@ -463,17 +476,17 @@ namespace CubeDash
             // Dedicated midpoint slots, seven metres before the coin row and four before its earliest hazard.
             position.z = segment.CubeHomePosition(row * 3).z - RunnerRules.PowerUpRowOffset;
             pickup.transform.localPosition = position;
-            bool spawn = visible && powerUpMaterials != null && powerUpMaterials.Length > 0 &&
-                random.NextDouble() < powerUpChance;
+            PowerUpType type = PowerUpType.Shield;
+            bool spawn = visible && openMask != 0 && powerUpMaterials != null &&
+                powerUpSpawns.TryChoose(distance, powerUpChance, powerUpMaterials.Length, out type);
             if (!spawn)
             {
                 pickup.gameObject.SetActive(false);
                 return;
             }
             // Any open lane may carry a bonus, giving alternatives to following a single reward route.
-            PowerUpType type = (PowerUpType)random.Next(Mathf.Min(5, powerUpMaterials.Length));
             pickup.Configure(type, PowerUpMaterial(type));
-            position.x = (RunnerRules.PickLane(random, openMask) - 1) * laneWidth;
+            position.x = (powerUpSpawns.PickLane(openMask) - 1) * laneWidth;
             pickup.transform.localPosition = position;
             pickup.gameObject.SetActive(true);
         }

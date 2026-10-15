@@ -4,15 +4,29 @@ Open `Assets/Scenes/Level.unity` and press Play. No scene rebuild or authoring m
 
 | Distance | Stage | Encounter palette |
 | --- | --- | --- |
-| 0–179 m | 1 | Traffic drums, weighted cones and compact barricades with open rows |
-| 180–479 m | 2 | Striped barriers, weaving routes, two-lane gates |
-| 480–899 m | 3 | Vans and box trucks mixed with barriers |
-| 900–1499 m | 4 | More narrow chicanes and traffic combinations |
-| 1500 m onward | 5 | Full difficulty, capped speed, repeating varied encounters |
+| 0–119 m | 1 | Traffic drums, weighted cones and compact barricades with open rows |
+| 120–319 m | 2 | Striped barriers, weaving routes, two-lane gates |
+| 320–649 m | 3 | Vans and box trucks mixed with barriers |
+| 650–1099 m | 4 | More narrow chicanes and traffic combinations |
+| 1100 m onward | 5 | Full difficulty, capped speed, varied steering encounters |
 
-Each encounter lasts six rows. Every fourth encounter is a three-row recovery stretch. Coin routes never jump directly between the two outside lanes; every previously open lane retains a reachable option. Vehicle length is reflected in swept collision bounds. Flight, shields, magnet, truck smashing and the cosmetic supercar retain their existing rules. There are no mandatory jumping/sliding hazards yet.
+After the introductory phrases, encounters last four to six rows. Every fourth encounter is a two-row recovery stretch. Slaloms, gates and traffic phrases avoid immediate repeats; later gates/traffic change lanes more often and narrow more frequently. When the marked route moves, a hazard blocks the old route instead of letting players ignore steering and only miss coins. Coin routes never jump directly between the two outside lanes; every previously open lane retains a reachable option. Vehicle length is reflected in swept collision bounds. Flight, shields, magnet, truck smashing and the cosmetic supercar retain their existing rules. There are no mandatory jumping/sliding hazards yet.
 
-Difficulty and speed now ramp by distance, so avoiding coins does not keep the run easy. Coin score and best-score saving are unchanged. The HUD displays the current stage and distance.
+Difficulty and speed ramp by distance, reaching full difficulty at 1100 m rather than 1500 m, so avoiding coins does not keep the run easy. Starting speed (12 m/s), maximum speed (30 m/s), acceleration and 14 m row spacing are unchanged. Coin score and best-score saving are unchanged. The HUD displays distance.
+
+## Power-up pacing
+
+All maps use `PowerUpSpawns.cs`, a seeded scheduler working in absolute run distance, not scene coordinates or frame time:
+
+- No bonus before 56 m; at least 56 m between any two bonuses. The track's existing bonus chance still applies to eligible rows; setting it to zero disables all bonuses.
+- Truck and Flight cannot spawn before 350 m. They share a **750 m minimum gap**, including Truck-to-Flight and Flight-to-Truck. At the 30 m/s speed cap this is at least 25 seconds between their locations, leaving ground gameplay after the existing 10-second ability and 3-second exit shield.
+- Eligible type weights are Shield 28, Double Points 32, Flight 8, Truck 8, Magnet 24. During the shared vehicle cooldown, only ordinary bonuses are selected; cooldowns reserve spawn locations even if a pickup is missed.
+- Mid-row bonuses use lanes open in both adjacent obstacle rows, within one lane of the incoming marked route. A transition with no suitable lane simply has no bonus; pickups never ask players to dash through the previous vehicle's tail.
+- Retry resets scheduling; fixed seeds reproduce it. Forward motion, frame splitting and world-origin shifts preserve spacing. Bonus selection/placement has its own RNG, separate from obstacle and coin generation.
+
+Existing power-up durations, exit shields, scoring and collision envelopes are unchanged. The shared pickup/track pools are reused, with no new objects during recycling. Obstacle art cycles separately per category so the shorter opening still shows every compact prop without consuming gameplay RNG. No scene or prefab rebuild is needed.
+
+Balance validation: **94/94 Unity checks passed**. Coverage includes 100 seeded spawn simulations, weighted rarity/shared cooldowns, all six maps through recycling and retry, disabled/partial bonus sets, actual forward travel with frame splitting and rebasing, deterministic/reachable patterns, later lane pressure/recovery, top-speed long-vehicle steering at 30/60/240 FPS with a short steering delay, all eleven traffic variants, stable pool sizes, existing abilities/collections, and map/UI regressions.
 
 ## Curves
 

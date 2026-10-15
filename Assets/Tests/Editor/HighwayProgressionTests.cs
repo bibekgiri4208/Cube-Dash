@@ -7,15 +7,18 @@ namespace CubeDash.Tests
     public sealed class HighwayProgressionTests
     {
         [TestCase(0, 1)]
-        [TestCase(179, 1)]
-        [TestCase(180, 2)]
-        [TestCase(480, 3)]
-        [TestCase(900, 4)]
-        [TestCase(1500, 5)]
+        [TestCase(119, 1)]
+        [TestCase(120, 2)]
+        [TestCase(319, 2)]
+        [TestCase(320, 3)]
+        [TestCase(649, 3)]
+        [TestCase(650, 4)]
+        [TestCase(1099, 4)]
+        [TestCase(1100, 5)]
         public void ProgressionIntroducesEncountersByDistance(float distance, int stage)
         {
             Assert.That(LevelProgression.Stage(distance), Is.EqualTo(stage));
-            Assert.That(LevelProgression.Difficulty(distance), Is.EqualTo(Mathf.Clamp01(distance / 1500)));
+            Assert.That(LevelProgression.Difficulty(distance), Is.EqualTo(Mathf.Clamp01(distance / 1100)));
             Assert.That(LevelProgression.Difficulty(-10), Is.Zero);
             Assert.That(LevelProgression.Difficulty(5000), Is.EqualTo(1));
         }
@@ -75,7 +78,7 @@ namespace CubeDash.Tests
             }
             var patterns = new HighwayPatterns(7);
             int open = 0;
-            for (int i = 0; i < 13; i++)
+            for (int i = 0; i < 9; i++)
             {
                 HighwayPatterns.Row row = patterns.Next(i * 14);
                 Assert.That(row.Hazard, Is.EqualTo(HighwayHazard.Cube));
@@ -85,12 +88,15 @@ namespace CubeDash.Tests
             Assert.That(open, Is.GreaterThanOrEqualTo(5));
         }
 
-        [Test]
-        public void LongVehiclesStillAllowSafeLaneChangesAtTheSavedMaximumSpeed()
+        [TestCase(240)]
+        [TestCase(60)]
+        [TestCase(30)]
+        public void LongVehiclesStillAllowSafeLaneChangesAtTheSavedMaximumSpeed(int framesPerSecond)
         {
             var patterns = new HighwayPatterns(42);
             HighwayPatterns.Row previous = patterns.Next(1500);
-            const float speed = 30, dt = 1f / 240;
+            const float speed = 30;
+            float dt = 1f / framesPerSecond;
             for (int i = 1; i < 500; i++)
             {
                 HighwayPatterns.Row next = patterns.Next(1500 + i * 14);
@@ -100,7 +106,7 @@ namespace CubeDash.Tests
                 float x = (previous.SafeLane - 1) * 2.6f, velocity = 0;
                 for (float elapsed = 0; elapsed < RunnerRules.RowSpacing / speed; elapsed += dt)
                 {
-                    float nextX = Mathf.SmoothDamp(x, (next.SafeLane - 1) * 2.6f, ref velocity, 0.085f, 18, dt);
+                    float nextX = elapsed < 0.05f ? x : Mathf.SmoothDamp(x, (next.SafeLane - 1) * 2.6f, ref velocity, 0.085f, 18, dt);
                     for (int lane = 0; lane < 3; lane++)
                     {
                         if ((previous.BlockedMask & (1 << lane)) != 0)

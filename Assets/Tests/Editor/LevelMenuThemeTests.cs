@@ -289,7 +289,7 @@ namespace CubeDash.Tests
             var game = Object.FindAnyObjectByType<CubeDashGame>(); var hud = Object.FindAnyObjectByType<RunnerHud>();
             game.enabled = false; game.StartRun();
             Text counter = hud.transform.Find("Safe Area/Speed").GetComponent<Text>();
-            foreach (float metres in new[] { 0f, 179.9f, 180f, 480f, 900f, 1500f })
+            foreach (float metres in new[] { 0f, 119.9f, 120f, 320f, 650f, 1100f, 1500f })
             {
                 typeof(CubeDashGame).GetProperty(nameof(CubeDashGame.Distance)).SetValue(game, metres);
                 hud.UpdateStats();
