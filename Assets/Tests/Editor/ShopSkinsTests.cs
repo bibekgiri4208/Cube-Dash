@@ -96,14 +96,14 @@ namespace CubeDash.Tests
                 string source = model.skin == PlayerSkin.MonsterTruck ? MainMenuSkinsRevamp.MonsterPath : MainMenuSkinsRevamp.MilitaryPath;
                 Assert.That(PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(model.root), Is.EqualTo(source));
                 Assert.That(model.root.localRotation, Is.EqualTo(Quaternion.identity));
-                Assert.That(model.root.localScale, Is.EqualTo(Vector3.one * 0.55f));
+                Assert.That(model.root.localScale, Is.EqualTo(Vector3.one * 0.3025f));
                 Assert.That(model.root.gameObject.activeSelf, Is.False);
                 Bounds bounds = MainMenuSkinsRevamp.LocalBounds(model.root, player.transform);
                 Assert.That(bounds.min.y, Is.EqualTo(-0.575f).Within(0.002f));
                 Assert.That(bounds.center.x, Is.EqualTo(0).Within(0.002f));
                 Assert.That(bounds.center.z, Is.EqualTo(0).Within(0.002f));
-                Assert.That(bounds.size.x, Is.LessThanOrEqualTo(2.201f));
-                Assert.That(bounds.size.z, Is.LessThanOrEqualTo(3.601f));
+                Assert.That(bounds.size.x, Is.LessThanOrEqualTo(1.22f));
+                Assert.That(bounds.size.z, Is.LessThanOrEqualTo(2.0f));
                 Assert.That(model.wheels.Length, Is.EqualTo(4));
                 Assert.That(model.wheels.All(wheel => wheel != null), Is.True);
                 Assert.That(model.root.GetComponentsInChildren<Collider>(true), Is.Empty);

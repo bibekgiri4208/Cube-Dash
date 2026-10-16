@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -19,12 +20,12 @@ namespace CubeDash.Tests
         public IEnumerator LeavePlayMode() { if (Application.isPlaying) yield return new ExitPlayMode(); }
 
         [Test]
-        public void BothMenuAndGameplayModelsHaveExactlyPoint55ScaleAndOnlyGameplayHasLampTrails()
+        public void CompactGameplayScaleIsSeparateFromMenuScaleAndOnlyGameplayHasLampTrails()
         {
             var player = AssetDatabase.LoadAssetAtPath<GameObject>(MainMenuSkinsRevamp.PlayerPath);
             foreach (var model in player.GetComponent<PlayerSupercar>().AdditionalSkins)
             {
-                Assert.That(model.root.localScale, Is.EqualTo(Vector3.one * 0.55f));
+                Assert.That(model.root.localScale, Is.EqualTo(Vector3.one * 0.3025f));
                 var trails = model.root.GetComponentsInChildren<SupercarLightTrail>(true);
                 Assert.That(trails.Length, Is.EqualTo(1));
                 Assert.That(trails[0].GetComponent<Renderer>().enabled, Is.False);
@@ -76,6 +77,85 @@ namespace CubeDash.Tests
         }
 
         [UnityTest]
+        public IEnumerator BothSkinsHaveCompactWorldFootprintsOnEveryMapAfterRetryAndPowerUps()
+        {
+            yield return new EnterPlayMode(); using var economy = new EconomyTestScope();
+            GameEconomy.AddCoins(200); GameEconomy.TryBuy(PlayerSkin.MonsterTruck); GameEconomy.TryBuy(PlayerSkin.MilitaryVan);
+            var measurements = new List<string>(); var oversized = new List<string>();
+            foreach (string map in PauseSoundAuthoring.Maps)
+            {
+                yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/" + map + ".unity", new LoadSceneParameters(LoadSceneMode.Single));
+                yield return null;
+                var game = Object.FindAnyObjectByType<CubeDashGame>(); game.enabled = false;
+                var collider = game.Player.GetComponent<BoxCollider>(); Vector3 size = collider.size, center = collider.center;
+                foreach (var skin in new[] { PlayerSkin.MonsterTruck, PlayerSkin.MilitaryVan })
+                {
+                    GameEconomy.Equip(skin); game.StartRun();
+                    var presentation = game.SupercarPresentation;
+                    presentation.Tick(0.4f, 0, 0); // Past the equip pop; stationary wheels, actual scene camera/FOV.
+                    Bounds bounds = ModelWorldBounds(presentation.Car);
+                    string label = map + " " + skin + " world footprint=" + bounds.size.ToString("F3");
+                    measurements.Add(label);
+                    if (bounds.size.x > 1.4f || bounds.size.y > 1.25f || bounds.size.z > 2.3f) oversized.Add(label);
+                    Assert.That(bounds.min.y, Is.InRange(-0.09f, 0.06f), "Resized tires must remain on the road: " + label);
+                    CaptureGameplayCamera(game, map, skin);
+                    foreach (var type in new[] { PowerUpType.Truck, PowerUpType.FighterPlane })
+                    {
+                        Invoke(game, "ApplyPowerUp", type);
+                        Invoke(game, type == PowerUpType.Truck ? "UpdateTruckTimers" : "UpdateFlightTimers", 30f);
+                        presentation.Tick(0.4f, 0, 0);
+                        Assert.That(Vector3.Distance(ModelWorldBounds(presentation.Car).size, bounds.size), Is.LessThan(0.002f), label);
+                    }
+                    game.StartRun(); presentation.Tick(0.4f, 0, 0);
+                    Assert.That(Vector3.Distance(ModelWorldBounds(presentation.Car).size, bounds.size), Is.LessThan(0.002f), "Retry must not enlarge " + label);
+                    Assert.That(collider.size, Is.EqualTo(size)); Assert.That(collider.center, Is.EqualTo(center));
+                }
+            }
+            string prefix = System.Environment.GetEnvironmentVariable("CUBE_DASH_GAMEPLAY_SIZE_PREVIEW");
+            if (!string.IsNullOrEmpty(prefix)) File.WriteAllLines(prefix + "-measurements.txt", measurements);
+            Assert.That(oversized, Is.Empty, "Check actual world dimensions, not just the model's localScale:\n" + string.Join("\n", oversized));
+        }
+
+        private static Bounds ModelWorldBounds(Transform model)
+        {
+            // Road bending pads Renderer.bounds by hundreds of units for culling. Measure the
+            // actual mesh vertices, not those culling bounds or the light ribbon's trailing mesh.
+            Bounds bounds = default; bool first = true;
+            foreach (var filter in model.GetComponentsInChildren<MeshFilter>(true))
+            {
+                if (filter.sharedMesh == null || filter.GetComponent<SupercarLightTrail>() != null) continue;
+                foreach (Vector3 vertex in filter.sharedMesh.vertices)
+                {
+                    Vector3 point = filter.transform.TransformPoint(vertex);
+                    if (first) { bounds = new Bounds(point, Vector3.zero); first = false; } else bounds.Encapsulate(point);
+                }
+            }
+            Assert.That(first, Is.False, "Vehicle geometry is required to measure the real world footprint.");
+            return bounds;
+        }
+
+        private static void CaptureGameplayCamera(CubeDashGame game, string map, PlayerSkin skin)
+        {
+            string prefix = System.Environment.GetEnvironmentVariable("CUBE_DASH_GAMEPLAY_SIZE_PREVIEW");
+            if (string.IsNullOrEmpty(prefix) || SystemInfo.graphicsDeviceType == UnityEngine.Rendering.GraphicsDeviceType.Null) return;
+            var camera = game.GameCamera; var oldTarget = camera.targetTexture; var active = RenderTexture.active;
+            var target = new RenderTexture(1600, 900, 24); var texture = new Texture2D(1600, 900, TextureFormat.RGB24, false);
+            bool async = ShaderUtil.allowAsyncCompilation;
+            try
+            {
+                ShaderUtil.allowAsyncCompilation = false; camera.targetTexture = target;
+                for (int i = 0; i < 4; i++) camera.Render();
+                RenderTexture.active = target; texture.ReadPixels(new Rect(0, 0, 1600, 900), 0, 0); texture.Apply();
+                File.WriteAllBytes(prefix + "-" + map + "-" + skin + ".png", texture.EncodeToPNG());
+            }
+            finally
+            {
+                camera.targetTexture = oldTarget; RenderTexture.active = active; ShaderUtil.allowAsyncCompilation = async;
+                Object.DestroyImmediate(target); Object.DestroyImmediate(texture);
+            }
+        }
+
+        [UnityTest]
         public IEnumerator BothSkinsUseRearLightRibbonsNotCubeWakeAndHandlePausePowerUpsRetryAndOriginShift()
         {
             yield return new EnterPlayMode(); using var economy = new EconomyTestScope();
@@ -87,7 +167,7 @@ namespace CubeDash.Tests
             {
                 GameEconomy.Equip(skin); Invoke(game, "RefreshEquippedSkin"); game.StartRun(); Clear(game);
                 var trail = game.SupercarPresentation.LightTrail; Assert.That(trail, Is.Not.Null);
-                Assert.That(game.SupercarPresentation.Car.localScale, Is.EqualTo(Vector3.one * 0.55f));
+                Assert.That(game.SupercarPresentation.Car.localScale, Is.EqualTo(Vector3.one * 0.3025f));
                 int count = game.Player.GetComponentsInChildren<Transform>(true).Length;
                 for (int i = 0; i < 40; i++) { game.Player.position += new Vector3(0.015f, 0, 0.2f); Invoke(game, "Update"); }
                 Assert.That(trail.TrailRenderer.enabled, Is.True, "The actual game Update must tick both new trails.");
@@ -95,7 +175,7 @@ namespace CubeDash.Tests
                 for (int side = 0; side < 2; side++)
                 {
                     Assert.That(Vector3.Distance(Point(trail, side, 0), trail.LampPosition(side)), Is.LessThan(0.002f));
-                    Assert.That(Point(trail, side, 64).z, Is.LessThan(trail.LampPosition(side).z - 1.5f));
+                    Assert.That(Point(trail, side, 64).z, Is.LessThan(trail.LampPosition(side).z - 1.0f));
                 }
                 var mesh = trail.TrailMesh; var beforePause = mesh.vertices;
                 game.TogglePause(); for (int i = 0; i < 3; i++) Invoke(game, "Update");

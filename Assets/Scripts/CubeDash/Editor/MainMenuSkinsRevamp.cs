@@ -138,7 +138,7 @@ namespace CubeDash.Editor
             Transform cube = menu.Hero.transform.parent;
             instance.transform.SetParent(cube.parent, false);
             instance.transform.localPosition = Vector3.zero; instance.transform.localRotation = Quaternion.identity; instance.transform.localScale = Vector3.one;
-            float scale = VehicleSkinFinish.ModelScale;
+            float scale = VehicleSkinFinish.MenuModelScale;
             instance.transform.localScale = Vector3.one * scale;
             instance.transform.rotation = Quaternion.Euler(0, -145, 0);
             instance.transform.position = menu.Hero.bounds.center - Vector3.up * menu.Hero.bounds.extents.y;
@@ -169,7 +169,7 @@ namespace CubeDash.Editor
                     instance.transform.SetParent(player.transform, false);
                     instance.transform.localPosition = Vector3.zero; instance.transform.localRotation = Quaternion.identity; instance.transform.localScale = Vector3.one;
                     Bounds bounds = LocalBounds(instance.transform, player.transform);
-                    float scale = VehicleSkinFinish.ModelScale;
+                    float scale = VehicleSkinFinish.GameplayModelScale;
                     instance.transform.localScale = Vector3.one * scale;
                     instance.transform.localPosition = new Vector3(-bounds.center.x * scale, -0.575f - bounds.min.y * scale, -bounds.center.z * scale);
                     foreach (var collider in instance.GetComponentsInChildren<Collider>(true)) Object.DestroyImmediate(collider);

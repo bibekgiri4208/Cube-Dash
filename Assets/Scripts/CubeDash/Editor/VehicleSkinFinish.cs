@@ -9,10 +9,15 @@ using UnityEngine.SceneManagement;
 
 namespace CubeDash.Editor
 {
-    /// <summary>Applies the requested 0.55 vehicle scale and model-specific rear-light ribbons, not cube wakes.</summary>
+    /// <summary>Authors compact gameplay vehicles separately from menu previews, with model-specific rear-light ribbons.</summary>
     public static class VehicleSkinFinish
     {
-        public const float ModelScale = 0.55f;
+        public const float MenuModelScale = 0.55f;
+        // Imported vehicles are over six units long. A raw 0.55 mesh scale still makes them
+        // roughly four metres long in maps. Reduce that previous gameplay size to 55%,
+        // without shrinking the shared player root/collider, power-ups or menu previews.
+        public const float GameplaySizeMultiplier = 0.55f;
+        public const float GameplayModelScale = MenuModelScale * GameplaySizeMultiplier;
         public const string MaterialFolder = "Assets/Material/Vehicle Skins";
         public const string MaterialPath = MaterialFolder + "/Rear Lamp Light Trail.mat";
 
@@ -42,7 +47,7 @@ namespace CubeDash.Editor
             {
                 Transform model = card.Preview.transform;
                 float floor = Bounds(model).min.y;
-                model.localScale = Vector3.one * ModelScale;
+                model.localScale = Vector3.one * MenuModelScale;
                 model.position += Vector3.up * (floor - Bounds(model).min.y);
                 PrefabUtility.RecordPrefabInstancePropertyModifications(model);
             }
@@ -74,8 +79,8 @@ namespace CubeDash.Editor
                         throw new InvalidOperationException("Unknown vehicle skin; refusing to overwrite it.");
                     Transform root = model.root;
                     var bounds = MainMenuSkinsRevamp.LocalBounds(root, root);
-                    root.localScale = Vector3.one * ModelScale;
-                    root.localPosition = new Vector3(-bounds.center.x * ModelScale, -0.575f - bounds.min.y * ModelScale, -bounds.center.z * ModelScale);
+                    root.localScale = Vector3.one * GameplayModelScale;
+                    root.localPosition = new Vector3(-bounds.center.x * GameplayModelScale, -0.575f - bounds.min.y * GameplayModelScale, -bounds.center.z * GameplayModelScale);
                     Transform effect = root.Find("Rear Light Trails");
                     if (effect == null)
                     {
@@ -90,9 +95,9 @@ namespace CubeDash.Editor
                     settings.FindProperty("car").objectReferenceValue = root;
                     settings.FindProperty("leftLamp").vector3Value = Lamp(model.skin, false);
                     settings.FindProperty("rightLamp").vector3Value = Lamp(model.skin, true);
-                    settings.FindProperty("width").floatValue = model.skin == PlayerSkin.MonsterTruck ? 0.12f : 0.34f;
-                    settings.FindProperty("minimumLength").floatValue = 2.4f;
-                    settings.FindProperty("maximumLength").floatValue = 4.0f;
+                    settings.FindProperty("width").floatValue = (model.skin == PlayerSkin.MonsterTruck ? 0.12f : 0.34f) * GameplaySizeMultiplier;
+                    settings.FindProperty("minimumLength").floatValue = 2.4f * GameplaySizeMultiplier;
+                    settings.FindProperty("maximumLength").floatValue = 4.0f * GameplaySizeMultiplier;
                     settings.ApplyModifiedPropertiesWithoutUndo();
                     PrefabUtility.RecordPrefabInstancePropertyModifications(root);
                 }
