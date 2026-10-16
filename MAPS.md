@@ -8,7 +8,7 @@
 | Jungle | `Assets/Scenes/Jungle.unity` | Jungle, river and landmarks |
 | Dynamic | `Assets/Scenes/Level.unity` | Cycles through City, Jungle, Mountains, Desert and Beach |
 | Desert | `Assets/Scenes/Desert.unity` | Dunes, mesas and cacti |
-| Beach | `Assets/Scenes/Beach.unity` | Coast, palms and islands |
+| Beach | `Assets/Scenes/Beach.unity` | Detailed coastal planting, shaded loungers, huts, lighthouse, jetties and sailboats |
 | Country Side | `Assets/Scenes/Country Side.unity` | Linked Japanese countryside, now with the same highway/UI/sky system |
 
 All listed scenes are enabled in Build Settings, with Main Menu still first. `Level.unity` is retained as the original mixed-biome runner, not replaced or renamed. The separate Mountain scene and its build entry are removed; mountain scenery, transitions and ambience remain available in Dynamic.
@@ -42,6 +42,19 @@ Scenery retains its varied interior layouts and reveal animations. Cross-biome e
 Open the individual scene to edit its layout. **Tools > Cube Dash > Separate Level into Four Maps** (`StandaloneMapScenes.ApplyFromCommandLine`) creates missing City/Jungle/Desert/Beach maps from Level, adds build entries and refreshes the six menu cards. It uses explicit biome mappings so removing the standalone Mountain cannot shift Desert/Beach to the wrong scenery or atmosphere. It does not recreate a Mountain scene. It preserves already-separated scenes and their manual edits; it refuses to overwrite an unrecognized existing scene or orphaned sky asset. It copies Level before editing, so even interrupted authoring does not modify the original Level.
 
 **Tools > Cube Dash > Add Main Menu Map Selection** refreshes the saved card targets, PLAY badges and navigation without rebuilding the submenu. Navigation follows the displayed three-column desktop/two-column portrait grid. Back/Escape/gamepad Back restore Start focus; selecting a map stops menu music, and in-game Quit returns to Main Menu.
+
+## Detailed Beach coast
+
+`Beach.unity` now uses eight coordinated coastal layouts under `Assets/Maps/Beach Coast`, linked through a Beach-only copy of the environment prefab. The original shared Beach prefab, Dynamic's coast, downloaded nature pack, other maps, road, camera, HUD, audio, gameplay and ocean/shoreline settings are untouched.
+
+- Six leafy Idyllic shrub shapes and three dune-grass shapes replace the spherical bushes and crude tufts. Actual rotated mesh footprints reserve furniture/hut/lighthouse clearances and keep planting outside the highway and section seams. Angular textured stones replace the old ball-like rocks.
+- Connected teak folding loungers, striped canvas cushions, a supported table and a ribbed coral/ivory parasol form one complete shaded seating bay. Plants cannot intersect it. Later layouts add a second seating bay.
+- Tapered, curved palm trunks have bark collars, coconuts and individually modeled pinnate leaflets. Teal weatherboard huts have siding, framed windows, seam roofs, porch rails, stilts/braces and ground-reaching stairs. The lighthouse has a tapered banded tower, entrance stairs, glazed lantern and a railed balcony.
+- Closed, curved sailing dinghies replace the old hulls. Planked jetties start at the bank, have seabed-reaching piles, rope rails and boarding ladders. Original timber-grain, woven-canvas and painted-surface textures add restrained detail without changing shared materials.
+
+All artwork remains baked into the two existing scenery renderers per section. There are no added runtime objects or colliders. Paired meshes swap through the existing eight-section pool, with full wind, road-curve and shared whole-object rise anchors; bounds include the below-ground reveal margin. The dunes and actual ocean/shore meshes/materials are preserved. The Beach map-selection thumbnail is refreshed from the improved scene.
+
+**Tools > Cube Dash > Improve Standalone Beach Scenery** (`BeachSceneryBuilder.ApplyFromCommandLine`) upgrades the standalone Beach once; reapplication preserves saved edits and rejects partial upgrades. `RebuildFromCommandLine` explicitly rebakes the Beach-local assets while retaining their GUIDs; save custom art changes before using it. `CaptureFromCommandLine` emits optional overview, seating and jetty images without saving capture-only camera/HUD changes. Validation passed **40/40 focused checks**, including GPU ocean contacts and inspected renders, followed by **37/37 graphics-free checks** of the delivered scene after consolidating the art into the map-local prefab. Tests cover all eight layouts' planting/furniture and road clearance, valid mesh channels/budgets, piles meeting the actual seabed, paired pooled mesh swapping, retained rise references, safe reapplication and unchanged standalone gameplay/camera/HUD/road settings. No game-audio playback is used during these Edit-mode checks. The scene audit confines changes to the eight Beach prefab instances and their linked references; all unrelated scene documents remain byte-identical.
 
 ## Jungle nature dressing
 

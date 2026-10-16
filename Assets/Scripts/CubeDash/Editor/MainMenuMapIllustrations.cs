@@ -18,6 +18,14 @@ namespace CubeDash.Editor
         public const int Width = 1200, Height = 450;
         public static string ImagePath(string name) => Folder + "/" + name + ".png";
 
+        public static void RenderBeachFromCommandLine()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) throw new InvalidOperationException("Stop Play mode first.");
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+                if (SceneManager.GetSceneAt(i).isDirty) throw new InvalidOperationException("Save scene edits first.");
+            Render("Beach"); AssetDatabase.SaveAssets();
+        }
+
         [MenuItem("Tools/Cube Dash/Render Actual Map Selection Previews")]
         public static void ApplyFromCommandLine()
         {
@@ -72,7 +80,7 @@ namespace CubeDash.Editor
             Vector3 origin = game.Player.position;
             Vector3 position = new Vector3(5, 6, -10), look = new Vector3(0, 1, 45);
             if (name == "Jungle") { position = new Vector3(-4, 5, -10); look = new Vector3(1, 1, 39); }
-            if (name == "Beach") { position = new Vector3(-5, 6, -11); look = new Vector3(4, 1, 43); }
+            if (name == "Beach") { position = new Vector3(-5, 6, -11); look = new Vector3(-8, 1, 43); }
             if (name == "Country Side") { position = new Vector3(-8, 7, -13); look = new Vector3(-5, 1, 43); }
             if (name == "Dynamic") { position = new Vector3(12, 14, 56); look = new Vector3(-2, 1, 175); }
             camera.transform.position = new Vector3(origin.x, 0, origin.z) + position;
