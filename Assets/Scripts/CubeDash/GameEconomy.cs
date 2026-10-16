@@ -3,17 +3,40 @@ using UnityEngine;
 
 namespace CubeDash
 {
+    // Saved numeric IDs: never reorder or reuse them (1 is the original Supercar selection).
+    public enum PlayerSkin { Cube = 0, Supercar = 1, MonsterTruck = 2, MilitaryVan = 3 }
+
     /// <summary>Local saved wallet and skin ownership. Physical coins, not multiplied score, fund purchases.</summary>
     public static class GameEconomy
     {
         public const string CoinsKey = "CubeDash.Coins";
         public const string SupercarOwnedKey = "CubeDash.Skins.Supercar.Owned";
+        public const string MonsterTruckOwnedKey = "CubeDash.Skins.MonsterTruck.Owned";
+        public const string MilitaryVanOwnedKey = "CubeDash.Skins.MilitaryVan.Owned";
         public const string EquippedKey = "CubeDash.Skins.Equipped";
-        public const int SupercarPrice = 100;
+        public const int SkinPrice = 100;
+        public const int SupercarPrice = SkinPrice;
         public static event Action Changed;
         public static int Coins => Mathf.Max(0, PlayerPrefs.GetInt(CoinsKey, 0));
         public static bool OwnsSupercar => PlayerPrefs.GetInt(SupercarOwnedKey, 0) == 1;
-        public static bool SupercarEquipped => OwnsSupercar && PlayerPrefs.GetInt(EquippedKey, 0) == 1;
+        public static bool SupercarEquipped => EquippedSkin == PlayerSkin.Supercar;
+        public static PlayerSkin EquippedSkin
+        {
+            get
+            {
+                var skin = (PlayerSkin)PlayerPrefs.GetInt(EquippedKey, 0);
+                return Owns(skin) ? skin : PlayerSkin.Cube;
+            }
+        }
+
+        public static string SkinName(PlayerSkin skin) => skin == PlayerSkin.Supercar ? "NEON SUPERCAR"
+            : skin == PlayerSkin.MonsterTruck ? "MONSTER TRUCK" : skin == PlayerSkin.MilitaryVan ? "MILITARY VAN" : "CUBE";
+
+        private static string OwnershipKey(PlayerSkin skin) => skin == PlayerSkin.Supercar ? SupercarOwnedKey
+            : skin == PlayerSkin.MonsterTruck ? MonsterTruckOwnedKey : skin == PlayerSkin.MilitaryVan ? MilitaryVanOwnedKey : null;
+
+        public static bool Owns(PlayerSkin skin) => skin == PlayerSkin.Cube ||
+            (OwnershipKey(skin) is string key && PlayerPrefs.GetInt(key, 0) == 1);
 
         public static void AddCoins(int count)
         {
@@ -22,19 +45,24 @@ namespace CubeDash
             Save();
         }
 
-        public static bool TryBuySupercar()
+        public static bool TryBuySupercar() => TryBuy(PlayerSkin.Supercar);
+
+        public static bool TryBuy(PlayerSkin skin)
         {
-            if (OwnsSupercar || Coins < SupercarPrice) return false;
-            PlayerPrefs.SetInt(CoinsKey, Coins - SupercarPrice);
-            PlayerPrefs.SetInt(SupercarOwnedKey, 1);
+            string key = OwnershipKey(skin);
+            if (key == null || Owns(skin) || Coins < SkinPrice) return false;
+            PlayerPrefs.SetInt(CoinsKey, Coins - SkinPrice);
+            PlayerPrefs.SetInt(key, 1);
             Save();
             return true;
         }
 
-        public static bool EquipSupercar(bool equipped)
+        public static bool EquipSupercar(bool equipped) => Equip(equipped ? PlayerSkin.Supercar : PlayerSkin.Cube);
+
+        public static bool Equip(PlayerSkin skin)
         {
-            if (equipped && !OwnsSupercar) return false;
-            PlayerPrefs.SetInt(EquippedKey, equipped ? 1 : 0);
+            if (!Owns(skin)) return false;
+            PlayerPrefs.SetInt(EquippedKey, (int)skin);
             Save();
             return true;
         }

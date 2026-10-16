@@ -18,6 +18,14 @@ namespace CubeDash.Editor
         public const int Width = 1200, Height = 450;
         public static string ImagePath(string name) => Folder + "/" + name + ".png";
 
+        public static void RenderDesertFromCommandLine()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) throw new InvalidOperationException("Stop Play mode first.");
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+                if (SceneManager.GetSceneAt(i).isDirty) throw new InvalidOperationException("Save scene edits first.");
+            Render("Desert"); AssetDatabase.SaveAssets();
+        }
+
         public static void RenderBeachFromCommandLine()
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode) throw new InvalidOperationException("Stop Play mode first.");

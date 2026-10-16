@@ -20,7 +20,9 @@ namespace CubeDash
             safeArea.anchorMin = new Vector2(area.xMin / Screen.width, area.yMin / Screen.height);
             safeArea.anchorMax = new Vector2(area.xMax / Screen.width, area.yMax / Screen.height);
             safeArea.offsetMin = safeArea.offsetMax = Vector2.zero;
-            shopMotion.SetLayoutScale(Mathf.Min(1, Mathf.Min((size.x - 48) / 1160, (size.y - 48) / 650)));
+            if (shopMotion.TryGetComponent(out MenuSkinsLayout skins))
+            { shopMotion.SetLayoutScale(1); skins.Refresh(); }
+            else shopMotion.SetLayoutScale(Mathf.Min(1, Mathf.Min((size.x - 48) / 1160, (size.y - 48) / 650)));
         }
     }
 }

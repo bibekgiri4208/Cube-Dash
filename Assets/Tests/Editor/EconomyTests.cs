@@ -47,7 +47,7 @@ namespace CubeDash.Tests
         }
 
         [Test]
-        public void MenuHasThemedWalletsEpicModelIllustrationAndSafeNavigationAndReauthoring()
+        public void MenuHasThemedWalletsUnifiedSkinsModelIllustrationAndSafeNavigationAndReauthoring()
         {
             var scene = EditorSceneManager.OpenPreviewScene(MainMenuSceneBuilder.ScenePath);
             try
@@ -59,13 +59,13 @@ namespace CubeDash.Tests
                 Assert.That(shop.MenuCoins.transform.parent.GetComponent<MenuPanelGraphic>().CornerCut, Is.GreaterThan(0));
                 Assert.That(shop.ShopCoins.transform.parent.GetComponent<RectTransform>().anchoredPosition.x, Is.LessThan(0));
                 Assert.That(shop.ShopCoins.transform.parent.GetComponent<RectTransform>().anchoredPosition.y, Is.LessThan(-200));
-                Transform product = menu.ShopPanel.transform.Find("Card/Epic Skins/Skin viewport/Skin slots/Epic Supercar");
+                Transform product = menu.ShopPanel.transform.Find("Card/Skins/Skin slots/NEON SUPERCAR/Contents");
                 Assert.That(product.Find("Price").GetComponent<Text>().text, Is.EqualTo("100 COINS"));
-                Assert.That(AssetDatabase.GetAssetPath(product.Find("Car Model Illustration").GetComponent<Image>().sprite), Is.EqualTo(MainMenuEconomyAuthoring.IllustrationPath));
+                Assert.That(AssetDatabase.GetAssetPath(product.Find("Model Illustration").GetComponent<Image>().sprite), Is.EqualTo(MainMenuEconomyAuthoring.IllustrationPath));
                 Assert.That(shop.CarPreview.GetComponentsInChildren<Collider>(true), Is.Empty);
                 Assert.That(shop.CarPreview.GetComponentsInChildren<MonoBehaviour>(true), Is.Empty);
                 var back = menu.ShopPanel.transform.Find("Card/BACK").GetComponent<Button>();
-                Assert.That(back.navigation.selectOnUp, Is.SameAs(shop.Action)); Assert.That(shop.Action.navigation.selectOnDown, Is.SameAs(back));
+                Assert.That(back.navigation.selectOnDown, Is.SameAs(shop.Action)); Assert.That(shop.Action.navigation.selectOnDown, Is.SameAs(back));
                 int count = menu.GetComponentsInChildren<Transform>(true).Length;
                 MainMenuEconomyAuthoring.ApplyToScene(scene);
                 Assert.That(menu.GetComponentsInChildren<Transform>(true).Length, Is.EqualTo(count));
@@ -83,9 +83,10 @@ namespace CubeDash.Tests
             var menu = Object.FindAnyObjectByType<MainMenuController>(); var shop = menu.GetComponent<MenuSkinShop>();
             Assert.That(shop.MenuCoins.text, Is.EqualTo("0")); Assert.That(shop.ShopCoins.text, Is.EqualTo("0"));
             shop.PurchaseOrToggle(); Assert.That(GameEconomy.OwnsSupercar, Is.False, "A hidden shop cannot buy.");
-            menu.OpenShop(); Assert.That(shop.Action.interactable, Is.False);
+            menu.OpenShop(); Assert.That(shop.Action.interactable, Is.True, "All cards remain navigable, even before earning coins.");
             yield return null; // Let the opening panel's masks and CanvasRenderer geometry update before pointer routing.
-            GameEconomy.AddCoins(99); Assert.That(shop.MenuCoins.text, Is.EqualTo("99")); Assert.That(shop.Action.interactable, Is.False);
+            GameEconomy.AddCoins(99); Assert.That(shop.MenuCoins.text, Is.EqualTo("99"));
+            shop.PurchaseOrToggle(); Assert.That(GameEconomy.OwnsSupercar, Is.False); Assert.That(GameEconomy.Coins, Is.EqualTo(99));
             GameEconomy.AddCoins(1); Assert.That(shop.Action.interactable, Is.True);
             EventSystem.current.SetSelectedGameObject(shop.Action.gameObject);
             ExecuteEvents.Execute(shop.Action.gameObject, new BaseEventData(EventSystem.current), ExecuteEvents.submitHandler);
@@ -211,7 +212,10 @@ namespace CubeDash.Tests
             {
                 ShaderUtil.allowAsyncCompilation = false;
                 canvas.renderMode = RenderMode.ScreenSpaceCamera; canvas.worldCamera = camera; canvas.planeDistance = 0.5f;
-                camera.targetTexture = target; Canvas.ForceUpdateCanvases(); menu.GetComponent<MenuEconomyLayout>().Refresh(); Canvas.ForceUpdateCanvases();
+                camera.targetTexture = target; camera.Render();
+                typeof(CanvasScaler).GetMethod("Handle", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(canvas.GetComponent<CanvasScaler>(), null);
+                Canvas.ForceUpdateCanvases(); menu.GetComponent<MenuEconomyLayout>().Refresh();
+                menu.ShopPanel.GetComponent<MenuSkinsLayout>()?.Refresh(); Canvas.ForceUpdateCanvases();
                 for (int i = 0; i < 4; i++) camera.Render();
                 RenderTexture.active = target; image.ReadPixels(new Rect(0, 0, width, height), 0, 0); image.Apply();
                 string prefix = System.Environment.GetEnvironmentVariable("CUBE_DASH_ECONOMY_PREVIEW");

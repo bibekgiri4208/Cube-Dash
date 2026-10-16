@@ -24,7 +24,7 @@ namespace CubeDash.Tests
         }
 
         [Test]
-        public void ShopHasEditableRarityCollectionsAndTheRequestedEpicSupercar()
+        public void ShopHasOneEditableSkinsCollectionAndAllThreeVehicles()
         {
             var scene = EditorSceneManager.OpenPreviewScene("Assets/Scenes/Main Menu.unity");
             try
@@ -33,18 +33,13 @@ namespace CubeDash.Tests
                 Assert.That(menu.ShopPanel.name, Is.EqualTo("Shop - Skin Collections"));
                 Assert.That(menu.ShopPanel.activeSelf, Is.False);
                 Transform card = menu.ShopPanel.transform.Find("Card"); Assert.That(card, Is.Not.Null);
-                foreach (string rarity in new[] { "Common", "Rare", "Epic" })
-                {
-                    Transform section = card.Find(rarity + " Skins"); Assert.That(section, Is.Not.Null);
-                    Assert.That(section.Find("Rarity heading/Rarity label").GetComponent<Text>().text, Is.EqualTo(rarity.ToUpperInvariant()));
-                    Transform slots = section.Find("Skin viewport/Skin slots"); Assert.That(slots, Is.Not.Null);
-                    Assert.That(slots.childCount, Is.EqualTo(rarity == "Epic" ? 1 : 0));
-                    Assert.That(slots.GetComponent<GridLayoutGroup>().constraintCount, Is.EqualTo(rarity == "Epic" ? 1 : 2));
-                    Assert.That(section.Find("Skin viewport").GetComponent<ScrollRect>().content, Is.SameAs(slots));
-                    Assert.That(section.Find("Empty state/Empty title").GetComponent<Text>().text, Is.EqualTo("NO SKINS YET"));
-                }
+                Transform section = card.Find("Skins"); Assert.That(section, Is.Not.Null);
+                Transform slots = section.Find("Skin slots"); Assert.That(slots, Is.Not.Null);
+                Assert.That(slots.childCount, Is.EqualTo(3));
+                Assert.That(section.GetComponent<ScrollRect>().content, Is.SameAs(slots));
+                Assert.That(menu.GetComponent<MenuSkinShop>().Cards.Length, Is.EqualTo(3));
                 Button[] controls = menu.ShopPanel.GetComponentsInChildren<Button>(true);
-                Assert.That(controls.Length, Is.EqualTo(2));
+                Assert.That(controls.Length, Is.EqualTo(4));
                 var back = controls.Single(button => button.name == "BACK");
                 Assert.That(back.onClick.GetPersistentTarget(0), Is.SameAs(menu));
                 Assert.That(back.onClick.GetPersistentMethodName(0), Is.EqualTo("ClosePanels"));
@@ -98,7 +93,7 @@ namespace CubeDash.Tests
         }
 
         [Test]
-        public void ShopAndOptionsHideHelperCopyButKeepFunctionalLabelsAndEmptyStatus()
+        public void ShopAndOptionsHideHelperCopyButKeepFunctionalLabelsAndProductNames()
         {
             var scene = EditorSceneManager.OpenPreviewScene("Assets/Scenes/Main Menu.unity");
             try
@@ -107,12 +102,8 @@ namespace CubeDash.Tests
                 AssertHelperCopyHidden(menu);
                 Assert.That(menu.ShopPanel.transform.Find("Card/Heading").gameObject.activeSelf, Is.True);
                 Assert.That(menu.OptionsPanel.transform.Find("Card/Heading").gameObject.activeSelf, Is.True);
-                foreach (string rarity in new[] { "Common", "Rare", "Epic" })
-                {
-                    Transform section = menu.ShopPanel.transform.Find("Card/" + rarity + " Skins");
-                    Assert.That(section.Find("Rarity heading/Rarity label").gameObject.activeSelf, Is.True);
-                    Assert.That(section.Find("Empty state/Empty title").gameObject.activeSelf, Is.True);
-                }
+                foreach (var item in menu.GetComponent<MenuSkinShop>().Cards)
+                    Assert.That(item.transform.parent.Find("Name").gameObject.activeSelf, Is.True);
                 foreach (string path in new[] { "Audio section/Volume heading", "Audio section/Music volume heading", "Display section/Fullscreen heading" })
                     Assert.That(menu.OptionsPanel.transform.Find("Card/" + path).gameObject.activeSelf, Is.True);
             }
@@ -142,7 +133,10 @@ namespace CubeDash.Tests
             Assert.That(menu.OptionsPanel.transform.Find("Card/Settings note").gameObject.activeSelf, Is.False);
             Assert.That(menu.OptionsPanel.transform.Find("Card/Display section/Fullscreen explanation").gameObject.activeSelf, Is.False);
             foreach (string rarity in new[] { "Common", "Rare", "Epic" })
-                Assert.That(menu.ShopPanel.transform.Find("Card/" + rarity + " Skins/Empty state/Empty explanation").gameObject.activeSelf, Is.False);
+            {
+                var helper = menu.ShopPanel.transform.Find("Card/" + rarity + " Skins/Empty state/Empty explanation");
+                if (helper != null) Assert.That(helper.gameObject.activeSelf, Is.False);
+            }
         }
 
         [UnityTest]
@@ -221,8 +215,8 @@ namespace CubeDash.Tests
                     Assert.That(back.GetComponent<MenuRibbonGraphic>().Primary, Is.True);
                     Assert.That(back.transition, Is.EqualTo(Selectable.Transition.None));
                 }
-                foreach (string rarity in new[] { "Common", "Rare", "Epic" })
-                    Assert.That(menu.ShopPanel.transform.Find("Card/" + rarity + " Skins/Rarity heading").GetComponent<MenuRibbonGraphic>(), Is.Not.Null);
+                foreach (var item in menu.GetComponent<MenuSkinShop>().Cards)
+                    Assert.That(item.Action.GetComponent<MenuRibbonGraphic>(), Is.Not.Null);
             }
             finally { EditorSceneManager.ClosePreviewScene(scene); }
         }
@@ -330,7 +324,7 @@ namespace CubeDash.Tests
             {
                 var menu = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<MainMenuController>(true)).Single();
                 var controls = menu.OptionsPanel.GetComponentsInChildren<Selectable>(true);
-                Transform slots = menu.ShopPanel.transform.Find("Card/Common Skins/Skin viewport/Skin slots");
+                Transform slots = menu.ShopPanel.transform.Find("Card/Skins/Skin slots");
                 var item = new GameObject("Authored skin content"); item.transform.SetParent(slots, false);
                 var heading = menu.ShopPanel.transform.Find("Card/Heading").GetComponent<Text>(); heading.text = "MY SHOP";
                 int count = menu.GetComponentsInChildren<Transform>(true).Length;
@@ -339,7 +333,7 @@ namespace CubeDash.Tests
                 CollectionAssert.AreEqual(controls, menu.OptionsPanel.GetComponentsInChildren<Selectable>(true));
                 Assert.That(menu.GetComponentsInChildren<Transform>(true).Length, Is.EqualTo(count));
                 Assert.That(heading.text, Is.EqualTo("MY SHOP"));
-                Assert.That(slots.GetChild(0), Is.SameAs(item.transform));
+                Assert.That(item.transform.parent, Is.SameAs(slots));
             }
             finally { EditorSceneManager.ClosePreviewScene(scene); }
         }

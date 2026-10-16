@@ -70,6 +70,8 @@ Desert validation: **67/67 Unity checks passed**, followed by **39/39 focused ch
 
 [Desert gameplay preview](Desert%20Environment%20Preview.png).
 
+The Desert map-selection card uses a fresh render of this upgraded canyon scene in `Assets/MainMenu/Map Previews/Desert.png`; the other map illustrations and gameplay scenes are unchanged by that thumbnail refresh.
+
 ## Jungle nature dressing
 
 `Jungle.unity` uses five Idyllic Fantasy Nature broadleaf tree shapes, six bush shapes, three grass shapes and the added Sticks-and-stones rock models in all eight pooled layouts. Each section has 20 trees, 52 shrubs, 174 grass clumps and ten irregular rocks: broken roadside verges, clustered understory, hillside groves and planting on both riverbanks. Higher leaf-texture contrast, tighter directional lighting and stronger contact shadows restore canopy definition; a restrained two-sided ambient floor keeps shaded leaves green instead of black. The old round/slab boulders, separate green moss caps, banana plant and umbrella-shaped fan palms are removed. Bamboo has seven individually grounded, gently leaning culms, raised nodes, fine side branches and narrow folded lance leaves instead of oversized palm fronds. The original deep-green palette, hills, river, remaining landmarks, lighting and sky remain intact; roads, guardrails, gameplay and HUD are unchanged.

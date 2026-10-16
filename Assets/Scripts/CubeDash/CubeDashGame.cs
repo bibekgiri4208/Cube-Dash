@@ -103,6 +103,8 @@ namespace CubeDash
         private float truckTimer;
         private float magnetTimer;
         public bool SupercarEnabled { get; private set; }
+        public PlayerSkin EquippedSkin { get; private set; }
+        public bool VehicleDriving => EquippedSkin != PlayerSkin.Cube && !Flying && !Trucking;
         public bool InvincibilityEnabled { get; private set; }
         private bool cheatedRun;
         public bool SupercarDriving => SupercarEnabled && !Flying && !Trucking;
@@ -178,6 +180,7 @@ namespace CubeDash
         {
             if (playerRenderer == null) return;
             SupercarEnabled = GameEconomy.SupercarEquipped;
+            EquippedSkin = GameEconomy.EquippedSkin;
             RefreshGroundPresentation();
         }
 
@@ -254,7 +257,7 @@ namespace CubeDash
             if (State == RunState.Running && SupercarDriving && supercarPresentation != null && supercarPresentation.LightTrail != null)
                 supercarPresentation.LightTrail.Tick(Speed, gameCamera.transform.position);
             hud.UpdateStats();
-            if (audioPresentation != null) audioPresentation.Tick(dt, State, Flying, Trucking, Speed, laneVelocity, SupercarDriving);
+            if (audioPresentation != null) audioPresentation.Tick(dt, State, Flying, Trucking, Speed, laneVelocity, VehicleDriving);
             if (ambiencePresentation != null) ambiencePresentation.Tick(dt, State, Distance);
         }
 
@@ -405,6 +408,7 @@ namespace CubeDash
                 graphics.Tick(0, RunState.Ready, 0);
             GameEconomy.Changed -= RefreshEquippedSkin;
             SupercarEnabled = false;
+            EquippedSkin = PlayerSkin.Cube;
             if (supercarPresentation != null) supercarPresentation.ResetPresentation();
             if (playerRenderer != null) RefreshGroundPresentation();
             if (audioPresentation != null) audioPresentation.ResetSounds();
@@ -478,6 +482,7 @@ namespace CubeDash
             truckTimer = 0;
             magnetTimer = 0;
             SupercarEnabled = GameEconomy.SupercarEquipped;
+            EquippedSkin = GameEconomy.EquippedSkin;
             playerRenderer.enabled = true;
             if (cubeVisualPresentation != null) cubeVisualPresentation.SyncEyes();
             playerCollider.enabled = true;
@@ -621,13 +626,17 @@ namespace CubeDash
 
         private void RefreshGroundPresentation()
         {
-            bool carVisible = SupercarDriving && supercarPresentation != null;
-            if (supercarPresentation != null) supercarPresentation.SetDriving(carVisible);
+            bool carVisible = VehicleDriving && supercarPresentation != null;
+            if (supercarPresentation != null)
+            {
+                supercarPresentation.SelectSkin(EquippedSkin);
+                supercarPresentation.SetDriving(carVisible);
+            }
             playerRenderer.enabled = !Flying && !Trucking && !carVisible;
             if (cubeVisualPresentation != null) cubeVisualPresentation.SyncEyes();
             playerCollider.enabled = !Flying;
-            // The equipped car uses its two red LED ribbons instead of the cube's ground wake.
-            if (wake != null) wake.SetVisible(!Flying && !Trucking && !carVisible);
+            // Only the Supercar replaces the ground wake with its two red LED ribbons.
+            if (wake != null) wake.SetVisible(!Flying && !Trucking && !(carVisible && SupercarEnabled));
         }
 
         private void OnApplicationFocus(bool focused)

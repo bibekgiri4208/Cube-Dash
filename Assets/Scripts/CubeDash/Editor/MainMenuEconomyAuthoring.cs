@@ -82,6 +82,9 @@ namespace CubeDash.Editor
             var layout = menu.gameObject.AddComponent<MenuEconomyLayout>();
             Set(layout, "safeArea", safe); Set(layout, "canvas", canvas); Set(layout, "shopMotion", menu.ShopPanel.GetComponent<MenuPanelMotion>());
             MainMenuWalletPolish.ApplyToScene(scene);
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(MainMenuSkinsRevamp.MonsterPath) != null &&
+                AssetDatabase.LoadAssetAtPath<GameObject>(MainMenuSkinsRevamp.MilitaryPath) != null)
+                MainMenuSkinsRevamp.ApplyToScene(scene);
             EditorSceneManager.MarkSceneDirty(scene);
         }
 
