@@ -40,9 +40,11 @@ namespace CubeDash.Editor
                 if (SceneManager.GetSceneAt(i).isDirty) throw new InvalidOperationException("Save scene edits first.");
             ValidateSources();
             AuthorPlayer();
+            VehicleSkinFinish.ApplyToPlayer();
             string originalScene = File.ReadAllText(MainMenuSceneBuilder.ScenePath);
             Scene scene = EditorSceneManager.OpenScene(MainMenuSceneBuilder.ScenePath);
             ApplyToScene(scene);
+            VehicleSkinFinish.ApplyToMenu(scene);
             if (!EditorSceneManager.SaveScene(scene)) throw new InvalidOperationException("Could not save the skin shop.");
             PreserveUnchangedDocuments(MainMenuSceneBuilder.ScenePath, originalScene);
             AssetDatabase.SaveAssets();
@@ -136,8 +138,7 @@ namespace CubeDash.Editor
             Transform cube = menu.Hero.transform.parent;
             instance.transform.SetParent(cube.parent, false);
             instance.transform.localPosition = Vector3.zero; instance.transform.localRotation = Quaternion.identity; instance.transform.localScale = Vector3.one;
-            Bounds bounds = LocalBounds(instance.transform, cube.parent);
-            float scale = Mathf.Min(2.2f / bounds.size.x, 3.6f / bounds.size.z);
+            float scale = VehicleSkinFinish.ModelScale;
             instance.transform.localScale = Vector3.one * scale;
             instance.transform.rotation = Quaternion.Euler(0, -145, 0);
             instance.transform.position = menu.Hero.bounds.center - Vector3.up * menu.Hero.bounds.extents.y;
@@ -168,7 +169,7 @@ namespace CubeDash.Editor
                     instance.transform.SetParent(player.transform, false);
                     instance.transform.localPosition = Vector3.zero; instance.transform.localRotation = Quaternion.identity; instance.transform.localScale = Vector3.one;
                     Bounds bounds = LocalBounds(instance.transform, player.transform);
-                    float scale = Mathf.Min(2.2f / bounds.size.x, 3.6f / bounds.size.z, 1.9f / bounds.size.y);
+                    float scale = VehicleSkinFinish.ModelScale;
                     instance.transform.localScale = Vector3.one * scale;
                     instance.transform.localPosition = new Vector3(-bounds.center.x * scale, -0.575f - bounds.min.y * scale, -bounds.center.z * scale);
                     foreach (var collider in instance.GetComponentsInChildren<Collider>(true)) Object.DestroyImmediate(collider);
@@ -291,7 +292,7 @@ namespace CubeDash.Editor
             data.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        private static void PreserveUnchangedDocuments(string path, string original)
+        internal static void PreserveUnchangedDocuments(string path, string original)
         {
             const string pattern = @"(?ms)^--- !u!\d+ &(-?\d+)[^\r\n]*\r?\n.*?(?=^--- !u!|\z)";
             var documents = Regex.Matches(original, pattern).Cast<Match>().ToDictionary(match => match.Groups[1].Value, match => match.Value);

@@ -254,7 +254,7 @@ namespace CubeDash
                 truckPresentation.Tick(dt, Speed, laneVelocity);
             if (State == RunState.Running && supercarPresentation != null)
                 supercarPresentation.Tick(dt, Speed, laneVelocity);
-            if (State == RunState.Running && SupercarDriving && supercarPresentation != null && supercarPresentation.LightTrail != null)
+            if (State == RunState.Running && VehicleDriving && supercarPresentation != null && supercarPresentation.LightTrail != null)
                 supercarPresentation.LightTrail.Tick(Speed, gameCamera.transform.position);
             hud.UpdateStats();
             if (audioPresentation != null) audioPresentation.Tick(dt, State, Flying, Trucking, Speed, laneVelocity, VehicleDriving);
@@ -635,8 +635,8 @@ namespace CubeDash
             playerRenderer.enabled = !Flying && !Trucking && !carVisible;
             if (cubeVisualPresentation != null) cubeVisualPresentation.SyncEyes();
             playerCollider.enabled = !Flying;
-            // Only the Supercar replaces the ground wake with its two red LED ribbons.
-            if (wake != null) wake.SetVisible(!Flying && !Trucking && !(carVisible && SupercarEnabled));
+            // Equipped vehicles use their own rear-lamp ribbons, never the cube's ground wake.
+            if (wake != null) wake.SetVisible(!Flying && !Trucking && !carVisible);
         }
 
         private void OnApplicationFocus(bool focused)

@@ -96,6 +96,7 @@ namespace CubeDash.Tests
                 string source = model.skin == PlayerSkin.MonsterTruck ? MainMenuSkinsRevamp.MonsterPath : MainMenuSkinsRevamp.MilitaryPath;
                 Assert.That(PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(model.root), Is.EqualTo(source));
                 Assert.That(model.root.localRotation, Is.EqualTo(Quaternion.identity));
+                Assert.That(model.root.localScale, Is.EqualTo(Vector3.one * 0.55f));
                 Assert.That(model.root.gameObject.activeSelf, Is.False);
                 Bounds bounds = MainMenuSkinsRevamp.LocalBounds(model.root, player.transform);
                 Assert.That(bounds.min.y, Is.EqualTo(-0.575f).Within(0.002f));
@@ -106,7 +107,7 @@ namespace CubeDash.Tests
                 Assert.That(model.wheels.Length, Is.EqualTo(4));
                 Assert.That(model.wheels.All(wheel => wheel != null), Is.True);
                 Assert.That(model.root.GetComponentsInChildren<Collider>(true), Is.Empty);
-                Assert.That(model.root.GetComponentsInChildren<MonoBehaviour>(true), Is.Empty);
+                Assert.That(model.root.GetComponentsInChildren<MonoBehaviour>(true).All(component => component is SupercarLightTrail), Is.True);
             }
             var preview = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/CubeDash/PlayerCubeMenuPreview.prefab");
             Assert.That(preview.GetComponentsInChildren<MeshRenderer>(true).Length, Is.EqualTo(3), "Menu cube contains only its body and two eyes.");
