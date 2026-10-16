@@ -20,7 +20,8 @@ All maps use `PowerUpSpawns.cs`, a seeded scheduler working in absolute run dist
 
 - No bonus before 56 m; at least 56 m between any two bonuses. The track's existing bonus chance still applies to eligible rows; setting it to zero disables all bonuses.
 - Truck and Flight cannot spawn before 350 m. They share a **750 m minimum gap**, including Truck-to-Flight and Flight-to-Truck. At the 30 m/s speed cap this is at least 25 seconds between their locations, leaving ground gameplay after the existing 10-second ability and 3-second exit shield.
-- Eligible type weights are Shield 28, Double Points 32, Flight 8, Truck 8, Magnet 24. During the shared vehicle cooldown, only ordinary bonuses are selected; cooldowns reserve spawn locations even if a pickup is missed.
+- Shield cannot spawn before 900 m and has its own **1,800 m minimum gap**, making it rarer than either Truck or Flight.
+- Eligible type weights are Shield 2, Double Points 32, Flight 8, Truck 8, Magnet 24. Each type is excluded while its cooldown is active; cooldowns reserve spawn locations even if a pickup is missed.
 - Mid-row bonuses use lanes open in both adjacent obstacle rows, within one lane of the incoming marked route. A transition with no suitable lane simply has no bonus; pickups never ask players to dash through the previous vehicle's tail.
 - Retry resets scheduling; fixed seeds reproduce it. Forward motion, frame splitting and world-origin shifts preserve spacing. Bonus selection/placement has its own RNG, separate from obstacle and coin generation.
 

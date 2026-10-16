@@ -387,7 +387,7 @@ namespace CubeDash
                 status = "";
                 if (game.Flying) status = "FLIGHT " + Mathf.CeilToInt(game.FlightRemaining) + "s";
                 if (game.Trucking) status = "TRUCK " + Mathf.CeilToInt(game.TruckRemaining) + "s";
-                if (game.VehicleDriving) status = GameEconomy.SkinName(game.EquippedSkin);
+                if (game.VehicleDriving && !game.SupercarDriving) status = GameEconomy.SkinName(game.EquippedSkin);
                 if (game.LandingShieldRemaining > 0)
                     status = AppendStatus(status, "TIMED SHIELD " + Mathf.CeilToInt(game.LandingShieldRemaining) + "s");
                 if (game.Shields > 0) status = AppendStatus(status, "SHIELD");

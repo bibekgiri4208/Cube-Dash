@@ -41,7 +41,7 @@ The countdown is `Canvas/Safe Area/Run Countdown`. Pause and game-over use the e
 `Canvas/Safe Area/Power-Up Bars` contains saved 216 × 56 cut-corner cards with Anton labels, dark outlines, and a cream/red meter. Active cards stack without empty gaps; inactive cards are hidden. Multiple simultaneous effects are shown separately rather than combined into the old long banner.
 
 - Double Points, Flight, Truck, Magnet and temporary post-vehicle protection show remaining seconds (rounded up) and a meter normalized to their actual configured duration.
-- The one-hit Shield shows **1 HIT** and a full charge; Supercar shows **ON**, since neither has a timed expiration.
+- The one-hit Shield shows **1 HIT** and a full charge. Neon Supercar is a cosmetic skin, so its saved legacy card stays hidden and neither HUD layout displays a Supercar indicator.
 - Recollecting a timed effect refills its own meter. Expiration or consuming a shield removes the card. Vehicle transitions replace the relevant card with timed protection, using the correct flight/truck protection duration.
 - Pause freezes the meters; game over, restart and countdown hide/clear them. Cards sit below the top HUD, with additional clearance on narrow screens, and scale down if necessary to fit the available vertical safe area.
 - Meters are display-only sliders: no handles, input callbacks, raycasts or gamepad focus. They do not change timers or gameplay.

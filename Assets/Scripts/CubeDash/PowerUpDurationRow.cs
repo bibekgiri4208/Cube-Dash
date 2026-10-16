@@ -30,7 +30,8 @@ namespace CubeDash
                 case Effect.Truck: remaining = game.TruckRemaining; total = game.TruckDuration; break;
                 case Effect.Magnet: remaining = game.MagnetRemaining; total = game.MagnetDuration; break;
                 case Effect.TimedShield: remaining = game.LandingShieldRemaining; total = game.TimedShieldDuration; break;
-                case Effect.Supercar: active = game.SupercarDriving; charge = "ON"; break;
+                // Retain the saved enum ID, but cosmetic skins are not power-ups or HUD indicators.
+                case Effect.Supercar: break;
             }
             active = visible && (active || remaining > 0);
             if (gameObject.activeSelf != active) gameObject.SetActive(active);

@@ -122,7 +122,7 @@ namespace CubeDash.Tests
         }
 
         [UnityTest]
-        public IEnumerator FlightTruckTimedProtectionAndSupercarSwapCardsAndResetWithoutGrowingUi()
+        public IEnumerator FlightTruckTimedProtectionAndHiddenSupercarIndicatorResetWithoutGrowingUi()
         {
             yield return new EnterPlayMode();
             using var economy = new EconomyTestScope();
@@ -144,13 +144,46 @@ namespace CubeDash.Tests
             Invoke(game, "UpdateFlightTimers", 3f); bars.Refresh();
             Assert.That(Row(bars, PowerUpDurationRow.Effect.TimedShield).DurationMeter.value, Is.EqualTo(0.5f).Within(0.001f));
             EconomyTestScope.Equip(game); bars.Refresh();
-            Assert.That(Row(bars, PowerUpDurationRow.Effect.Supercar).RemainingLabel.text, Is.EqualTo("ON"));
-            Assert.That(Row(bars, PowerUpDurationRow.Effect.Supercar).DurationMeter.value, Is.EqualTo(1));
+            Assert.That(game.SupercarDriving, Is.True);
+            Assert.That(Row(bars, PowerUpDurationRow.Effect.Supercar).gameObject.activeSelf, Is.False, "Equipping a skin must not show a Supercar indicator.");
+            Invoke(game, "UpdateFlightTimers", 4f); bars.Refresh();
+            Assert.That(bars.Stack.gameObject.activeSelf, Is.False, "A skin alone must not keep the power-up HUD visible.");
             Invoke(game, "Crash"); bars.Refresh(); Assert.That(bars.Stack.gameObject.activeSelf, Is.False);
             game.RequestRun(); bars.Refresh(); Assert.That(bars.Stack.gameObject.activeSelf, Is.False);
             for (int i = 0; i < 20; i++) { game.StartRun(); Apply(game, PowerUpType.Magnet); bars.Refresh(); }
             Assert.That(hud.GetComponentsInChildren<Transform>(true).Length, Is.EqualTo(objects));
             EconomyTestScope.Equip(game, false); game.StartRun(); bars.Refresh(); Assert.That(bars.Stack.gameObject.activeSelf, Is.False);
+        }
+
+        [UnityTest]
+        public IEnumerator NeonSupercarDoesNotShowASkinIndicatorInEitherHudLayoutOnAnyMap()
+        {
+            yield return new EnterPlayMode(); using var economy = new EconomyTestScope();
+            GameEconomy.AddCoins(100); GameEconomy.TryBuySupercar(); GameEconomy.EquipSupercar(true);
+            foreach (string map in PauseSoundAuthoring.Maps)
+            {
+                yield return EditorSceneManager.LoadSceneAsyncInPlayMode("Assets/Scenes/" + map + ".unity", new LoadSceneParameters(LoadSceneMode.Single));
+                yield return null;
+                var game = Object.FindAnyObjectByType<CubeDashGame>(); var hud = Object.FindAnyObjectByType<RunnerHud>();
+                game.enabled = false; game.StartRun(); hud.UpdateStats();
+                Assert.That(game.SupercarDriving, Is.True, map);
+                var bars = hud.PowerUpBars;
+                if (bars != null)
+                {
+                    Assert.That(bars.Stack.gameObject.activeSelf, Is.False, map);
+                    var settings = new SerializedObject(hud);
+                    settings.FindProperty("powerUpBars").objectReferenceValue = null;
+                    settings.ApplyModifiedPropertiesWithoutUndo();
+                }
+                hud.UpdateStats();
+                var status = hud.transform.Find("Safe Area/Power-Up Status");
+                Assert.That(status.gameObject.activeSelf, Is.False, "The legacy banner must not name the skin either: " + map);
+                Apply(game, PowerUpType.Shield);
+                typeof(RunnerHud).GetField("powerUpMessageTimer", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(hud, 0f);
+                hud.UpdateStats();
+                Assert.That(status.gameObject.activeSelf, Is.True, "Actual power-up indicators must remain visible: " + map);
+                Assert.That(status.GetComponent<Text>().text, Is.EqualTo("SHIELD"), map);
+            }
         }
 
         [UnityTest]

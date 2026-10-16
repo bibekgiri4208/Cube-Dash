@@ -65,6 +65,7 @@ namespace CubeDash.Tests
                     var presentation = game.SupercarPresentation; var field = presentation.Shield;
                     Assert.That(field, Is.Not.Null, map + " " + skin); Assert.That(field.Visible, Is.False);
                     var mesh = field.GetComponent<MeshFilter>().sharedMesh; var material = field.FieldRenderer.sharedMaterial;
+                    Assert.That(mesh.uv2.Length, Is.EqualTo(mesh.vertexCount), "Gameplay road preparation must preserve shield panel coordinates: " + map + " " + skin);
                     Invoke(game, "ApplyPowerUp", PowerUpType.Shield); Invoke(game, "Update");
                     Assert.That(game.Shields, Is.EqualTo(1)); Assert.That(field.Visible, Is.True);
                     Assert.That(field.EffectAge, Is.GreaterThan(0), "Actual gameplay Update must advance the armor field.");
@@ -104,6 +105,45 @@ namespace CubeDash.Tests
                     Assert.That(collider.size, Is.EqualTo(size)); Assert.That(collider.center, Is.EqualTo(center)); Assert.That(game.Player.localScale, Is.EqualTo(rootScale));
                 }
             }
+        }
+
+        [Test]
+        public void NeonSupercarRoadSlicingPreservesAndInterpolatesShieldPanelCoordinates()
+        {
+            var player = AssetDatabase.LoadAssetAtPath<GameObject>(MainMenuSkinsRevamp.PlayerPath);
+            var car = player.GetComponent<PlayerSupercar>().Car;
+            var field = car.GetComponentInChildren<VehicleShield>(true);
+            var source = field.GetComponent<MeshFilter>().sharedMesh;
+            Matrix4x4 matrix = field.transform.localToWorldMatrix;
+            var sliced = RoadMeshSubdivision.Create(source, new Vector3(matrix.m20, matrix.m21, matrix.m22));
+            try
+            {
+                Assert.That(sliced, Is.Not.SameAs(source), "The longer Neon Supercar field needs slicing, unlike the compact vehicle skins.");
+                Assert.That(sliced.uv2.Length, Is.EqualTo(sliced.vertexCount), "Missing panel coordinates make every pixel a bright border.");
+                Vector3[] points = sliced.vertices, original = source.vertices;
+                Vector2[] edges = sliced.uv2, originalEdges = source.uv2;
+                int[] triangles = source.triangles;
+                for (int i = 0; i < points.Length; i++)
+                {
+                    bool matched = false;
+                    for (int t = 0; t < triangles.Length; t += 3)
+                    {
+                        int a = triangles[t], b = triangles[t + 1], c = triangles[t + 2];
+                        Vector3 ab = original[b] - original[a], ac = original[c] - original[a], ap = points[i] - original[a];
+                        if (Mathf.Abs(Vector3.Dot(Vector3.Cross(ab, ac).normalized, ap)) > 0.0001f) continue;
+                        float aa = Vector3.Dot(ab, ab), bb = Vector3.Dot(ac, ac), cross = Vector3.Dot(ab, ac);
+                        float denominator = aa * bb - cross * cross;
+                        if (denominator <= 0.000001f) continue;
+                        float v = (bb * Vector3.Dot(ap, ab) - cross * Vector3.Dot(ap, ac)) / denominator;
+                        float w = (aa * Vector3.Dot(ap, ac) - cross * Vector3.Dot(ap, ab)) / denominator;
+                        if (v < -0.0001f || w < -0.0001f || v + w > 1.0001f) continue;
+                        Vector2 expected = originalEdges[a] * (1 - v - w) + originalEdges[b] * v + originalEdges[c] * w;
+                        if (Vector2.Distance(edges[i], expected) < 0.0001f) { matched = true; break; }
+                    }
+                    Assert.That(matched, Is.True, "Sliced panel UV must interpolate its source triangle: vertex " + i);
+                }
+            }
+            finally { if (sliced != source) Object.DestroyImmediate(sliced); }
         }
 
         private static void Clear(CubeDashGame game)

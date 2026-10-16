@@ -28,7 +28,7 @@ namespace CubeDash.Tests
             {
                 var spawns = new PowerUpSpawns(seed);
                 var same = new PowerUpSpawns(seed);
-                float lastBonus = float.NegativeInfinity, lastVehicle = float.NegativeInfinity;
+                float lastBonus = float.NegativeInfinity, lastVehicle = float.NegativeInfinity, lastShield = float.NegativeInfinity;
                 for (int row = 0; row < 3000; row++)
                 {
                     float distance = row * RunnerRules.RowSpacing;
@@ -39,6 +39,12 @@ namespace CubeDash.Tests
                     Assert.That(distance, Is.GreaterThanOrEqualTo(PowerUpSpawns.FirstBonusDistance));
                     Assert.That(distance - lastBonus, Is.GreaterThanOrEqualTo(PowerUpSpawns.MinimumBonusGap));
                     lastBonus = distance; counts[(int)type]++;
+                    if (type == PowerUpType.Shield)
+                    {
+                        Assert.That(distance, Is.GreaterThanOrEqualTo(PowerUpSpawns.FirstShieldDistance));
+                        Assert.That(distance - lastShield, Is.GreaterThanOrEqualTo(PowerUpSpawns.MinimumShieldGap));
+                        lastShield = distance;
+                    }
                     if (!PowerUpSpawns.IsVehicle(type)) continue;
                     Assert.That(distance, Is.GreaterThanOrEqualTo(PowerUpSpawns.FirstVehicleDistance));
                     Assert.That(distance - lastVehicle, Is.GreaterThanOrEqualTo(PowerUpSpawns.MinimumVehicleGap), "Truck and Flight must share the same gate, not chain into one another.");
@@ -48,7 +54,8 @@ namespace CubeDash.Tests
             foreach (int count in counts) Assert.That(count, Is.GreaterThan(100));
             int total = 0; foreach (int count in counts) total += count;
             Assert.That((counts[2] + counts[3]) / (float)total, Is.LessThan(0.12f), "Vehicle bonuses are rare treats, not the default way to survive.");
-            Assert.That(counts[0], Is.GreaterThan(counts[2] * 3));
+            Assert.That(counts[0], Is.LessThan(counts[2]), "Shield must be rarer than Flight.");
+            Assert.That(counts[0], Is.LessThan(counts[3]), "Shield must be rarer than Truck.");
             Assert.That(counts[4], Is.GreaterThan(counts[3] * 3));
         }
 
@@ -66,6 +73,19 @@ namespace CubeDash.Tests
                         Assert.That((int)type, Is.InRange(0, available - 1));
                 }
             }
+        }
+
+        [Test]
+        public void ShieldOnlyPoolWaitsForItsOwnCooldownWithoutThrowingOrSpendingTheGeneralGate()
+        {
+            var spawns = new PowerUpSpawns(42);
+            Assert.That(spawns.TryChoose(PowerUpSpawns.FirstShieldDistance - 1, 1, 1, out _), Is.False);
+            Assert.That(spawns.TryChoose(PowerUpSpawns.FirstShieldDistance, 1, 1, out var type), Is.True);
+            Assert.That(type, Is.EqualTo(PowerUpType.Shield));
+            float next = PowerUpSpawns.FirstShieldDistance + PowerUpSpawns.MinimumShieldGap;
+            Assert.That(spawns.TryChoose(next - 1, 1, 1, out _), Is.False);
+            Assert.That(spawns.TryChoose(next, 1, 1, out type), Is.True);
+            Assert.That(type, Is.EqualTo(PowerUpType.Shield));
         }
 
         [Test]
@@ -130,13 +150,19 @@ namespace CubeDash.Tests
                     Record(track, seen);
                     track.Advance(42, 0, 0, 1, Vector2.one * 0.45f, 0, false, true, false, false, out _, out _);
                 }
-                float previous = float.NegativeInfinity, previousVehicle = float.NegativeInfinity;
+                float previous = float.NegativeInfinity, previousVehicle = float.NegativeInfinity, previousShield = float.NegativeInfinity;
                 int vehicles = 0;
                 foreach (var bonus in seen)
                 {
                     Assert.That(bonus.Key, Is.GreaterThanOrEqualTo(PowerUpSpawns.FirstBonusDistance), map);
                     Assert.That(bonus.Key - previous, Is.GreaterThanOrEqualTo(PowerUpSpawns.MinimumBonusGap), map);
                     previous = bonus.Key;
+                    if (bonus.Value == PowerUpType.Shield)
+                    {
+                        Assert.That(bonus.Key, Is.GreaterThanOrEqualTo(PowerUpSpawns.FirstShieldDistance), map);
+                        Assert.That(bonus.Key - previousShield, Is.GreaterThanOrEqualTo(PowerUpSpawns.MinimumShieldGap), map);
+                        previousShield = bonus.Key;
+                    }
                     if (!PowerUpSpawns.IsVehicle(bonus.Value)) continue;
                     Assert.That(bonus.Key, Is.GreaterThanOrEqualTo(PowerUpSpawns.FirstVehicleDistance), map);
                     Assert.That(bonus.Key - previousVehicle, Is.GreaterThanOrEqualTo(PowerUpSpawns.MinimumVehicleGap), map);

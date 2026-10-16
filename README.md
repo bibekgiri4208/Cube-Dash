@@ -82,7 +82,7 @@ In **Level**, active power-ups appear as separate compact cards stacked on the *
    Collecting another truck refreshes its duration. Fighter Plane pickups are ignored while the truck is active
    and become collectible again after it expires.
 
-The five bonus types share the existing pooled pickup slots and unchanged spawn frequency.
+The five bonus types share the existing pooled pickup slots. Shield is rarer than either Truck or Flight: it cannot spawn before 900 m, has a 1,800 m minimum gap and a much lower selection weight. See [HIGHWAY_PROGRESSION.md](HIGHWAY_PROGRESSION.md#power-up-pacing) for scheduling details.
 **Supercar** is a saved, purchasable Epic cosmetic skin: no pickup, duration, cooldown, extra
 speed or obstacle immunity. Normal cube collision/color rules, scoring and the player's collider
 remain unchanged. The reference car stays cyan/charcoal; the HUD's existing color objective
