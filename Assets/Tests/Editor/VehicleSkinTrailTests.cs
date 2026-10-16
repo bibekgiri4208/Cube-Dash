@@ -123,7 +123,7 @@ namespace CubeDash.Tests
             Bounds bounds = default; bool first = true;
             foreach (var filter in model.GetComponentsInChildren<MeshFilter>(true))
             {
-                if (filter.sharedMesh == null || filter.GetComponent<SupercarLightTrail>() != null) continue;
+                if (filter.sharedMesh == null || filter.GetComponent<SupercarLightTrail>() != null || filter.GetComponent<VehicleShield>() != null) continue;
                 foreach (Vector3 vertex in filter.sharedMesh.vertices)
                 {
                     Vector3 point = filter.transform.TransformPoint(vertex);

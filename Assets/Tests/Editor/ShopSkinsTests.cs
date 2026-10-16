@@ -107,7 +107,7 @@ namespace CubeDash.Tests
                 Assert.That(model.wheels.Length, Is.EqualTo(4));
                 Assert.That(model.wheels.All(wheel => wheel != null), Is.True);
                 Assert.That(model.root.GetComponentsInChildren<Collider>(true), Is.Empty);
-                Assert.That(model.root.GetComponentsInChildren<MonoBehaviour>(true).All(component => component is SupercarLightTrail), Is.True);
+                Assert.That(model.root.GetComponentsInChildren<MonoBehaviour>(true).All(component => component is SupercarLightTrail || component is VehicleShield), Is.True);
             }
             var preview = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/CubeDash/PlayerCubeMenuPreview.prefab");
             Assert.That(preview.GetComponentsInChildren<MeshRenderer>(true).Length, Is.EqualTo(3), "Menu cube contains only its body and two eyes.");

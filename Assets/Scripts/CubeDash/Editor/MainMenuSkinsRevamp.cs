@@ -41,6 +41,7 @@ namespace CubeDash.Editor
             ValidateSources();
             AuthorPlayer();
             VehicleSkinFinish.ApplyToPlayer();
+            VehicleShieldAuthoring.ApplyToPlayer();
             string originalScene = File.ReadAllText(MainMenuSceneBuilder.ScenePath);
             Scene scene = EditorSceneManager.OpenScene(MainMenuSceneBuilder.ScenePath);
             ApplyToScene(scene);
@@ -206,6 +207,7 @@ namespace CubeDash.Editor
             foreach (var filter in model.GetComponentsInChildren<MeshFilter>(true))
             {
                 if (filter.sharedMesh == null) continue;
+                if (filter.GetComponent<VehicleShield>() != null) continue;
                 Bounds mesh = filter.sharedMesh.bounds;
                 Matrix4x4 matrix = relativeTo.worldToLocalMatrix * filter.transform.localToWorldMatrix;
                 for (int i = 0; i < 8; i++)

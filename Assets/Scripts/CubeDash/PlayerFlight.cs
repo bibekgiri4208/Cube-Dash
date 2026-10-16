@@ -10,9 +10,16 @@ namespace CubeDash
         [SerializeField] private Transform shield = null;
         private bool flying;
         private float age;
+        private bool vehicleShield;
         public Transform Fighter => fighter;
         public ParticleSystem[] Exhaust => exhaust;
         public bool ShieldVisible => shield != null && shield.gameObject.activeSelf;
+
+        public void UseVehicleShield(bool value)
+        {
+            vehicleShield = value;
+            if (value && shield != null) shield.gameObject.SetActive(false);
+        }
 
         public void SetFlying(bool value)
         {
@@ -42,7 +49,7 @@ namespace CubeDash
             }
             if (shield != null)
             {
-                shield.gameObject.SetActive(!flying && protectedLanding);
+                shield.gameObject.SetActive(!flying && !vehicleShield && protectedLanding);
                 shield.localScale = Vector3.one * (1.65f + Mathf.Sin(age * 6) * 0.035f);
             }
         }

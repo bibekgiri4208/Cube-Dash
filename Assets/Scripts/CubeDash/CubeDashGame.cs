@@ -253,7 +253,10 @@ namespace CubeDash
             if (State == RunState.Running && truckPresentation != null)
                 truckPresentation.Tick(dt, Speed, laneVelocity);
             if (State == RunState.Running && supercarPresentation != null)
+            {
                 supercarPresentation.Tick(dt, Speed, laneVelocity);
+                supercarPresentation.TickShield(dt, !Flying && !Trucking && (landingShieldTimer > 0 || shields > 0));
+            }
             if (State == RunState.Running && VehicleDriving && supercarPresentation != null && supercarPresentation.LightTrail != null)
                 supercarPresentation.LightTrail.Tick(Speed, gameCamera.transform.position);
             hud.UpdateStats();
@@ -542,6 +545,7 @@ namespace CubeDash
             if (flightPresentation != null) flightPresentation.ResetPresentation();
             State = RunState.GameOver;
             if (supercarPresentation != null && supercarPresentation.LightTrail != null) supercarPresentation.LightTrail.ResetTrail();
+            if (supercarPresentation != null) supercarPresentation.TickShield(0, false);
             if (audioPresentation != null) audioPresentation.ResetSounds();
             shake = 0.25f;
             SetPlayerColor(playerColor * 0.7f, 0.1f);
@@ -559,7 +563,7 @@ namespace CubeDash
         {
             switch (type)
             {
-                case PowerUpType.Shield: shields = 1; break;
+                case PowerUpType.Shield: shields = 1; RefreshGroundPresentation(); break;
                 case PowerUpType.DoublePoints: doublePointsTimer = doublePointsDuration; break;
                 case PowerUpType.Magnet: magnetTimer = Mathf.Max(0.1f, magnetDuration); break;
                 case PowerUpType.FighterPlane:
@@ -631,7 +635,10 @@ namespace CubeDash
             {
                 supercarPresentation.SelectSkin(EquippedSkin);
                 supercarPresentation.SetDriving(carVisible);
+                supercarPresentation.TickShield(0, carVisible && State == RunState.Running && (landingShieldTimer > 0 || shields > 0));
             }
+            if (flightPresentation != null)
+                flightPresentation.UseVehicleShield(carVisible && supercarPresentation.Shield != null);
             playerRenderer.enabled = !Flying && !Trucking && !carVisible;
             if (cubeVisualPresentation != null) cubeVisualPresentation.SyncEyes();
             playerCollider.enabled = !Flying;

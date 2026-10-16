@@ -28,11 +28,13 @@ namespace CubeDash
         private bool driving;
         private bool initialized;
         private SupercarLightTrail lightTrail;
+        private VehicleShield shield;
         public Transform Car => activeCar != null ? activeCar : car;
         public Transform[] Wheels => activeWheels ?? wheels;
         public VehicleModel[] AdditionalSkins => additionalSkins;
         public bool Driving => driving;
         public SupercarLightTrail LightTrail { get { EnsureHomes(); return lightTrail; } }
+        public VehicleShield Shield { get { EnsureHomes(); return shield; } }
 
         private void Awake() => EnsureHomes();
 
@@ -42,6 +44,7 @@ namespace CubeDash
             initialized = true;
             if (Car != null) { home = Car.localPosition; scale = Car.localScale; rotation = Car.localRotation; }
             lightTrail = Car != null ? Car.GetComponentInChildren<SupercarLightTrail>(true) : null;
+            shield = Car != null ? Car.GetComponentInChildren<VehicleShield>(true) : null;
             wheelHomes = new Quaternion[Wheels.Length];
             for (int i = 0; i < Wheels.Length; i++) wheelHomes[i] = Wheels[i] != null ? Wheels[i].localRotation : Quaternion.identity;
         }
@@ -87,11 +90,18 @@ namespace CubeDash
                     * Quaternion.Euler(0, i < 2 ? steering : 0, 0) * Quaternion.AngleAxis(spin, Vector3.right);
         }
 
+        public void TickShield(float dt, bool protectedVehicle)
+        {
+            EnsureHomes();
+            if (shield != null) shield.Tick(dt, driving && protectedVehicle);
+        }
+
         public void ResetPresentation()
         {
             EnsureHomes();
             driving = false; spin = steering = roadPhase = age = 0;
             if (lightTrail != null) lightTrail.ResetTrail();
+            if (shield != null) shield.ResetField();
             if (Car != null)
             {
                 Car.gameObject.SetActive(false); Car.localPosition = home;
