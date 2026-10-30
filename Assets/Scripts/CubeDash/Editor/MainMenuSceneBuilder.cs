@@ -84,6 +84,7 @@ namespace CubeDash.Editor
             MainMenuPanelTheme.ApplyToScene(scene);
             MainMenuMapSelection.ApplyToScene(scene);
             MainMenuQuitConfirmation.ApplyToScene(scene);
+            MainMenuRedeemAuthoring.ApplyToScene(scene);
             MainMenuUiAnimations.ApplyToScene(scene);
             MainMenuEconomyAuthoring.ApplyToScene(scene);
             AssetDatabase.SaveAssets();

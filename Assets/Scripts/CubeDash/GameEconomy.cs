@@ -16,6 +16,7 @@ namespace CubeDash
         public const string EquippedKey = "CubeDash.Skins.Equipped";
         public const int SkinPrice = 100;
         public const int SupercarPrice = SkinPrice;
+        public const int RedeemGiftCoins = 5000;
         public static event Action Changed;
         public static int Coins => Mathf.Max(0, PlayerPrefs.GetInt(CoinsKey, 0));
         public static bool OwnsSupercar => PlayerPrefs.GetInt(SupercarOwnedKey, 0) == 1;
@@ -43,6 +44,14 @@ namespace CubeDash
             if (count <= 0) return;
             PlayerPrefs.SetInt(CoinsKey, (int)Math.Min(int.MaxValue, (long)Coins + count));
             Save();
+        }
+
+        /// <summary>Repeatable local gift: deliberately no used-code flag or cooldown.</summary>
+        public static bool TryRedeemCode(string code)
+        {
+            if (!string.Equals(code?.Trim(), "jestergift", StringComparison.OrdinalIgnoreCase)) return false;
+            AddCoins(RedeemGiftCoins);
+            return true;
         }
 
         public static bool TryBuySupercar() => TryBuy(PlayerSkin.Supercar);

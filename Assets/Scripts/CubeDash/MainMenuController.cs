@@ -14,6 +14,9 @@ namespace CubeDash
         [SerializeField] private GameObject optionsPanel = null;
         [SerializeField] private Button shopClose = null;
         [SerializeField] private Button optionsClose = null;
+        [Header("Redeem gift")]
+        [SerializeField] private MenuRedeemCode redeemPanel = null;
+        [SerializeField] private Button redeemButton = null;
         [Header("Map selection")]
         [SerializeField] private GameObject mapPanel = null;
         [SerializeField] private Button firstMap = null;
@@ -36,6 +39,7 @@ namespace CubeDash
         public string GameplayScene => gameplayScene;
         public GameObject ShopPanel => shopPanel;
         public GameObject OptionsPanel => optionsPanel;
+        public MenuRedeemCode RedeemPanel => redeemPanel;
         public GameObject MapPanel => mapPanel;
         public GameObject QuitPanel => quitPanel;
         public Renderer Hero => hero;
@@ -50,6 +54,7 @@ namespace CubeDash
             appearance = new MaterialPropertyBlock();
             if (shopPanel != null) shopPanel.SetActive(false);
             if (optionsPanel != null) optionsPanel.SetActive(false);
+            if (redeemPanel != null) redeemPanel.gameObject.SetActive(false);
             if (mapPanel != null) mapPanel.SetActive(false);
             if (quitPanel != null) quitPanel.SetActive(false);
             float savedVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(VolumePreference, 1));
@@ -107,6 +112,13 @@ namespace CubeDash
             OpenPanel(optionsPanel, optionsClose, nameof(OpenOptions));
         }
 
+        public void OpenRedeem()
+        {
+            if (redeemPanel == null || currentPanel != optionsPanel || loading || SceneLoader.IsLoading) return;
+            OpenPanel(redeemPanel.gameObject, null, nameof(OpenRedeem));
+            redeemPanel.ResetForm();
+        }
+
         private void OpenPanel(GameObject panel, Button close, string action)
         {
             if (panel == null || loading) return;
@@ -137,6 +149,12 @@ namespace CubeDash
         public void ClosePanels()
         {
             if (currentPanel == null) return;
+            if (redeemPanel != null && currentPanel == redeemPanel.gameObject)
+            {
+                OpenOptions();
+                Focus(redeemButton);
+                return;
+            }
             GameObject closing = currentPanel; currentPanel = null;
             ClosePanel(closing);
             Focus(panelReturnButton != null && panelReturnButton.isActiveAndEnabled && panelReturnButton.IsInteractable()
@@ -148,6 +166,7 @@ namespace CubeDash
         {
             if (shopPanel != except) ClosePanel(shopPanel);
             if (optionsPanel != except) ClosePanel(optionsPanel);
+            if (redeemPanel != null && redeemPanel.gameObject != except) ClosePanel(redeemPanel.gameObject);
             if (mapPanel != except) ClosePanel(mapPanel);
             if (quitPanel != except) ClosePanel(quitPanel);
         }

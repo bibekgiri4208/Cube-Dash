@@ -180,7 +180,9 @@ namespace CubeDash.Tests
                 AssertPointerRoutesTo(musicSlider, menu);
                 Assert.That(slider.navigation.selectOnDown, Is.SameAs(musicSlider));
                 Assert.That(musicSlider.navigation.selectOnDown, Is.SameAs(toggle));
-                Assert.That(toggle.navigation.selectOnDown, Is.SameAs(back)); Assert.That(back.navigation.selectOnDown, Is.SameAs(slider));
+                Button redeem = menu.OptionsPanel.transform.Find("Card/REDEEM CODE").GetComponent<Button>();
+                Assert.That(toggle.navigation.selectOnDown, Is.SameAs(redeem));
+                Assert.That(redeem.navigation.selectOnDown, Is.SameAs(back)); Assert.That(back.navigation.selectOnDown, Is.SameAs(slider));
                 CaptureIfRequested(menu, "options");
                 back.onClick.Invoke(); yield return WaitForPanelClosed(menu.OptionsPanel); Assert.That(menu.OptionsPanel.activeSelf, Is.False);
                 Assert.That(EventSystem.current.currentSelectedGameObject.name, Is.EqualTo("OPTIONS"));
