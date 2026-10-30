@@ -51,7 +51,7 @@ namespace CubeDash
 
         public void SelectSkin(PlayerSkin skin)
         {
-            if (skin == PlayerSkin.Cube) skin = PlayerSkin.Supercar;
+            if (!GameEconomy.IsVehicleSkin(skin)) skin = PlayerSkin.Supercar;
             if (selectedSkin == skin) return;
             ResetPresentation();
             selectedSkin = skin; activeCar = car; activeWheels = wheels; wheelRadius = 0.4f;

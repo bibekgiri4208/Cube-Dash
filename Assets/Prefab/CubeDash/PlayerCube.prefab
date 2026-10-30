@@ -822,6 +822,11 @@ MonoBehaviour:
   - {fileID: 8744417858404703298}
   - {fileID: 6705051243286024645}
   autoplayIdle: 1
+  sharkMesh: {fileID: 4300000, guid: 59894ae9ba9051e4eaef1286eb42f782, type: 2}
+  sharkMaterials:
+  - {fileID: 2100000, guid: 4154c2723a2de8b4baf12c4ed2690955, type: 2}
+  - {fileID: 2100000, guid: 8a4bb631484ce9249a470bf2a869966b, type: 2}
+  - {fileID: 2100000, guid: 181ab3992eda51649af5b6aa197053d1, type: 2}
 --- !u!1 &6054154529859888868
 GameObject:
   m_ObjectHideFlags: 0

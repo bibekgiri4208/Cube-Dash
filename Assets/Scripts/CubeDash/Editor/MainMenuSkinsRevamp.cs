@@ -24,6 +24,7 @@ namespace CubeDash.Editor
         private static readonly Color Cream = new Color(1, 0.99f, 0.94f);
         private static readonly PlayerSkin[] Skins = { PlayerSkin.Supercar, PlayerSkin.MonsterTruck, PlayerSkin.MilitaryVan };
         public static string IllustrationPath(PlayerSkin skin) => skin == PlayerSkin.Supercar ? MainMenuEconomyAuthoring.IllustrationPath
+            : skin == PlayerSkin.SharkCube ? SharkCubeAuthoring.IllustrationPath
             : ArtFolder + (skin == PlayerSkin.MonsterTruck ? "/Monster Truck.png" : "/Military Van.png");
         private static string PrefabPath(PlayerSkin skin) => skin == PlayerSkin.Supercar ? "Assets/Prefab/CubeDash/Supercar.prefab"
             : skin == PlayerSkin.MonsterTruck ? MonsterPath : MilitaryPath;

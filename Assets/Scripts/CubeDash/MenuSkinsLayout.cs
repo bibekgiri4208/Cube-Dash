@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 namespace CubeDash
 {
-    /// <summary>One responsive skin grid: three cards on desktop, scrollable rows on narrow screens.</summary>
+    /// <summary>One responsive skin grid with scrollable rows and keyboard/gamepad navigation.</summary>
     public sealed class MenuSkinsLayout : MonoBehaviour
     {
         [SerializeField] private RectTransform card, shadow, header, heading, icon, divider, viewport, wallet, status, back;
@@ -14,14 +14,16 @@ namespace CubeDash
         private void OnEnable() { lastSize = Vector2.zero; Refresh(); }
         private void LateUpdate() => Refresh();
 
+        public void RefreshProducts() { lastSize = Vector2.zero; Refresh(); }
+
         public void Refresh()
         {
             Vector2 size = ((RectTransform)transform).rect.size;
             if (size == lastSize || size.x <= 0 || size.y <= 0) return;
             lastSize = size;
             float width = Mathf.Min(1160, Mathf.Max(320, size.x - 48));
-            int columns = width >= 1000 ? 3 : width >= 720 ? 2 : 1;
-            float height = columns == 3 ? 650 : columns == 2 ? 900 : 1040;
+            int columns = width >= 1120 && actions.Length >= 4 ? 4 : width >= 1000 ? 3 : width >= 720 ? 2 : 1;
+            float height = columns >= 3 ? 650 : columns == 2 ? 900 : 1040;
             float fit = Mathf.Min(1, Mathf.Max(0.1f, (size.y - 48) / height));
             width *= fit; height *= fit;
             card.sizeDelta = shadow.sizeDelta = new Vector2(width, height);

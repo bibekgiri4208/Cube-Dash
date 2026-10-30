@@ -24,7 +24,7 @@ namespace CubeDash.Tests
         }
 
         [Test]
-        public void ShopHasOneEditableSkinsCollectionAndAllThreeVehicles()
+        public void ShopHasOneEditableSkinsCollectionWithVehiclesAndSharkCube()
         {
             var scene = EditorSceneManager.OpenPreviewScene("Assets/Scenes/Main Menu.unity");
             try
@@ -35,11 +35,11 @@ namespace CubeDash.Tests
                 Transform card = menu.ShopPanel.transform.Find("Card"); Assert.That(card, Is.Not.Null);
                 Transform section = card.Find("Skins"); Assert.That(section, Is.Not.Null);
                 Transform slots = section.Find("Skin slots"); Assert.That(slots, Is.Not.Null);
-                Assert.That(slots.childCount, Is.EqualTo(3));
+                Assert.That(slots.childCount, Is.EqualTo(4));
                 Assert.That(section.GetComponent<ScrollRect>().content, Is.SameAs(slots));
-                Assert.That(menu.GetComponent<MenuSkinShop>().Cards.Length, Is.EqualTo(3));
+                Assert.That(menu.GetComponent<MenuSkinShop>().Cards.Length, Is.EqualTo(4));
                 Button[] controls = menu.ShopPanel.GetComponentsInChildren<Button>(true);
-                Assert.That(controls.Length, Is.EqualTo(4));
+                Assert.That(controls.Length, Is.EqualTo(5));
                 var back = controls.Single(button => button.name == "BACK");
                 Assert.That(back.onClick.GetPersistentTarget(0), Is.SameAs(menu));
                 Assert.That(back.onClick.GetPersistentMethodName(0), Is.EqualTo("ClosePanels"));

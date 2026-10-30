@@ -24,6 +24,7 @@ namespace CubeDash.Tests
         [TestCase(PlayerSkin.Supercar)]
         [TestCase(PlayerSkin.MonsterTruck)]
         [TestCase(PlayerSkin.MilitaryVan)]
+        [TestCase(PlayerSkin.SharkCube)]
         public void EachSkinCostsExactly100AndOwnershipIsIndependentPersistentAndNotDoubleCharged(PlayerSkin skin)
         {
             using var economy = new EconomyTestScope();
@@ -36,7 +37,7 @@ namespace CubeDash.Tests
             Assert.That(GameEconomy.TryBuy(skin), Is.False); Assert.That(GameEconomy.Coins, Is.EqualTo(100));
             Assert.That(GameEconomy.Equip(skin), Is.True);
             Assert.That(PlayerPrefs.GetInt(GameEconomy.EquippedKey), Is.EqualTo((int)skin));
-            foreach (var other in new[] { PlayerSkin.Supercar, PlayerSkin.MonsterTruck, PlayerSkin.MilitaryVan }.Where(other => other != skin))
+            foreach (var other in new[] { PlayerSkin.Supercar, PlayerSkin.MonsterTruck, PlayerSkin.MilitaryVan, PlayerSkin.SharkCube }.Where(other => other != skin))
                 Assert.That(GameEconomy.Owns(other), Is.False);
             GameEconomy.Equip(PlayerSkin.Cube); Assert.That(GameEconomy.Owns(skin), Is.True);
         }
@@ -48,14 +49,14 @@ namespace CubeDash.Tests
             PlayerPrefs.SetInt(GameEconomy.SupercarOwnedKey, 1); PlayerPrefs.SetInt(GameEconomy.EquippedKey, 1);
             Assert.That(GameEconomy.SupercarEquipped, Is.True);
             Assert.That(GameEconomy.EquippedSkin, Is.EqualTo(PlayerSkin.Supercar));
-            foreach (int invalid in new[] { -1, 2, 3, 999 })
+            foreach (int invalid in new[] { -1, 2, 3, 4, 999 })
             { PlayerPrefs.SetInt(GameEconomy.EquippedKey, invalid); Assert.That(GameEconomy.EquippedSkin, Is.EqualTo(PlayerSkin.Cube)); }
             Assert.That(GameEconomy.TryBuy((PlayerSkin)999), Is.False);
             Assert.That(GameEconomy.Equip((PlayerSkin)999), Is.False);
         }
 
         [Test]
-        public void SavedShopHasOneSkinsGridThreeIllustratedProductsAndNoRaritySections()
+        public void SavedShopHasOneSkinsGridFourIllustratedProductsAndNoRaritySections()
         {
             var scene = EditorSceneManager.OpenPreviewScene(MainMenuSceneBuilder.ScenePath);
             try
@@ -65,7 +66,7 @@ namespace CubeDash.Tests
                 Assert.That(menu.ShopPanel.GetComponent<MenuSkinsLayout>(), Is.Not.Null);
                 foreach (string rarity in new[] { "Common Skins", "Rare Skins", "Epic Skins" })
                     Assert.That(menu.ShopPanel.transform.Find("Card/" + rarity), Is.Null);
-                Assert.That(shop.Cards.Select(card => card.Skin), Is.EqualTo(new[] { PlayerSkin.Supercar, PlayerSkin.MonsterTruck, PlayerSkin.MilitaryVan }));
+                Assert.That(shop.Cards.Select(card => card.Skin), Is.EqualTo(new[] { PlayerSkin.Supercar, PlayerSkin.MonsterTruck, PlayerSkin.MilitaryVan, PlayerSkin.SharkCube }));
                 foreach (var item in shop.Cards)
                 {
                     Transform contents = item.transform.parent;
@@ -76,7 +77,9 @@ namespace CubeDash.Tests
                     Assert.That(item.Action.onClick.GetPersistentTarget(0), Is.SameAs(item));
                     Assert.That(item.Action.onClick.GetPersistentMethodName(0), Is.EqualTo(nameof(MenuSkinCard.PurchaseOrToggle)));
                     Assert.That(item.Preview.GetComponentsInChildren<Collider>(true), Is.Empty);
-                    Assert.That(item.Preview.GetComponentsInChildren<MonoBehaviour>(true), Is.Empty);
+                    if (item.Skin == PlayerSkin.SharkCube)
+                        Assert.That(item.Preview.GetComponentsInChildren<MonoBehaviour>(true).All(component => component is PlayerCubeVisual), Is.True);
+                    else Assert.That(item.Preview.GetComponentsInChildren<MonoBehaviour>(true), Is.Empty);
                 }
                 int count = menu.GetComponentsInChildren<Transform>(true).Length;
                 MainMenuSkinsRevamp.ApplyToScene(scene);
@@ -137,9 +140,9 @@ namespace CubeDash.Tests
             yield return EditorSceneManager.LoadSceneAsyncInPlayMode(MainMenuSceneBuilder.ScenePath, new LoadSceneParameters(LoadSceneMode.Single));
             yield return null;
             var menu = Object.FindAnyObjectByType<MainMenuController>(); var shop = menu.GetComponent<MenuSkinShop>();
-            GameEconomy.AddCoins(300);
+            GameEconomy.AddCoins(400);
             foreach (var item in shop.Cards) item.PurchaseOrToggle();
-            Assert.That(GameEconomy.Coins, Is.EqualTo(300));
+            Assert.That(GameEconomy.Coins, Is.EqualTo(400));
             menu.OpenShop();
             foreach (var item in shop.Cards)
             {
@@ -151,10 +154,10 @@ namespace CubeDash.Tests
                 foreach (var other in shop.Cards) Assert.That(other.Preview.activeSelf, Is.EqualTo(other == item));
             }
             Assert.That(GameEconomy.Coins, Is.Zero); Assert.That(shop.MenuCoins.text, Is.EqualTo("0")); Assert.That(shop.ShopCoins.text, Is.EqualTo("0"));
-            menu.ClosePanels(); shop.Cards[2].PurchaseOrToggle();
-            Assert.That(GameEconomy.EquippedSkin, Is.EqualTo(PlayerSkin.MilitaryVan));
+            menu.ClosePanels(); shop.Cards.Last().PurchaseOrToggle();
+            Assert.That(GameEconomy.EquippedSkin, Is.EqualTo(PlayerSkin.SharkCube));
             yield return MainMenuSectionTests.WaitForPanelClosed(menu.ShopPanel);
-            menu.OpenShop(); shop.Cards[2].Action.onClick.Invoke();
+            menu.OpenShop(); shop.Cards.Last().Action.onClick.Invoke();
             Assert.That(GameEconomy.EquippedSkin, Is.EqualTo(PlayerSkin.Cube)); Assert.That(shop.CubePreview.activeInHierarchy, Is.True);
         }
 

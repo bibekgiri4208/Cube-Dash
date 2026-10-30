@@ -7,9 +7,9 @@ namespace CubeDash.Tests
     internal sealed class EconomyTestScope : IDisposable
     {
         private readonly string[] keys = { GameEconomy.CoinsKey, GameEconomy.SupercarOwnedKey, GameEconomy.EquippedKey,
-            GameEconomy.MonsterTruckOwnedKey, GameEconomy.MilitaryVanOwnedKey };
-        private readonly bool[] existed = new bool[5];
-        private readonly int[] values = new int[5];
+            GameEconomy.MonsterTruckOwnedKey, GameEconomy.MilitaryVanOwnedKey, GameEconomy.SharkCubeOwnedKey };
+        private readonly bool[] existed = new bool[6];
+        private readonly int[] values = new int[6];
         public EconomyTestScope()
         {
             for (int i = 0; i < keys.Length; i++) { existed[i] = PlayerPrefs.HasKey(keys[i]); values[i] = PlayerPrefs.GetInt(keys[i]); PlayerPrefs.DeleteKey(keys[i]); }

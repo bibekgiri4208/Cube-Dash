@@ -9,7 +9,13 @@ namespace CubeDash
     {
         [SerializeField] private MeshRenderer[] eyes = new MeshRenderer[0];
         [SerializeField] private bool autoplayIdle = true;
+        [Header("Cube cosmetics")]
+        [SerializeField] private Mesh sharkMesh;
+        [SerializeField] private Material[] sharkMaterials = new Material[0];
         private MeshRenderer body;
+        private MeshFilter bodyMesh;
+        private Mesh originalMesh;
+        private Material[] originalMaterials;
         private Vector3 restScale, restPosition;
         private Quaternion restRotation;
         private float bottom, age;
@@ -35,6 +41,9 @@ namespace CubeDash
         public bool AutoplayIdle => autoplayIdle;
         public float IdleAge => age;
         public float BlinkAge => blinkAge;
+        public bool SharkEquipped { get; private set; }
+        public Mesh SharkMesh => sharkMesh;
+        public Material[] SharkMaterials => sharkMaterials;
 
         private void Awake() => CachePose();
 
@@ -42,7 +51,9 @@ namespace CubeDash
         {
             if (cached) return;
             body = GetComponent<MeshRenderer>();
-            Mesh mesh = GetComponent<MeshFilter>().sharedMesh;
+            bodyMesh = GetComponent<MeshFilter>();
+            Mesh mesh = originalMesh = bodyMesh.sharedMesh;
+            originalMaterials = body.sharedMaterials;
             bottom = mesh != null ? mesh.bounds.min.y : -0.5f;
             restScale = transform.localScale;
             restPosition = transform.localPosition;
@@ -51,6 +62,29 @@ namespace CubeDash
             for (int i = 0; i < eyes.Length; i++)
                 if (eyes[i] != null) eyeRestScales[i] = eyes[i].transform.localScale;
             cached = true;
+        }
+
+        /// <summary>Mesh-only cube skin: eyes, jelly pose, renderer visibility and collider stay owned by the cube.</summary>
+        public void ApplySkin(PlayerSkin skin)
+        {
+            CachePose();
+            bool shark = skin == PlayerSkin.SharkCube && sharkMesh != null && sharkMaterials.Length == 3;
+            if (shark)
+            {
+                if (!SharkEquipped || bodyMesh.sharedMesh != sharkMesh || body.sharedMaterial != sharkMaterials[0])
+                {
+                    bodyMesh.sharedMesh = sharkMesh;
+                    body.sharedMaterials = sharkMaterials;
+                    body.SetPropertyBlock(null);
+                }
+            }
+            else if (SharkEquipped)
+            {
+                bodyMesh.sharedMesh = originalMesh;
+                body.sharedMaterials = originalMaterials;
+                body.SetPropertyBlock(null);
+            }
+            SharkEquipped = shark;
         }
 
         /// <summary>The game owns pickup/idle/pause animation; the menu preview owns only its own idle.</summary>

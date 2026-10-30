@@ -38,7 +38,7 @@ namespace CubeDash.Tests
             try
             {
                 var shop = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<MenuSkinShop>(true)).Single();
-                foreach (var card in shop.Cards.Where(card => card.Skin != PlayerSkin.Supercar))
+                foreach (var card in shop.Cards.Where(card => GameEconomy.IsVehicleSkin(card.Skin) && card.Skin != PlayerSkin.Supercar))
                 {
                     Assert.That(card.Preview.transform.localScale, Is.EqualTo(Vector3.one * 0.55f));
                     Assert.That(card.Preview.GetComponentsInChildren<SupercarLightTrail>(true), Is.Empty);

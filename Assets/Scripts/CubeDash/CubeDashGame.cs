@@ -104,7 +104,7 @@ namespace CubeDash
         private float magnetTimer;
         public bool SupercarEnabled { get; private set; }
         public PlayerSkin EquippedSkin { get; private set; }
-        public bool VehicleDriving => EquippedSkin != PlayerSkin.Cube && !Flying && !Trucking;
+        public bool VehicleDriving => GameEconomy.IsVehicleSkin(EquippedSkin) && !Flying && !Trucking;
         public bool InvincibilityEnabled { get; private set; }
         private bool cheatedRun;
         public bool SupercarDriving => SupercarEnabled && !Flying && !Trucking;
@@ -492,7 +492,6 @@ namespace CubeDash
             if (flightPresentation != null) flightPresentation.ResetPresentation();
             if (truckPresentation != null) truckPresentation.ResetPresentation();
             if (supercarPresentation != null) supercarPresentation.ResetPresentation();
-            RefreshGroundPresentation();
             gameCamera.transform.position = cameraOrigin;
             cameraFollow = cameraOrigin;
             gameCamera.fieldOfView = cameraFov;
@@ -501,6 +500,7 @@ namespace CubeDash
             playerRenderer.sharedMaterial = track.ColorMaterial(playerCubeColor);
             if (ambiencePresentation != null) ambiencePresentation.ResetSounds();
             playerColor = playerRenderer.sharedMaterial.color;
+            RefreshGroundPresentation();
             SetPlayerColor(playerColor, cubeEmission);
             if (wake != null) { wake.SetColor(playerColor); wake.ResetWake(); }
             track.ResetForward(fixedSeed == 0 ? System.Environment.TickCount : fixedSeed, playerCubeColor, playerOrigin.z);
@@ -630,6 +630,7 @@ namespace CubeDash
 
         private void RefreshGroundPresentation()
         {
+            if (cubeVisualPresentation != null) cubeVisualPresentation.ApplySkin(EquippedSkin);
             bool carVisible = VehicleDriving && supercarPresentation != null;
             if (supercarPresentation != null)
             {
@@ -669,6 +670,8 @@ namespace CubeDash
 
         private void SetPlayerColor(Color color, float emission)
         {
+            // Shark's blue/white/gill materials must not all become the gameplay cube's red pulse color.
+            if (cubeVisualPresentation != null && cubeVisualPresentation.SharkEquipped) return;
             playerAppearance.SetColor("_BaseColor", color);
             playerAppearance.SetColor("_Color", color);
             playerAppearance.SetColor("_EmissionColor", color * emission);

@@ -4,7 +4,7 @@ using UnityEngine;
 namespace CubeDash
 {
     // Saved numeric IDs: never reorder or reuse them (1 is the original Supercar selection).
-    public enum PlayerSkin { Cube = 0, Supercar = 1, MonsterTruck = 2, MilitaryVan = 3 }
+    public enum PlayerSkin { Cube = 0, Supercar = 1, MonsterTruck = 2, MilitaryVan = 3, SharkCube = 4 }
 
     /// <summary>Local saved wallet and skin ownership. Physical coins, not multiplied score, fund purchases.</summary>
     public static class GameEconomy
@@ -13,6 +13,7 @@ namespace CubeDash
         public const string SupercarOwnedKey = "CubeDash.Skins.Supercar.Owned";
         public const string MonsterTruckOwnedKey = "CubeDash.Skins.MonsterTruck.Owned";
         public const string MilitaryVanOwnedKey = "CubeDash.Skins.MilitaryVan.Owned";
+        public const string SharkCubeOwnedKey = "CubeDash.Skins.SharkCube.Owned";
         public const string EquippedKey = "CubeDash.Skins.Equipped";
         public const int SkinPrice = 100;
         public const int SupercarPrice = SkinPrice;
@@ -31,10 +32,15 @@ namespace CubeDash
         }
 
         public static string SkinName(PlayerSkin skin) => skin == PlayerSkin.Supercar ? "NEON SUPERCAR"
-            : skin == PlayerSkin.MonsterTruck ? "MONSTER TRUCK" : skin == PlayerSkin.MilitaryVan ? "MILITARY VAN" : "CUBE";
+            : skin == PlayerSkin.MonsterTruck ? "MONSTER TRUCK" : skin == PlayerSkin.MilitaryVan ? "MILITARY VAN"
+            : skin == PlayerSkin.SharkCube ? "SHARK CUBE" : "CUBE";
+
+        public static bool IsVehicleSkin(PlayerSkin skin) => skin == PlayerSkin.Supercar ||
+            skin == PlayerSkin.MonsterTruck || skin == PlayerSkin.MilitaryVan;
 
         private static string OwnershipKey(PlayerSkin skin) => skin == PlayerSkin.Supercar ? SupercarOwnedKey
-            : skin == PlayerSkin.MonsterTruck ? MonsterTruckOwnedKey : skin == PlayerSkin.MilitaryVan ? MilitaryVanOwnedKey : null;
+            : skin == PlayerSkin.MonsterTruck ? MonsterTruckOwnedKey : skin == PlayerSkin.MilitaryVan ? MilitaryVanOwnedKey
+            : skin == PlayerSkin.SharkCube ? SharkCubeOwnedKey : null;
 
         public static bool Owns(PlayerSkin skin) => skin == PlayerSkin.Cube ||
             (OwnershipKey(skin) is string key && PlayerPrefs.GetInt(key, 0) == 1);
