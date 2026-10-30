@@ -39,7 +39,7 @@ namespace CubeDash.Tests
                 Assert.That(section.GetComponent<ScrollRect>().content, Is.SameAs(slots));
                 Assert.That(menu.GetComponent<MenuSkinShop>().Cards.Length, Is.EqualTo(4));
                 Button[] controls = menu.ShopPanel.GetComponentsInChildren<Button>(true);
-                Assert.That(controls.Length, Is.EqualTo(5));
+                Assert.That(controls.Length, Is.EqualTo(11));
                 var back = controls.Single(button => button.name == "BACK");
                 Assert.That(back.onClick.GetPersistentTarget(0), Is.SameAs(menu));
                 Assert.That(back.onClick.GetPersistentMethodName(0), Is.EqualTo("ClosePanels"));

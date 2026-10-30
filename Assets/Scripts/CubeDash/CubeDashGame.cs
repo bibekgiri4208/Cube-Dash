@@ -75,6 +75,8 @@ namespace CubeDash
         private const string BestKey = "CubeDash.BestColorScore";
         private Renderer playerRenderer;
         private PlayerCubeVisual cubeVisualPresentation;
+        private PlayerTrailEffect cosmeticTrail;
+        public PlayerTrailEffect CosmeticTrail => cosmeticTrail;
         private float playerMeshBottom = -0.5f;
         private MaterialPropertyBlock playerAppearance;
         private Color playerColor;
@@ -146,6 +148,8 @@ namespace CubeDash
             playerOrigin = player.position;
             if (playerVisual == null) playerVisual = player;
             cubeVisualPresentation = playerVisual.GetComponent<PlayerCubeVisual>();
+            cosmeticTrail = player.GetComponentInChildren<PlayerTrailEffect>(true);
+            if (cosmeticTrail != null) cosmeticTrail.Initialize(this, player);
             if (cubeVisualPresentation != null) cubeVisualPresentation.UseGameplayAnimation();
             if (playerVisual.TryGetComponent(out MeshFilter playerMesh) && playerMesh.sharedMesh != null)
                 playerMeshBottom = playerMesh.sharedMesh.bounds.min.y;
@@ -259,6 +263,7 @@ namespace CubeDash
             }
             if (State == RunState.Running && VehicleDriving && supercarPresentation != null && supercarPresentation.LightTrail != null)
                 supercarPresentation.LightTrail.Tick(Speed, gameCamera.transform.position);
+            if (State == RunState.Running && cosmeticTrail != null) cosmeticTrail.Tick(dt);
             hud.UpdateStats();
             if (audioPresentation != null) audioPresentation.Tick(dt, State, Flying, Trucking, Speed, laneVelocity, VehicleDriving);
             if (ambiencePresentation != null) ambiencePresentation.Tick(dt, State, Distance);
@@ -315,6 +320,7 @@ namespace CubeDash
             gameCamera.transform.position += Vector3.back * offset;
             track.ShiftWorldOrigin(offset);
             if (wake != null) wake.ShiftWorldOrigin(offset);
+            if (cosmeticTrail != null) cosmeticTrail.ShiftWorldOrigin(offset);
             if (supercarPresentation != null && supercarPresentation.LightTrail != null) supercarPresentation.LightTrail.ShiftWorldOrigin(offset);
         }
 
@@ -414,6 +420,7 @@ namespace CubeDash
             EquippedSkin = PlayerSkin.Cube;
             if (supercarPresentation != null) supercarPresentation.ResetPresentation();
             if (playerRenderer != null) RefreshGroundPresentation();
+            if (cosmeticTrail != null) cosmeticTrail.ResetTrail();
             if (audioPresentation != null) audioPresentation.ResetSounds();
             if (ambiencePresentation != null) ambiencePresentation.ResetSounds();
             activeGamepad = null;
@@ -503,6 +510,7 @@ namespace CubeDash
             RefreshGroundPresentation();
             SetPlayerColor(playerColor, cubeEmission);
             if (wake != null) { wake.SetColor(playerColor); wake.ResetWake(); }
+            if (cosmeticTrail != null) cosmeticTrail.ResetTrail();
             track.ResetForward(fixedSeed == 0 ? System.Environment.TickCount : fixedSeed, playerCubeColor, playerOrigin.z);
             State = RunState.Running;
             hud.Show(State);
@@ -544,6 +552,7 @@ namespace CubeDash
             SetTruckPresentation(false);
             if (flightPresentation != null) flightPresentation.ResetPresentation();
             State = RunState.GameOver;
+            if (cosmeticTrail != null) cosmeticTrail.ResetTrail();
             if (supercarPresentation != null && supercarPresentation.LightTrail != null) supercarPresentation.LightTrail.ResetTrail();
             if (supercarPresentation != null) supercarPresentation.TickShield(0, false);
             if (audioPresentation != null) audioPresentation.ResetSounds();
@@ -631,11 +640,18 @@ namespace CubeDash
         private void RefreshGroundPresentation()
         {
             if (cubeVisualPresentation != null) cubeVisualPresentation.ApplySkin(EquippedSkin);
+            if (cosmeticTrail != null)
+            {
+                cosmeticTrail.Select(GameEconomy.EquippedTrail);
+                cosmeticTrail.SetSuppressed(Flying || Trucking);
+            }
+            bool customTrail = cosmeticTrail != null && GameEconomy.EquippedTrail != PlayerTrail.None;
             bool carVisible = VehicleDriving && supercarPresentation != null;
             if (supercarPresentation != null)
             {
                 supercarPresentation.SelectSkin(EquippedSkin);
                 supercarPresentation.SetDriving(carVisible);
+                if (supercarPresentation.LightTrail != null) supercarPresentation.LightTrail.SetSuppressed(customTrail);
                 supercarPresentation.TickShield(0, carVisible && State == RunState.Running && (landingShieldTimer > 0 || shields > 0));
             }
             if (flightPresentation != null)
@@ -644,7 +660,7 @@ namespace CubeDash
             if (cubeVisualPresentation != null) cubeVisualPresentation.SyncEyes();
             playerCollider.enabled = !Flying;
             // Equipped vehicles use their own rear-lamp ribbons, never the cube's ground wake.
-            if (wake != null) wake.SetVisible(!Flying && !Trucking && !carVisible);
+            if (wake != null) wake.SetVisible(!Flying && !Trucking && !carVisible && !customTrail);
         }
 
         private void OnApplicationFocus(bool focused)

@@ -88,6 +88,7 @@ namespace CubeDash.Editor
             MainMenuUiAnimations.ApplyToScene(scene);
             MainMenuEconomyAuthoring.ApplyToScene(scene);
             if (AssetDatabase.LoadAssetAtPath<GameObject>(SharkCubeAuthoring.PrefabPath) != null) SharkCubeAuthoring.ApplyToScene(scene);
+            ShopTrailsAuthoring.ApplyToScene(scene);
             AssetDatabase.SaveAssets();
             EditorSceneManager.MarkSceneDirty(scene);
             if (!EditorSceneManager.SaveScene(scene)) throw new IOException("Could not save Main Menu.");

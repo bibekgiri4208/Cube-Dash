@@ -18,10 +18,20 @@ namespace CubeDash
         public const int SkinPrice = 100;
         public const int SupercarPrice = SkinPrice;
         public const int RedeemGiftCoins = 5000;
+        public const int TrailPrice = 250;
+        public const string EquippedTrailKey = "CubeDash.Trails.Equipped";
         public static event Action Changed;
         public static int Coins => Mathf.Max(0, PlayerPrefs.GetInt(CoinsKey, 0));
         public static bool OwnsSupercar => PlayerPrefs.GetInt(SupercarOwnedKey, 0) == 1;
         public static bool SupercarEquipped => EquippedSkin == PlayerSkin.Supercar;
+        public static PlayerTrail EquippedTrail
+        {
+            get
+            {
+                var trail = (PlayerTrail)PlayerPrefs.GetInt(EquippedTrailKey, 0);
+                return OwnsTrail(trail) ? trail : PlayerTrail.None;
+            }
+        }
         public static PlayerSkin EquippedSkin
         {
             get
@@ -78,6 +88,30 @@ namespace CubeDash
         {
             if (!Owns(skin)) return false;
             PlayerPrefs.SetInt(EquippedKey, (int)skin);
+            Save();
+            return true;
+        }
+
+        public static string TrailOwnershipKey(PlayerTrail trail) => TrailStyles.Valid(trail)
+            ? "CubeDash.Trails." + (int)trail + ".Owned" : null;
+
+        public static bool OwnsTrail(PlayerTrail trail) => trail == PlayerTrail.None ||
+            (TrailOwnershipKey(trail) is string key && PlayerPrefs.GetInt(key, 0) == 1);
+
+        public static bool TryBuyTrail(PlayerTrail trail)
+        {
+            string key = TrailOwnershipKey(trail);
+            if (key == null || OwnsTrail(trail) || Coins < TrailPrice) return false;
+            PlayerPrefs.SetInt(CoinsKey, Coins - TrailPrice);
+            PlayerPrefs.SetInt(key, 1);
+            Save();
+            return true;
+        }
+
+        public static bool EquipTrail(PlayerTrail trail)
+        {
+            if (!OwnsTrail(trail)) return false;
+            PlayerPrefs.SetInt(EquippedTrailKey, (int)trail);
             Save();
             return true;
         }

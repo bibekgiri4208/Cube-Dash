@@ -62,7 +62,7 @@ namespace CubeDash.Tests
             try
             {
                 var menu = Find<MainMenuController>(scene); var shop = menu.GetComponent<MenuSkinShop>();
-                Assert.That(menu.ShopPanel.transform.Find("Card/Heading").GetComponent<Text>().text, Is.EqualTo("SKINS"));
+                Assert.That(menu.ShopPanel.transform.Find("Card/Heading").GetComponent<Text>().text, Is.EqualTo("SHOP"));
                 Assert.That(menu.ShopPanel.GetComponent<MenuSkinsLayout>(), Is.Not.Null);
                 foreach (string rarity in new[] { "Common Skins", "Rare Skins", "Epic Skins" })
                     Assert.That(menu.ShopPanel.transform.Find("Card/" + rarity), Is.Null);

@@ -5,6 +5,7 @@ Open `Assets/Scenes/Main Menu.unity` and press Play. It is the first enabled bui
 The reference-inspired scene contains editable 3D parking bays, weathered asphalt, concrete/graffiti wall, warm sconces, layered foliage, neighborhood buildings, overhead wires, a classic sedan, safety props, and a red cube with black eyes. Its low camera and left-hand cut-corner ribbons use the supplied image's composition. This is a recreation, not the image's original models or a pixel-identical reproduction.
 
 - **Shop:** one **Skins** collection containing **Neon Supercar**, **Monster Truck**, **Military Van** and **Shark Cube**, each **100 coins**, with illustrations rendered from their actual prefabs. Buy unlocks a skin; Equip/Unequip changes the saved selection. There are no Common/Rare/Epic sections.
+- **Shop > Trails:** a separate category with animated previews for **Neon Aurora**, **Solar Flare**, **Frost Wave** and **Rainbow Rush**, each **250 coins**. Trail ownership/equipment saves independently from skins, so any skin can use any trail.
 - **Options:** independent saved master/music volume sliders with live percentage readouts, a fullscreen toggle, and **Redeem Code**.
 - **Quit:** opens **Confirm exit?**; **Yes** closes the application (stops Play mode in the Editor), while **No** cancels.
 - Mouse, keyboard/UI navigation and gamepad are supported. Escape/back closes a panel.
@@ -69,6 +70,23 @@ Edit **Cube Dash Main Menu > Reference Menu Canvas > Start - Map Selection > Car
 All six cards use 1200×450 images rendered from their actual map scenes, stored in `Assets/MainMenu/Map Previews/`, rather than generic vector illustrations. `MapPreviewGraphic` center-crops these textures to fill each card without stretching. **Tools > Cube Dash > Render Actual Map Selection Previews** regenerates the images and updates the menu references. Captures hide the player and HUD and disable depth-of-field/motion blur in temporary profile copies; no gameplay scene, camera or shared post-processing profile is saved or changed.
 
 ## Player preview and idle
+
+### Trail shop and effects
+
+Use the **Skins / Trails** tabs in Shop. Each trail has **Buy → Equip → Unequip** controls and its own saved ownership flag; only one trail is equipped at a time. Buying does not auto-equip or spend coins again on subsequent equips. Unaffordable products remain navigable. Tab switching, keyboard/gamepad navigation and scrolling keep hidden-category callbacks inactive. The shared wallet updates immediately.
+
+- **Neon Aurora:** three elevated mint/cyan/violet streamers that braid through space, surrounded by floating glow sparks.
+- **Solar Flare:** three turbulent orange/gold flame streamers with rising, flickering airborne embers.
+- **Frost Wave:** raised icy blue/white ribbons with rotating, shaded 3D ice crystals and cold glints.
+- **Rainbow Rush:** four undulating rainbow streamers with moving color gradients, floating gems and sparks.
+
+The purchased effect follows the player's actual driven path on every map, including lane changes, vehicle skins and Shark Cube. **Truck and Flight temporarily hide the trail** without changing its saved selection. When either power-up ends, the effect starts a fresh ground ribbon rather than connecting to the old path. An equipped trail replaces the default cube wake/vehicle rear-light streaks, rather than stacking them. Unequip restores those original effects. It is cosmetic only: no changes to movement, collisions, shields, score or pickups. The hide/resume regression passed for all **120 trail/skin/map combinations**, checking both power-ups with audio muted.
+
+`PlayerTrailEffect` uses one reusable 1,616-vertex distance-sampled mesh: layered twisting ribbons, 48 airborne glow particles and 16 rotating octahedral crystals (visible for Frost/Rainbow), with one shared `ShopTrail.shader` material. The streams rise above the road rather than drawing a flat road pattern; crystal faces have directional shading. Motion, colors and shimmer use the game clock, so pause freezes them. Retry, crash, teleport and scene unload clear the effect; world-origin rebasing shifts its history safely. There are no per-frame trail objects or material instances. The animated menu previews use a perspective floor, glow motes and faceted gem illustrations and introduce no sound.
+
+**Tools > Cube Dash > Add Shop Trails Section** (`ShopTrailsAuthoring.ApplyFromCommandLine`) adds the saved tabs/cards and one gameplay-only trail child to the shared player prefab. The menu cube variant explicitly excludes that child, including the Shark preview inherited from it. Existing products, vehicle models, redeem UI, maps and scenery are retained; reapplication does not duplicate content. Full menu generation includes the category. Edit palettes in `TrailStyles.cs`, effects in `Assets/Shaders/ShopTrail.shader`, and the shared material under `Assets/Material/Trails/`.
+
+[Trails shop preview](Trails%20Shop%20Preview.png) · [Normal gameplay preview](Neon%20Aurora%20Gameplay%20Preview.png) · [All four 3D trails, angled gameplay views](3D%20Trails%20Gameplay%20Preview.png). The 3D redesign passed **9/9 Unity trail checks**, covering purchases/persistence, separate skin/trail selection, hidden/closing callback guards, category navigation, all **120 trail/skin/map combinations**, Truck/Flight hide/resume, real vertical mesh extent, bounded geometry, animation/pause, retry, teleport/rebasing safety, default trail restoration and desktop/portrait rendering. All four effects were captured with both the normal gameplay camera and an additional angled camera for checking depth. Validation was audio-disabled and explicitly muted. No gameplay map, scenery, existing skin artwork or production audio setting was saved or replaced.
 
 ### Shark Cube skin
 

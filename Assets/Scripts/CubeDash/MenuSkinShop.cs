@@ -53,6 +53,7 @@ namespace CubeDash
             // Hidden/closing panels cannot spend coins through stale submits or callbacks.
             if (SceneLoader.IsLoading || menu.CurrentPanel != menu.ShopPanel || !menu.ShopPanel.activeInHierarchy) return;
             if (menu.ShopPanel.TryGetComponent(out CanvasGroup group) && !group.interactable) return;
+            if (menu.ShopPanel.TryGetComponent(out MenuShopSections sections) && sections.TrailsSelected) return;
             if (!GameEconomy.Owns(skin)) GameEconomy.TryBuy(skin);
             else GameEconomy.Equip(GameEconomy.EquippedSkin == skin ? PlayerSkin.Cube : skin);
             Refresh();

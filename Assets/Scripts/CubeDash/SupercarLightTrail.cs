@@ -23,9 +23,16 @@ namespace CubeDash
         private int newest;
         private float distance, sampleDistance;
         private bool seeded;
+        private bool suppressed;
         public Mesh TrailMesh => mesh;
         public Renderer TrailRenderer => trailRenderer;
         public Vector3 LampPosition(int side) => car.TransformPoint(side == 0 ? leftLamp : rightLamp);
+
+        public void SetSuppressed(bool value)
+        {
+            if (suppressed == value) return;
+            suppressed = value; ResetTrail();
+        }
 
         private void Awake() => Initialize();
         private void Initialize()
@@ -62,7 +69,7 @@ namespace CubeDash
         public void Tick(float speed, Vector3 cameraPosition)
         {
             Initialize();
-            if (!isActiveAndEnabled || car == null) return;
+            if (!isActiveAndEnabled || car == null || suppressed) return;
             for (int side = 0; side < 2; side++) current[side] = LampPosition(side);
             if (!seeded) { Seed(); return; }
             float travel = Vector3.Distance((previous[0] + previous[1]) * 0.5f, (current[0] + current[1]) * 0.5f);
